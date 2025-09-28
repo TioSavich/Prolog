@@ -1,3 +1,26 @@
+/** <module> Jason's Partitive Fractional Schemes
+ *
+ * This module implements a computational model of Jason's partitive
+ * fractional schemes, as described in cognitive science literature on
+ * mathematical development. It models how a student might conceptualize
+ * and operate on fractions by partitioning, disembedding, and iterating units.
+ *
+ * The core data structure is a `unit(Value, History)` term, which tracks
+ * both a rational numerical value and its operational history.
+ *
+ * The module defines two main strategic state machines:
+ * 1.  **Partitive Fractional Scheme (PFS)**: Models the process of finding
+ *     a simple fraction (e.g., 3/7) of a whole.
+ * 2.  **Fractional Composition Scheme (FCS)**: Models the more complex process
+ *     of finding a fraction of a fraction (e.g., 3/4 of 1/4), which involves
+ *     a "metamorphic accommodation" where the result of one operation becomes
+ *     the input for the next.
+ *
+ * The primary entry point for demonstration is `run_tests/0`.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- module(jason, [run_tests/0]).
 :- use_module(library(rat)).
 
@@ -13,7 +36,6 @@
 % II. Iterative Core: Explicitly Nested Number Sequence (ENS) Operations
 % =============================================================================
 
-% [CORE::Partitioning]
 % ens_partition(+UnitIn, +N, -PartitionedWhole)
 % Divides a continuous unit into N equal parts.
 ens_partition(unit(Value, History), N, PartitionedWhole) :-
@@ -23,13 +45,11 @@ ens_partition(unit(Value, History), N, PartitionedWhole) :-
     length(PartitionedWhole, N),
     maplist(=(unit(NewValue, NewHistory)), PartitionedWhole).
 
-% [CORE::Disembedding]
 % ens_disembed(+PartitionedWhole, -UnitFraction)
 % Isolates a single unit part from the partitioned whole.
 ens_disembed([UnitFraction | _], UnitFraction) :- !.
 ens_disembed([], _) :- throw(error(cannot_disembed_from_empty_list, _)).
 
-% [CORE::Iterating]
 % ens_iterate(+UnitIn, +M, -ResultUnit)
 % Repeats a unit M times.
 ens_iterate(unit(Value, History), M, unit(NewValue, NewHistory)) :-
@@ -40,7 +60,20 @@ ens_iterate(unit(Value, History), M, unit(NewValue, NewHistory)) :-
 % III. Strategic Shell: The Partitive Fractional Scheme (PFS)
 % =============================================================================
 
-% run_pfs(+Whole, +Numerator, +Denominator, -Result, -Trace)
+%!      run_pfs(+Whole:unit, +Numerator:integer, +Denominator:integer, -Result:unit, -Trace:list) is det.
+%
+%       Executes the Partitive Fractional Scheme to calculate `Num/Den` of `Whole`.
+%
+%       This state machine models the cognitive process of:
+%       1. Partitioning the `Whole` into `Denominator` equal parts.
+%       2. Disembedding one of those parts (the unit fraction).
+%       3. Iterating the unit fraction `Numerator` times.
+%
+%       @param Whole The initial `unit/2` term to be operated on.
+%       @param Numerator The numerator of the fraction.
+%       @param Denominator The denominator of the fraction.
+%       @param Result The final `unit/2` term representing the result.
+%       @param Trace A list of strings describing the cognitive steps taken.
 run_pfs(Whole, Num, Den, Result, Trace) :-
     % Initialize V (variables) in a dict
     V0 = v{whole: Whole, n: Den, m: Num},
@@ -83,8 +116,22 @@ pfs_transition(q_iterate, V_in, q_accept, V_out, Log) :-
 % IV. Strategic Shell: The Fractional Composition Scheme (FCS)
 % =============================================================================
 
-% run_fcs(+Whole, +OuterFrac, +InnerFrac, -Result, -Trace)
-% OuterFrac and InnerFrac are pairs: Num-Den
+%!      run_fcs(+Whole:unit, +OuterFrac:pair, +InnerFrac:pair, -Result:unit, -Trace:list) is det.
+%
+%       Executes the Fractional Composition Scheme to calculate a fraction of a fraction.
+%       It solves `(A/B) of (C/D)` of `Whole`.
+%
+%       This state machine models a more advanced cognitive process involving
+%       "metamorphic accommodation," where the result of one fractional operation
+%       becomes the new "whole" for the next fractional operation. It achieves
+%       this by calling `run_pfs/5` as a subroutine.
+%
+%       @param Whole The initial `unit/2` term.
+%       @param OuterFrac A pair `A-B` for the outer fraction.
+%       @param InnerFrac A pair `C-D` for the inner fraction.
+%       @param Result The final `unit/2` term.
+%       @param Trace A nested list describing the cognitive steps, including the
+%       trace of the inner `run_pfs/5` calls.
 run_fcs(Whole, A-B, C-D, Result, Trace) :-
     V0 = v{whole: Whole, a:A, b:B, c:C, d:D},
     format(string(Log0), 'FCS Initialized: Find ~w/~w of ~w/~w of ~w', [A, B, C, D, Whole.value]),
@@ -128,6 +175,16 @@ fcs_transition(q_outer_PFS, V_in, q_accept, V_out, Log, NestedTrace) :-
 % V. Demonstration and Testing
 % =============================================================================
 
+%!      run_tests is det.
+%
+%       The main demonstration predicate for this module.
+%
+%       It runs two tests:
+%       1. A test of the basic Partitive Fractional Scheme (PFS).
+%       2. A test of the more complex Fractional Composition Scheme (FCS),
+%          which demonstrates recursive partitioning.
+%
+%       It prints detailed execution traces for both tests to the console.
 run_tests :-
     writeln('=== JASON AUTOMATON MODEL TESTING ==='),
 

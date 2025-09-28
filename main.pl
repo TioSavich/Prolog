@@ -1,7 +1,26 @@
+/** <module> Main Entry Point for Command-Line Execution
+ *
+ * This module provides a simple, non-interactive entry point for running the
+ * cognitive modeling system from the command line. It is primarily used for
+ * testing and demonstration purposes.
+ *
+ * When executed, it invokes the ORR (Observe, Reorganize, Reflect) cycle
+ * with a predefined goal and prints the final result to the console.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- use_module(execution_handler).
 
-% The goal is to calculate 5 + 5.
-% s(s(s(s(s(0))))) represents 5 in Peano arithmetic.
+%!      main is det.
+%
+%       The main predicate for command-line execution.
+%
+%       It runs a predefined query, `add(5, 5, X)`, using the `run_query/1`
+%       predicate from the `execution_handler`. This triggers the full ORR
+%       cycle. After the cycle completes, it prints the final result for `X`
+%       and halts the Prolog system. The number 5 is represented using
+%       Peano arithmetic (`s(s(s(s(s(0)))))`).
 main :-
     run_query(add(s(s(s(s(s(0))))), s(s(s(s(s(0))))), X)),
     format('Final Result: ~w~n', [X]),

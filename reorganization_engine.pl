@@ -1,12 +1,43 @@
+/** <module> Reorganization Engine for Cognitive Accommodation
+ *
+ * This module implements the "Reorganize" stage of the ORR cycle. It is
+ * responsible for `accommodate/1`, the process of modifying the system's
+ * own knowledge base (`object_level.pl`) in response to a state of
+ * disequilibrium detected by the `reflective_monitor.pl`.
+ *
+ * The engine currently handles failures by:
+ * 1.  Identifying the predicate causing the most "conceptual stress" (i.e.,
+ *     the one involved in the most failures).
+ * 2.  Applying a predefined transformation strategy to that predicate.
+ *
+ * The only transformation implemented is `specialize_add_rule`, which
+ * replaces a failing `add/3` implementation with a more robust, recursive
+ * one based on the Peano axioms.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- module(reorganization_engine, [accommodate/1]).
 
 :- use_module(object_level).
 :- use_module(reflective_monitor).
-:- use_module(reorganization_log). % <-- INTEGRATED LOGGER
+:- use_module(reorganization_log).
 
-% accommodate(+Trigger)
+%!      accommodate(+Trigger:term) is semidet.
 %
-% Dispatches to different handlers based on the disequilibrium trigger.
+%       Attempts to accommodate a state of disequilibrium by modifying the
+%       knowledge base. This is the main entry point for the reorganization engine.
+%
+%       It dispatches to different handlers based on the type of `Trigger`:
+%       - `goal_failure` or `perturbation`: Calls `handle_failure/1` to attempt
+%         a knowledge repair based on conceptual stress.
+%       - `incoherence`: Currently a placeholder; fails as this type of
+%         reorganization is not yet implemented.
+%
+%       Succeeds if a transformation is successfully applied. Fails otherwise.
+%
+%       @param Trigger The term describing the disequilibrium, provided by the
+%       reflective monitor.
 accommodate(Trigger) :-
     (   (Trigger = goal_failure(_); Trigger = perturbation(_)) ->
         handle_failure(Trigger)
@@ -18,16 +49,19 @@ accommodate(Trigger) :-
 
 % handle_failure(+Trigger)
 %
-% Identifies the most stressed predicate and attempts to transform it.
+% Handles disequilibrium caused by goal failure. It identifies the most
+% stressed predicate from the conceptual stress map and attempts to apply a
+% transformation to repair it.
 handle_failure(_Trigger) :-
     get_most_stressed_predicate(Signature),
     format('Highest conceptual stress found for predicate: ~w~n', [Signature]),
-    log_event(reorganization_start(Signature)), % Log start
+    log_event(reorganization_start(Signature)),
     apply_transformation(Signature).
 
 % handle_incoherence(+Commitments)
 %
-% Placeholder for future implementation.
+% Placeholder for handling disequilibrium caused by logical contradictions.
+% This is a future work area and currently always fails.
 handle_incoherence(Commitments) :-
     format('Handling incoherence for commitments: ~w~n', [Commitments]),
     format('Incoherence-driven reorganization is not yet implemented.~n'),
@@ -35,7 +69,8 @@ handle_incoherence(Commitments) :-
 
 % get_most_stressed_predicate(-Signature)
 %
-% Finds the predicate with the highest stress count.
+% Finds the predicate with the highest stress count in the stress map
+% maintained by the reflective monitor.
 get_most_stressed_predicate(Signature) :-
     get_stress_map(StressMap),
     StressMap \= [],
@@ -44,6 +79,9 @@ get_most_stressed_predicate(_) :-
     format('Could not identify a stressed predicate. Reorganization failed.~n'),
     fail.
 
+% find_max_stress(+StressMap, +CurrentMax, -Max)
+%
+% Helper predicate to find the maximum entry in the stress map list.
 find_max_stress([], Max, Max).
 find_max_stress([stress(S, C)|Rest], stress(_, MaxC), Max) :-
     C > MaxC, !, find_max_stress(Rest, stress(S, C), Max).
@@ -51,7 +89,8 @@ find_max_stress([_|Rest], Max, Result) :- find_max_stress(Rest, Max, Result).
 
 % apply_transformation(+Signature)
 %
-% Dispatches to a specific transformation strategy.
+% Dispatches to a specific transformation strategy based on the predicate
+% signature. Currently, only a transformation for `add/3` exists.
 apply_transformation(add/3) :-
     !, specialize_add_rule.
 apply_transformation(Signature) :-
@@ -60,16 +99,21 @@ apply_transformation(Signature) :-
 
 % --- Transformation Strategies ---
 
+% specialize_add_rule/0
+%
+% A specific transformation strategy that replaces the existing `add/3` rules
+% with a correct, recursive implementation based on Peano arithmetic. This
+% represents a form of learning or knowledge repair.
 specialize_add_rule :-
     format('Applying "Specialization" strategy to add/3.~n'),
-    % Retract old rules and log each one.
+    % Retract all existing rules for add/3 and log each one.
     forall(
         clause(object_level:add(A, B, C), Body),
         (   retract(object_level:add(A, B, C) :- Body),
             log_event(retracted((add(A, B, C) :- Body)))
         )
     ),
-    % Synthesize and assert the new rule, logging it.
+    % Synthesize and assert the new, correct rule and log it.
     NewHead = add(A, B, Sum),
     NewBody = recursive_add(A, B, Sum),
     assertz(object_level:(NewHead :- NewBody)),
@@ -82,8 +126,11 @@ specialize_add_rule :-
         format('Asserted helper predicate recursive_add/3.~n')
     ;   true
     ),
-    log_event(reorganization_success). % Log overall success
+    log_event(reorganization_success).
 
+% assert_and_log(+Clause)
+%
+% Helper to assert a clause and log the assertion event.
 assert_and_log(Clause) :-
     assertz(Clause),
     log_event(asserted(Clause)).

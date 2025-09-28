@@ -1,3 +1,17 @@
+/** <module> Full-featured API Server for Cognitive Modeling
+ *
+ * This module provides a comprehensive HTTP server that exposes the full
+ * capabilities of the cognitive modeling system. It integrates various
+ * components, including the core execution handler for the ORR (Observe,
+ * Reorganize, Reflect) cycle, logging, semantic analysis, and student
+ * strategy analysis.
+ *
+ * This server is intended for development and provides a richer set of
+ * endpoints compared to `working_server.pl`.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_json)).
@@ -23,15 +37,24 @@
 % Enable CORS for all endpoints
 :- set_setting(http:cors, [*]).
 
-% Main predicate to start the server
+%!      server(+Port:integer) is det.
+%
+%       Starts the HTTP server on the specified Port.
+%
+%       @param Port The port number for the server to listen on.
 server(Port) :-
     http_server(http_dispatch, [port(Port)]).
 
 % --- Endpoint Handlers ---
 
-% POST /solve
-% Accepts a JSON object like {"goal": "add(s(0),s(0),X)"}
-% Runs the ORR cycle and returns the final result.
+%!      solve_handler(+Request:list) is det.
+%
+%       Handles POST requests to the `/solve` endpoint.
+%       It expects a JSON object with a `goal` key, e.g., `{"goal": "add(s(0),s(0),X)"}`.
+%       It runs the full ORR (Observe, Reorganize, Reflect) cycle for the given
+%       goal and returns the final result.
+%
+%       @param Request The incoming HTTP request.
 solve_handler(Request) :-
     http_read_json_dict(Request, In),
     term_string(Goal, In.goal),
@@ -47,14 +70,27 @@ solve_handler(Request) :-
     term_string(ResultString, Result),
     reply_json_dict(_{status: Status, result: ResultString}).
 
-% GET /log
-% Returns the full reorganization log as a JSON object.
+
+%!      log_handler(+Request:list) is det.
+%
+%       Handles GET requests to the `/log` endpoint.
+%       It generates and returns the full reorganization log as a JSON object,
+%       detailing the cognitive steps taken by the system.
+%
+%       @param _Request The incoming HTTP request (unused).
 log_handler(_Request) :-
     generate_report(Report),
     reply_json_dict(_{report: Report}).
 
-% GET /knowledge
-% Returns the current knowledge base and conceptual stress map.
+
+%!      knowledge_handler(+Request:list) is det.
+%
+%       Handles GET requests to the `/knowledge` endpoint.
+%       It returns the current state of the system's knowledge base, including
+%       all clauses in the `object_level` module and the current conceptual
+%       stress map.
+%
+%       @param _Request The incoming HTTP request (unused).
 knowledge_handler(_Request) :-
     findall(
         Clause,
@@ -65,9 +101,14 @@ knowledge_handler(_Request) :-
     prolog_to_json(_{clauses: Clauses, stress_map: StressMap}, JSON_Object),
     reply_json(JSON_Object).
 
-% POST /analyze_semantics
-% Accepts a JSON object like {"statement": "The object is red"}
-% Returns semantic analysis based on incompatibility semantics
+
+%!      analyze_semantics_handler(+Request:list) is det.
+%
+%       Handles POST requests to the `/analyze_semantics` endpoint.
+%       It expects a JSON object with a `statement` key, e.g., `{"statement": "The object is red"}`.
+%       It performs a semantic analysis of the statement based on incompatibility semantics.
+%
+%       @param Request The incoming HTTP request.
 analyze_semantics_handler(Request) :-
     cors_enable(Request, [methods([post, options])]),
     (   http_read_json_dict(Request, In) ->
@@ -77,9 +118,15 @@ analyze_semantics_handler(Request) :-
     ;   reply_json_dict(_{error: "Invalid JSON input"})
     ).
 
-% POST /analyze_strategy  
-% Accepts a JSON object like {"problemContext": "Math-JRU", "strategy": "student counted all"}
-% Returns CGI/Piagetian analysis of the strategy
+
+%!      analyze_strategy_handler(+Request:list) is det.
+%
+%       Handles POST requests to the `/analyze_strategy` endpoint.
+%       It expects a JSON object with `problemContext` and `strategy` keys,
+%       e.g., `{"problemContext": "Math-JRU", "strategy": "student counted all"}`.
+%       It returns a CGI/Piagetian analysis of the described student strategy.
+%
+%       @param Request The incoming HTTP request.
 analyze_strategy_handler(Request) :-
     cors_enable(Request, [methods([post, options])]),
     (   http_read_json_dict(Request, In) ->
@@ -92,7 +139,15 @@ analyze_strategy_handler(Request) :-
 
 
 % --- Helper for JSON conversion ---
-% This is needed because clause bodies can be complex terms.
+
+%!      json_convert:prolog_to_json(+Term, -JSON) is multi.
+%
+%       A multifile predicate that extends the default JSON conversion library.
+%       This implementation is needed to handle the conversion of complex Prolog
+%       terms (like rule bodies) into a structured JSON format.
+%
+%       @param Term The Prolog term to convert.
+%       @param JSON The resulting JSON object.
 :- multifile json_convert:prolog_to_json/2.
 json_convert:prolog_to_json(Term, JSON) :-
     is_list(Term), !,
@@ -108,8 +163,15 @@ json_convert:prolog_to_json(Term, JSON) :-
 
 % --- Helper Predicates for Analysis ---
 
-% analyze_statement_semantics(+Statement, -Analysis)
-% Analyzes a statement using incompatibility semantics
+%!      analyze_statement_semantics(+Statement:string, -Analysis:dict) is det.
+%
+%       Performs semantic analysis on a given statement.
+%       It finds all implications and incompatibilities for the normalized
+%       (lowercase) statement.
+%
+%       @param Statement The input string to analyze.
+%       @param Analysis A dict containing the original statement, a list of
+%       implications, and a list of incompatibilities.
 analyze_statement_semantics(Statement, Analysis) :-
     atom_string(StatementAtom, Statement),
     downcase_atom(StatementAtom, Normalized),
@@ -124,8 +186,15 @@ analyze_statement_semantics(Statement, Analysis) :-
         incompatibleWith: IncompatibleWith
     }.
 
-% get_implications(+NormalizedStatement, -Implication)
-% Determines what a statement implies
+%!      get_implications(+Statement:atom, -Implication:string) is nondet.
+%
+%       Generates implications for a given statement.
+%       This predicate defines the semantic entailments based on keywords
+%       found in the statement. It is a multi-clause predicate where each
+%       clause represents a different implication rule.
+%
+%       @param Statement The normalized (lowercase) input atom.
+%       @param Implication A string describing what the statement implies.
 get_implications(Statement, 'The object is colored') :-
     sub_atom(Statement, _, _, _, red).
 get_implications(Statement, 'The shape is a rectangle') :-
@@ -137,8 +206,15 @@ get_implications(Statement, 'The shape has 4 sides of equal length') :-
 get_implications(Statement, 'This statement has semantic content') :-
     Statement \= ''.
 
-% get_incompatibilities(+NormalizedStatement, -Incompatibility)  
-% Determines what a statement is incompatible with
+%!      get_incompatibilities(+Statement:atom, -Incompatibility:string) is nondet.
+%
+%       Generates incompatibilities for a given statement.
+%       This predicate defines what a statement semantically rules out based
+%       on keywords. It is a multi-clause predicate where each clause
+%       represents a different incompatibility rule.
+%
+%       @param Statement The normalized (lowercase) input atom.
+%       @param Incompatibility A string describing what the statement is incompatible with.
 get_incompatibilities(Statement, 'The object is entirely blue') :-
     sub_atom(Statement, _, _, _, red).
 get_incompatibilities(Statement, 'The object is monochromatic and green') :-
@@ -150,8 +226,16 @@ get_incompatibilities(Statement, 'The shape has exactly 3 sides') :-
 get_incompatibilities(Statement, 'The negation of this statement') :-
     Statement \= ''.
 
-% analyze_cgi_strategy(+ProblemContext, +StrategyDescription, -Analysis)
-% Analyzes a student strategy using CGI and Piagetian frameworks
+%!      analyze_cgi_strategy(+ProblemContext:string, +StrategyDescription:string, -Analysis:dict) is det.
+%
+%       Analyzes a student's problem-solving strategy within a given context.
+%       It normalizes the strategy description and uses `classify_strategy/7`
+%       to get a detailed analysis.
+%
+%       @param ProblemContext The context of the problem (e.g., "Math-Addition").
+%       @param StrategyDescription A text description of the student's strategy.
+%       @param Analysis A dict containing the classification, developmental stage,
+%       implications, incompatibilities, and pedagogical recommendations.
 analyze_cgi_strategy(ProblemContext, StrategyDescription, Analysis) :-
     atom_string(StrategyAtom, StrategyDescription),
     downcase_atom(StrategyAtom, Normalized),
@@ -166,7 +250,20 @@ analyze_cgi_strategy(ProblemContext, StrategyDescription, Analysis) :-
         recommendations: Recommendations
     }.
 
-% classify_strategy(+Context, +NormalizedStrategy, -Classification, -Stage, -Implications, -Incompatibility, -Recommendations)
+%!      classify_strategy(+Context:string, +Strategy:atom, -Classification:string, -Stage:string, -Implications:string, -Incompatibility:string, -Recommendations:string) is det.
+%
+%       Classifies a student's strategy based on context and description.
+%       This multi-clause predicate uses keyword matching on the strategy
+%       description to determine the CGI classification, Piagetian stage,
+%       and associated pedagogical insights for various domains (Math, Science).
+%
+%       @param Context The problem context (e.g., "Math-Addition", "Science-Float").
+%       @param Strategy The normalized student strategy description.
+%       @param Classification The CGI classification of the strategy.
+%       @param Stage The associated Piagetian developmental stage.
+%       @param Implications What the strategy implies about the student's understanding.
+%       @param Incompatibility The conceptual conflict this strategy might lead to.
+%       @param Recommendations Pedagogical suggestions to advance the student's understanding.
 classify_strategy(Context, Strategy, Classification, Stage, Implications, Incompatibility, Recommendations) :-
     atom_string(Context, ContextStr),
     sub_atom(ContextStr, 0, 4, _, "Math"),
