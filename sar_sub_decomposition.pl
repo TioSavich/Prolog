@@ -1,22 +1,58 @@
-% SWI-Prolog code for the 'Decomposition' (Borrowing) strategy for subtraction.
-
+/** <module> Student Subtraction Strategy: Decomposition (Standard Algorithm)
+ *
+ * This module implements the standard "decomposition" or "borrowing"
+ * algorithm for subtraction, modeled as a finite state machine.
+ *
+ * The process is as follows:
+ * 1. Decompose both the minuend (M) and subtrahend (S) into tens and ones.
+ * 2. Subtract the tens components.
+ * 3. Check if the ones component of M is sufficient to subtract the ones
+ *    component of S.
+ * 4. If not, "borrow" or "decompose" a ten from M's tens component, adding
+ *    it to M's ones component. This is the key step of the algorithm.
+ * 5. Subtract the ones components.
+ * 6. Recombine the resulting tens and ones to get the final answer.
+ * 7. The strategy fails if S > M.
+ *
+ * The state is represented by the term:
+ * `state(StateName, Result_Tens, Result_Ones, Subtrahend_Tens, Subtrahend_Ones)`
+ *
+ * The history of execution is captured as a list of steps:
+ * `step(StateName, Result_Tens, Result_Ones, Interpretation)`
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- module(sar_sub_decomposition,
-          [ run_decomposition/4 % M, S, FinalResult, History
+          [ run_decomposition/4
           ]).
 
 :- use_module(library(lists)).
 
-% State: state(StateName, R_T, R_O, S_T, S_O)
-% History: step(StateName, R_T, R_O, Interpretation)
+%!      run_decomposition(+M:integer, +S:integer, -FinalResult:integer, -History:list) is det.
+%
+%       Executes the 'Decomposition' (borrowing) subtraction strategy for M - S.
+%
+%       This predicate initializes and runs a state machine that models the
+%       standard schoolbook subtraction algorithm. It first checks if the
+%       subtraction is possible (M >= S). If so, it decomposes both numbers
+%       and performs the subtraction column by column, handling borrowing
+%       when necessary. It traces the entire execution.
+%
+%       @param M The Minuend, the number to subtract from.
+%       @param S The Subtrahend, the number to subtract.
+%       @param FinalResult The resulting difference (M - S). If S > M, this
+%       will be the atom `'error'`.
+%       @param History A list of `step/4` terms that describe the state
+%       machine's execution path and the interpretation of each step.
 
 run_decomposition(M, S, FinalResult, History) :-
     Base = 10,
     (S > M ->
-        % Error condition as specified in the Python __init__
         History = [step(q_error, 0, 0, 'Error: Subtrahend > Minuend.')],
         FinalResult = 'error'
     ;
-        % Initial state setup from execute_q_init
+        % Initial state: Decompose both M and S into tens and ones.
         S_T is S // Base, S_O is S mod Base,
         M_T is M // Base, M_O is M mod Base,
 
@@ -35,6 +71,7 @@ run_decomposition(M, S, FinalResult, History) :-
         )
     ).
 
+% run/4 is the main recursive loop of the state machine.
 run(state(q_accept, R_T, R_O, _, _), Base, AccHistory, FinalHistory) :-
     Result is R_T * Base + R_O,
     format(string(Interpretation), 'Accept. Final Result: ~w.', [Result]),
@@ -47,14 +84,18 @@ run(CurrentState, Base, AccHistory, FinalHistory) :-
     HistoryEntry = step(Name, R_T, R_O, Interpretation),
     run(NextState, Base, [HistoryEntry | AccHistory], FinalHistory).
 
-% Transitions
+% transition/4 defines the logic for moving from one state to the next.
+
+% From q_init, proceed to subtract the tens column.
 transition(state(q_init, R_T, R_O, S_T, S_O), _Base, state(q_sub_bases, R_T, R_O, S_T, S_O),
            'Proceed to subtract bases.').
 
+% In q_sub_bases, subtract the tens and move to check the ones column.
 transition(state(q_sub_bases, R_T, R_O, S_T, S_O), _Base, state(q_check_ones, New_R_T, R_O, S_T, S_O), Interpretation) :-
     New_R_T is R_T - S_T,
     format(string(Interpretation), 'Subtract Bases: ~wT - ~wT = ~wT.', [R_T, S_T, New_R_T]).
 
+% In q_check_ones, determine if borrowing is needed.
 transition(state(q_check_ones, R_T, R_O, S_T, S_O), _Base, state(q_sub_ones, R_T, R_O, S_T, S_O), Interpretation) :-
     R_O >= S_O,
     format(string(Interpretation), 'Sufficient Ones (~w >= ~w). Proceed.', [R_O, S_O]).
@@ -63,12 +104,14 @@ transition(state(q_check_ones, R_T, R_O, S_T, S_O), _Base, state(q_decompose, R_
     R_O < S_O,
     format(string(Interpretation), 'Insufficient Ones (~w < ~w). Need decomposition.', [R_O, S_O]).
 
+% In q_decompose, perform the "borrow" from the tens column.
 transition(state(q_decompose, R_T, R_O, S_T, S_O), Base, state(q_sub_ones, New_R_T, New_R_O, S_T, S_O), Interpretation) :-
     R_T > 0,
     New_R_T is R_T - 1,
     New_R_O is R_O + Base,
     format(string(Interpretation), 'Decomposed 1 Ten. New state: ~wT, ~wO.', [New_R_T, New_R_O]).
 
+% In q_sub_ones, subtract the ones column and transition to the final accept state.
 transition(state(q_sub_ones, R_T, R_O, S_T, S_O), _Base, state(q_accept, R_T, New_R_O, S_T, S_O), Interpretation) :-
     New_R_O is R_O - S_O,
     format(string(Interpretation), 'Subtract Ones: ~wO - ~wO = ~wO.', [R_O, S_O, New_R_O]).

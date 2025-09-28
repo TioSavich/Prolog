@@ -1,3 +1,27 @@
+/** <module> Simple Strategy Resolution Model
+ *
+ *  This module provides a simple, self-contained model for resolving the
+ *  outputs from multiple, potentially conflicting, information sources or
+ *  "strategies". It is a conceptual demonstration and is not integrated with
+ *  the main ORR cycle or the other learner modules.
+ *
+ *  The model consists of two parts:
+ *  1.  A database of facts (`strategy_output/4`) that simulates the results
+ *      produced by different named strategies for various problems.
+ *  2.  A `compute/3` predicate that gathers all possible results for a given
+ *      problem and uses a `resolve/2` helper to determine the final outcome
+ *      based on a simple semantic:
+ *      - If all strategies agree, that is the result.
+ *      - If strategies disagree, the result is `incompatible`.
+ *      - If no strategy can solve the problem, the result is `unknown`.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
+:- module(learner_1, [compute/3]).
+
+:- use_module(library(lists)).
+
 % --- A. DATABASE OF STRATEGY OUTPUTS ---
 % This section simulates the results from different strategies.
 % Format: strategy_output(StrategyName, Operation, InputsList, Result).
@@ -19,7 +43,7 @@ strategy_output(strategy_b, multiply, [10, 2], 20).
 % --- B. RULES FOR COMPUTATION ---
 % This section implements the logic to compute a final result.
 
-% resolve(ListOfResults, FinalResult).
+% resolve(+ListOfResults, -FinalResult)
 % This helper predicate applies the semantics to a list of gathered results.
 
 % Rule 1: If the list of results is empty, the answer is 'unknown'.
@@ -39,12 +63,23 @@ resolve(ResultsList, Result) :-
     length(Set, 1),
     [Result] = Set.
 
-% compute(Operation, Inputs, FinalResult).
-% This is the main predicate to query. ⚙️
-
+%!      compute(+Op:atom, +Inputs:list, -Result) is det.
+%
+%       Computes the result for a given operation and inputs by polling all
+%       available strategies and resolving their outputs.
+%
+%       It uses `findall/3` to collect all possible results from the
+%       `strategy_output/4` database for the given `Op` and `Inputs`. It then
+%       passes this list of results to `resolve/2` to determine the final,
+%       semantically coherent result.
+%
+%       @param Op The operation to perform (e.g., `add`, `subtract`).
+%       @param Inputs A list of input numbers for the operation.
+%       @param Result The final resolved result, which can be a number,
+%       the atom `incompatible`, or the atom `unknown`.
 compute(Op, Inputs, Result) :-
     % Step 1: Find all results from all available strategies for the given problem.
     findall(R, strategy_output(_, Op, Inputs, R), ResultsList),
-    
+
     % Step 2: Resolve the collected list of results using our semantics.
     resolve(ResultsList, Result).

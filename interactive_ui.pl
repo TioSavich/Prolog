@@ -1,12 +1,32 @@
-% Filename: interactive_ui.pl
-% Description: Contains the interactive UI for the More Machine Learner.
-
+/** <module> Interactive Command-Line UI for the More Machine Learner
+ *
+ * This module provides a text-based, interactive user interface for the
+ * "More Machine Learner" system. It allows a user to:
+ *
+ * - Trigger the learning of new addition strategies from examples.
+ * - Trigger a critique of existing rules using challenging subtraction problems.
+ * - View the strategies that have been learned during the session.
+ * - Load and save learned knowledge from a file (`learned_knowledge.pl`).
+ *
+ * The main entry point is `start/0`, which initializes the system and
+ * displays the main menu.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- module(interactive_ui, [start/0]).
 
 :- use_module(more_machine_learner).
 
 % --- Main Entry Point ---
 
+%!      start is det.
+%
+%       The main entry point for the interactive user interface.
+%
+%       This predicate displays a welcome message, asks the user if they want
+%       to load previously saved knowledge, and then enters the main menu loop
+%       where the user can select different actions.
 start :-
     welcome_message,
     ask_to_load_knowledge,

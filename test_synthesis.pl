@@ -1,18 +1,37 @@
-% Filename: test_synthesis.pl (Updated and Corrected)
+/** <module> Unit Tests for Incompatibility Semantics
+ *
+ * This module contains the unit tests for the `incompatibility_semantics`
+ * module. It uses the `plunit` testing framework to verify the correctness
+ * of the core logic across various domains.
+ *
+ * The tests are organized into sections:
+ * 1.  **Core Logic**: Basic tests for identity, incoherence, and negation.
+ * 2.  **Arithmetic**: Tests for commutativity and domain-specific constraints (e.g., subtraction in natural numbers).
+ * 3.  **Embodied Modal Logic**: Tests for the EML state transition axioms.
+ * 4.  **Quadrilateral Hierarchy**: Tests for geometric entailment and incompatibility.
+ * 5.  **Number Theory**: Tests for Euclid's proof of the infinitude of primes.
+ * 6.  **Fractions**: Tests for arithmetic and object collection over rational numbers.
+ *
+ * To run these tests, execute `run_tests(unified_synthesis).` from the
+ * SWI-Prolog console after loading this file.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 % Load the module under test. Explicitly qualify imports to avoid ambiguity in tests.
 :- use_module(incompatibility_semantics, [
     proves/1, incoherent/1, set_domain/1, obj_coll/1, normalize/2
 ]).
 :- use_module(library(plunit)).
 
-% Ensure operators are visible (FIX: Added all necessary operators)
+% Ensure operators are visible for the test definitions.
 :- op(500, fx, neg).
 :- op(500, fx, comp_nec).
 :- op(500, fx, exp_nec).
 :- op(500, fx, exp_poss).
 :- op(500, fx, comp_poss).
 :- op(1050, xfy, =>).
-:- op(550, xfy, rdiv). % Ensure rdiv is visible for tests
+:- op(550, xfy, rdiv).
 
 :- begin_tests(unified_synthesis).
 
@@ -138,7 +157,6 @@ test(euclid_theorem_empty_list) :-
     assertion(incoherent([n(is_complete([]))])).
 
 % --- Tests for Fractions (Jason.pl integration) ---
-% FIX: obj_coll/1 and normalize/2 are now imported and visible.
 
 test(fraction_obj_coll_q, [setup(set_domain(q))]) :-
     assertion(obj_coll(1 rdiv 2)),

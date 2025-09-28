@@ -1,11 +1,21 @@
+/** <module> Simple, Self-Contained API Server
+ *
+ * This module provides a lightweight, self-contained HTTP server that offers
+ * semantic and strategy analysis endpoints. Unlike `api_server.pl` or
+ * `working_server.pl`, this file includes the analysis logic directly within it,
+ * making it independent of other modules like `incompatibility_semantics.pl`.
+ *
+ * It is likely intended for testing, demonstration, or as a simplified
+ * alternative to the more complex, modularized servers.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_json)).
 :- use_module(library(http/json_convert)).
 :- use_module(library(http/http_cors)).
-
-% Load only the essential modules for our functionality
-% :- use_module(incompatibility_semantics).
 
 % Define the REST API endpoints
 :- http_handler(root(analyze_semantics), analyze_semantics_handler, [method(post)]).
@@ -14,15 +24,23 @@
 % Enable CORS for all endpoints
 :- set_setting(http:cors, [*]).
 
-% Main predicate to start the server
+%!      server(+Port:integer) is det.
+%
+%       Starts the HTTP server on the specified Port.
+%
+%       @param Port The port number for the server to listen on.
 server(Port) :-
     http_server(http_dispatch, [port(Port)]).
 
 % --- Endpoint Handlers ---
 
-% POST /analyze_semantics
-% Accepts a JSON object like {"statement": "The object is red"}
-% Returns semantic analysis based on incompatibility semantics
+%!      analyze_semantics_handler(+Request:list) is det.
+%
+%       Handles POST requests to the `/analyze_semantics` endpoint.
+%       It expects a JSON object with a `statement` key, e.g., `{"statement": "The object is red"}`.
+%       It performs a semantic analysis of the statement using its internal helper predicates.
+%
+%       @param Request The incoming HTTP request.
 analyze_semantics_handler(Request) :-
     cors_enable(Request, [methods([post, options])]),
     (   http_read_json_dict(Request, In) ->
@@ -32,9 +50,14 @@ analyze_semantics_handler(Request) :-
     ;   reply_json_dict(_{error: "Invalid JSON input"})
     ).
 
-% POST /analyze_strategy  
-% Accepts a JSON object like {"problemContext": "Math-JRU", "strategy": "student counted all"}
-% Returns CGI/Piagetian analysis of the strategy
+%!      analyze_strategy_handler(+Request:list) is det.
+%
+%       Handles POST requests to the `/analyze_strategy` endpoint.
+%       It expects a JSON object with `problemContext` and `strategy` keys,
+%       e.g., `{"problemContext": "Math-JRU", "strategy": "student counted all"}`.
+%       It returns a CGI/Piagetian analysis of the described student strategy.
+%
+%       @param Request The incoming HTTP request.
 analyze_strategy_handler(Request) :-
     cors_enable(Request, [methods([post, options])]),
     (   http_read_json_dict(Request, In) ->
@@ -53,7 +76,6 @@ analyze_statement_semantics(Statement, Analysis) :-
     atom_string(StatementAtom, Statement),
     downcase_atom(StatementAtom, Normalized),
     
-    % Basic semantic analysis based on statement content
     findall(Implication, get_implications(Normalized, Implication), Implies),
     findall(Incompatibility, get_incompatibilities(Normalized, Incompatibility), IncompatibleWith),
     

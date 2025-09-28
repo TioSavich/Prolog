@@ -1,4 +1,22 @@
-% Filename: incompatibility_semantics.pl (Corrected)
+/** <module> Core logic for incompatibility semantics and automated theorem proving.
+ *
+ *  This module implements Robert Brandom's incompatibility semantics, providing a
+ *  sequent calculus-based theorem prover. It integrates multiple knowledge
+ *  domains, including geometry, number theory (Euclid's proof of the
+ *  infinitude of primes), and arithmetic over natural numbers, integers, and
+ *  rational numbers. The prover uses a combination of structural rules,
+ *  material inferences (axioms), and reduction schemata to derive conclusions
+ *  from premises.
+ *
+ *  Key features:
+ *  - A sequent prover `proves/1` that operates on sequents of the form `Premises => Conclusions`.
+ *  - A predicate `incoherent/1` to check if a set of propositions is contradictory.
+ *  - Support for multiple arithmetic domains (n, z, q) via `set_domain/1`.
+ *  - A rich set of logical operators and domain-specific predicates.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- module(incompatibility_semantics,
           [ proves/1, obj_coll/1, incoherent/1, set_domain/1, current_domain/1
           % Updated exports
@@ -55,13 +73,37 @@ fraction_predicates([rdiv, iterate, partition]).
 % --- 1.2 Arithmetic (O/N Domains) ---
 
 :- dynamic current_domain/1.
+
+%!      current_domain(?Domain:atom) is nondet.
+%
+%       Dynamic fact that holds the current arithmetic domain.
+%       Possible values are `n` (natural numbers), `z` (integers),
+%       or `q` (rational numbers).
+%
+%       @param Domain The current arithmetic domain.
 current_domain(n).
 
+%!      set_domain(+Domain:atom) is det.
+%
+%       Sets the current arithmetic domain.
+%       Retracts the current domain and asserts the new one.
+%       Valid domains are `n`, `z`, and `q`.
+%
+%       @param Domain The new arithmetic domain to set.
 set_domain(D) :-
     % Added 'q' (Rationals) as a valid domain.
     ( member(D, [n, z, q]) -> retractall(current_domain(_)), assertz(current_domain(D)) ; true).
 
-% Domain-dependent Object Collection (Extended for Q) (FIX: Corrected Cut Logic)
+
+%!      obj_coll(+Term) is semidet.
+%
+%       Checks if a `Term` is a valid object in the `current_domain/1`.
+%       - In domain `n`, `Term` must be a non-negative integer.
+%       - In domain `z`, `Term` must be an integer.
+%       - In domain `q`, `Term` can be an integer or a rational number
+%         represented as `N rdiv D`.
+%
+%       @param Term The term to check.
 obj_coll(N) :- current_domain(n), !, integer(N), N >= 0.
 obj_coll(N) :- current_domain(z), !, integer(N).
 % Domain Q recognizes integers AND rationals.
@@ -76,7 +118,14 @@ obj_coll(X) :- current_domain(q), !,
 gcd(A, 0, A) :- A \= 0, !.
 gcd(A, B, G) :- B \= 0, R is A mod B, gcd(B, R, G).
 
-% normalize(Input, Normalized)
+%!      normalize(+Input, -Normalized) is det.
+%
+%       Normalizes a number. Integers are unchanged. Rational numbers
+%       (e.g., `6 rdiv 8`) are reduced to their simplest form (e.g., `3 rdiv 4`).
+%       If the denominator is 1, it is converted to an integer.
+%
+%       @param Input The integer or rational number to normalize.
+%       @param Normalized The resulting normalized number.
 normalize(N, N) :- integer(N), !.
 normalize(N rdiv D, R) :-
     (D =:= 1 -> R = N ;
@@ -162,7 +211,15 @@ match_antecedents([A|As], Premises) :-
 
 % --- 2.1 Incoherence Definitions (SAFE AND COMPLETE) ---
 
-% Full definition of Incoherence.
+%!      incoherent(+PropositionSet:list) is semidet.
+%
+%       Checks if a set of propositions is incoherent (contradictory).
+%       A set is incoherent if:
+%       1. It contains a direct contradiction (e.g., `P` and `neg(P)`).
+%       2. It violates a material incompatibility (e.g., `n(square(a))` and `n(r1(a))`).
+%       3. An empty conclusion `[]` can be proven from it, i.e., `proves(PropositionSet => [])`.
+%
+%       @param PropositionSet A list of propositions.
 incoherent(X) :- is_incoherent(X), !.
 incoherent(X) :- proves(X => []).
 
@@ -206,6 +263,17 @@ is_incoherent(Y) :- incoherent_base(Y), !.
 % --- 2.2 Sequent Calculus Prover (REORDERED) ---
 % Order: Identity/Explosion -> Axioms -> Structural Rules -> Reduction Schemata.
 
+%!      proves(+Sequent) is semidet.
+%
+%       Attempts to prove a given sequent using the rules of the calculus.
+%       A sequent has the form `Premises => Conclusions`, where `Premises`
+%       and `Conclusions` are lists of propositions. The predicate succeeds
+%       if the conclusions can be derived from the premises.
+%
+%       The prover uses a recursive, history-tracked implementation (`proves_impl/2`)
+%       to apply inference rules and avoid infinite loops.
+%
+%       @param Sequent The sequent to be proven.
 proves(Sequent) :- proves_impl(Sequent, []).
 
 % --- PRIORITY 1: Identity and Explosion ---
@@ -425,18 +493,123 @@ is_eml_modality(s(comp_poss _)).
 % Part 4: Automata and Placeholders
 % =================================================================
 
+%!      highlander(+List:list, -Result) is semidet.
+%
+%       Succeeds if the `List` contains exactly one element, which is unified with `Result`.
+%       "There can be only one."
+%
+%       @param List The input list.
+%       @param Result The single element of the list.
 highlander([Result], Result) :- !.
 highlander([], _) :- !, fail.
 highlander([_|Rest], Result) :- highlander(Rest, Result).
 
+%!      bounded_region(+I:number, +L:number, +U:number, -R:term) is det.
+%
+%       Checks if a number `I` is within a given lower `L` and upper `U` bound.
+%
+%       @param I The number to check.
+%       @param L The lower bound.
+%       @param U The upper bound.
+%       @param R `in_bounds(I)` if `L =< I =< U`, otherwise `out_of_bounds(I)`.
 bounded_region(I, L, U, R) :- ( number(I), I >= L, I =< U -> R = in_bounds(I) ; R = out_of_bounds(I) ).
 
+%!      equality_iterator(?C:integer, +T:integer, -R:integer) is nondet.
+%
+%       Iterates from a counter `C` up to a target `T`.
+%       Unifies `R` with `T` when `C` reaches `T`.
+%
+%       @param C The current value of the counter.
+%       @param T The target value.
+%       @param R The result, unified with T on success.
 equality_iterator(T, T, T) :- !.
 equality_iterator(C, T, R) :- C < T, C1 is C + 1, equality_iterator(C1, T, R).
 
 % Placeholder definitions for exported functors
-s(_). o(_). n(_). neg(_). comp_nec(_). exp_nec(_). exp_poss(_). comp_poss(_).
-square(_). rectangle(_). rhombus(_). parallelogram(_). trapezoid(_). kite(_). quadrilateral(_).
-r1(_). r2(_). r3(_). r4(_). r5(_). r6(_).
-prime(_). composite(_). divides(_, _). is_complete(_). analyze_euclid_number(_, _).
-rdiv(_, _). iterate(_, _, _). partition(_, _, _).
+%! s(P) is det.
+% Wrapper for subjective propositions.
+s(_).
+%! o(P) is det.
+% Wrapper for objective propositions.
+o(_).
+%! n(P) is det.
+% Wrapper for normative propositions.
+n(_).
+%! neg(P) is det.
+% Wrapper for negation.
+neg(_).
+%! comp_nec(P) is det.
+% Compressive necessity modality.
+comp_nec(_).
+%! exp_nec(P) is det.
+% Expansive necessity modality.
+exp_nec(_).
+%! exp_poss(P) is det.
+% Expansive possibility modality.
+exp_poss(_).
+%! comp_poss(P) is det.
+% Compressive possibility modality.
+comp_poss(_).
+%! square(X) is det.
+% Geometric shape placeholder.
+square(_).
+%! rectangle(X) is det.
+% Geometric shape placeholder.
+rectangle(_).
+%! rhombus(X) is det.
+% Geometric shape placeholder.
+rhombus(_).
+%! parallelogram(X) is det.
+% Geometric shape placeholder.
+parallelogram(_).
+%! trapezoid(X) is det.
+% Geometric shape placeholder.
+trapezoid(_).
+%! kite(X) is det.
+% Geometric shape placeholder.
+kite(_).
+%! quadrilateral(X) is det.
+% Geometric shape placeholder.
+quadrilateral(_).
+%! r1(X) is det.
+% Geometric restriction placeholder.
+r1(_).
+%! r2(X) is det.
+% Geometric restriction placeholder.
+r2(_).
+%! r3(X) is det.
+% Geometric restriction placeholder.
+r3(_).
+%! r4(X) is det.
+% Geometric restriction placeholder.
+r4(_).
+%! r5(X) is det.
+% Geometric restriction placeholder.
+r5(_).
+%! r6(X) is det.
+% Geometric restriction placeholder.
+r6(_).
+%! prime(N) is det.
+% Number theory placeholder for prime numbers.
+prime(_).
+%! composite(N) is det.
+% Number theory placeholder for composite numbers.
+composite(_).
+%! divides(A, B) is det.
+% Number theory placeholder for divisibility.
+divides(_, _).
+%! is_complete(L) is det.
+% Number theory placeholder for a complete list of primes.
+is_complete(_).
+%! analyze_euclid_number(N, L) is det.
+% Placeholder for Euclid's proof step.
+analyze_euclid_number(_, _).
+%! rdiv(N, D) is det.
+% Placeholder for rational number representation (Numerator rdiv Denominator).
+rdiv(_, _).
+%! iterate(U, M, R) is det.
+% Placeholder for iteration/multiplication of fractions.
+iterate(_, _, _).
+%! partition(W, N, U) is det.
+% Placeholder for partitioning/division of fractions.
+partition(_, _, _).

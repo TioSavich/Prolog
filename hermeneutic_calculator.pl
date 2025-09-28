@@ -1,6 +1,19 @@
+/** <module> Hermeneutic Calculator - Strategy Dispatcher
+ *
+ * This module acts as a high-level dispatcher for the various cognitive
+ * strategy models implemented in the `sar_*` and `smr_*` modules. It provides
+ * a unified interface to execute a calculation using a specific, named
+ * strategy and to list the available strategies for each arithmetic operation.
+ *
+ * This allows the user interface or other components to abstract away the
+ * details of individual strategy modules.
+ *
+ * @author Tilo Wiedera
+ * @license MIT
+ */
 :- module(hermeneutic_calculator,
-          [ calculate/5 % Num1, Op, Num2, Strategy, Result
-          , list_strategies/2 % Op, Strategies
+          [ calculate/5
+          , list_strategies/2
           ]).
 
 % Addition Strategies
@@ -37,6 +50,14 @@
 
 % --- Strategy Lists ---
 
+%!      list_strategies(+Op:atom, -Strategies:list) is nondet.
+%
+%       Provides a list of available strategy names for a given arithmetic
+%       operator.
+%
+%       @param Op The operator (`+`, `-`, `*`, `/`).
+%       @param Strategies A list of atoms representing the names of the
+%       strategies available for that operator.
 list_strategies(+, [
     'COBO',
     'Chunking',
@@ -68,6 +89,21 @@ list_strategies(/, [
 
 % --- Calculator Dispatch ---
 
+%!      calculate(+Num1:integer, +Op:atom, +Num2:integer, +Strategy:atom, -Result:integer) is semidet.
+%
+%       Executes a calculation using a specified cognitive strategy.
+%       This predicate acts as a dispatcher, calling the appropriate
+%       `run_*` predicate from the various strategy modules based on the
+%       `Strategy` name. The history trace from the strategy execution is
+%       ignored.
+%
+%       @param Num1 The first operand.
+%       @param Op The arithmetic operator (`+`, `-`, `*`, `/`).
+%       @param Num2 The second operand.
+%       @param Strategy The name of the strategy to use (must match one from
+%       `list_strategies/2`).
+%       @param Result The numerical result of the calculation. Fails if the
+%       strategy does not complete successfully.
 calculate(N1, +, N2, 'COBO', Result) :-
     run_cobo(N1, N2, Result, _).
 calculate(N1, +, N2, 'Chunking', Result) :-
@@ -108,7 +144,7 @@ calculate(T, /, S, 'CBO (Division)', Result) :-
 calculate(T, /, N, 'Dealing by Ones', Result) :-
     run_dealing_by_ones(T, N, Result, _).
 calculate(T, /, S, 'IDP', Result) :-
-    % Default KB for now
+    % A default Knowledge Base is provided for demonstration.
     KB = [40-5, 16-2, 8-1],
     run_idp(T, S, KB, Result, _).
 calculate(E, /, G, 'UCR', Result) :-

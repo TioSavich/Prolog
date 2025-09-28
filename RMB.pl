@@ -1,30 +1,37 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Reflective Pushdown Automaton for A+B using Rearranging to Make Bases %
-% Author: Theodore M. Savich (Concept), Revised Implementation (AI Assist)%
-% Date: 2023-11-16 (Corrected Version)                                    %
-%                                                                         %
-% Description:                                                            %
-% Implements a PDA that processes input "A+B".                            %
-% Primary strategy: Rearranging to Make Bases (RMB) for A+B.              %
-% Special Feature: If reflection is enabled AND A=4, B>=6 (for base 10),  %
-% the automaton enters a reflective state (q6) which repeatedly applies   %
-% "+6 mod 10" to the stack representation of B. This state loops          %
-% indefinitely unless the value becomes 0, demonstrating emergence.       %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+/** <module> Reflective Pushdown Automaton for RMB Strategy
+ *
+ * This module provides a detailed, low-level simulation of the 'Rearranging
+ * to Make Bases' (RMB) addition strategy, implemented as a Pushdown
+ * Automaton (PDA).
+ *
+ * **Note:** This appears to be an older or more experimental implementation
+ * compared to `sar_add_rmb.pl`. It includes a unique "reflective" state
+ * (`q6`) that demonstrates emergent behavior under specific conditions, which
+ * is not present in the simplified `sar` models.
+ *
+ * The automaton processes an input string like `[4, '+', 8]` and uses a
+ * stack to manipulate the numbers. The core logic involves deciding whether
+ * a standard RMB rearrangement is possible or if a special reflective loop
+ * should be entered.
+ *
+ * The main entry point is `run/4`.
+ *
+ * @author Theodore M. Savich (Concept), Revised Implementation (AI Assist)
+ * @license Unknown
+ */
 :- module(refrmb_corrected, [run/4]).
 :- use_module(library(lists)).
 
 % --- Dynamic Predicates for State ---
-:- dynamic stored_A/1.          % Stores decoded value of A
-:- dynamic stored_B/1.          % Stores decoded value of B
-:- dynamic transition/5.        % Stores transitions: transition(From, Sym, To, Action, IsReflective)
-:- dynamic stack_item/1.        % Represents the current stack contents (list managed externally)
-:- dynamic reflection_enabled/1.% Flag: y/n
-:- dynamic decision_made/1.     % Tracks if decision phase at q3 has occurred for the current run
+:- dynamic stored_A/1.
+:- dynamic stored_B/1.
+:- dynamic transition/5.
+:- dynamic stack_item/1.
+:- dynamic reflection_enabled/1.
+:- dynamic decision_made/1.
 
 % --- Configuration ---
-base(10). % Base for arithmetic
+base(10).
 
 % --- Define valid digits ---
 digit(D) :- member(D, [0,1,2,3,4,5,6,7,8,9]).
@@ -33,46 +40,67 @@ digit(D) :- member(D, [0,1,2,3,4,5,6,7,8,9]).
 %           Main Entry Point           %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+%!      run(+Start:integer, +Input:list, -Result:atom, +ReflectFlag:atom) is det.
+%
+%       Runs the Reflective Pushdown Automaton simulation.
+%
+%       This is the main entry point for the module. It initializes the
+%       automaton's state by clearing any dynamic facts from previous runs,
+%       setting up the initial stack, and defining the static transitions.
+%       It then starts the simulation process by calling `step/4`.
+%
+%       @param Start The initial state of the automaton (e.g., `1`).
+%       @param Input The input string to be processed, as a list of atoms
+%       and numbers (e.g., `[4, '+', 8]`).
+%       @param Result The final result of the run, either `accept` or `error`.
+%       @param ReflectFlag A flag (`y` or `n`) to enable or disable the
+%       special reflective behavior of the automaton.
 run(Start, Input, Result, ReflectFlag) :-
     % --- Cleanup from any previous run ---
     retractall(stored_A(_)),
     retractall(stored_B(_)),
     retractall(reflection_enabled(_)),
     retractall(stack_item(_)),
-    retractall(transition(_,_,_,_,_)), % Clear ALL dynamic transitions
+    retractall(transition(_,_,_,_,_)),
     retractall(decision_made(_)),
 
     % --- Setup for new run ---
     assertz(reflection_enabled(ReflectFlag)),
-    set_global_stack([]),        % Initialize empty stack
-    setup_base_transitions,      % Setup only static, non-conditional transitions
+    set_global_stack([]),
+    setup_base_transitions,
     write('Starting run with reflection='), write(ReflectFlag), nl, nl,
 
     % --- Start processing ---
-    step(Start, Input, [], Result). % Initial call to step predicate
+    step(Start, Input, [], Result).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %        Main Processing Step          %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% step(+State, +Input, +Stack, -Result)
+%
+% The main recursive predicate that drives the PDA. In each step, it
+% determines the next action based on the current state, input, and stack,
+% then calls itself with the updated parameters. It handles terminal states,
+% special decision points, and the reflective loop.
 step(State, Input, Stack, Result) :-
-    print_config(State, Input, Stack), % Display current stack state (uses passed Stack)
+    print_config(State, Input, Stack),
 
     % --- Handle Terminal States ---
-    ( State == 4 -> % Accept state
+    ( State == 4 ->
         Result = accept,
         write('*** ACCEPT reached. ***'), nl
-    ; State == 5 -> % Error state
+    ; State == 5 ->
         Result = error,
         write('*** ERROR reached. ***'), nl
 
     % --- Handle State 3: Decision Phase ---
-    ; State == 3, \+ decision_made(_) -> % Check if decision needed and not yet made
-        !, % Prevent backtracking once decision logic starts
+    ; State == 3, \+ decision_made(_) ->
+        !,
         make_decision_at_q3(Stack, Decision),
-        assertz(decision_made(Decision)), % Mark decision as made for this run
-        setup_q3_transition(Decision), % Assert the chosen transition FROM q3
-        step(State, Input, Stack, Result) % Re-call step to take the newly added transition
+        assertz(decision_made(Decision)),
+        setup_q3_transition(Decision),
+        step(State, Input, Stack, Result)
 
     % --- Handle State 6: Reflection Loop ---
     ; State == 6 ->
@@ -80,8 +108,7 @@ step(State, Input, Stack, Result) :-
 
     % --- Default Transition Handling ---
     ; select_transition(State, Input, Stack, NextState, NextInput, NextStack, Action) ->
-        % Note: select_transition now handles applying the action and updating stack
-        print_transition(State, Input, Action, NextState), % Print applied transition
+        print_transition(State, Input, Action, NextState),
         step(NextState, NextInput, NextStack, Result)
 
     % --- No Transition Found ---
@@ -95,54 +122,65 @@ step(State, Input, Stack, Result) :-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % --- State 3: Decision Making & Transition Setup ---
+% make_decision_at_q3(+Stack, -Decision)
+%
+% Determines the next step from state q3. It decodes the numbers A and B
+% from the stack, calculates the required transfer amount K, and then decides
+% whether to (1) rearrange, (2) enter the reflective state, or (3) error out.
 make_decision_at_q3(Stack, Decision) :-
-    decode_stack_final(Stack, A, B, K, Possible), % Decode A, B, calculate K
+    decode_stack_final(Stack, A, B, K, Possible),
     ( Possible == error ->
         write('Decision@q3: Stack format error.'), nl,
         Decision = error
-    ; reflection_enabled(RF), RF == y, base(Base), A =:= (Base - 6), B >= 6 -> % Generalized reflection trigger (k=6)
+    ; reflection_enabled(RF), RF == y, base(Base), A =:= (Base - 6), B >= 6 ->
         write('Decision@q3: Conditions met for Reflection (k=6).'), nl,
         Decision = reflect
-    ; B >= K -> % Standard rearrangement condition
+    ; B >= K ->
         write('Decision@q3: Conditions met for Rearrangement (Accept).'), nl,
         Decision = accept
-    ; % B < K and not reflection case
+    ;
         write('Decision@q3: B < K, cannot rearrange standardly. Error.'), nl,
         Decision = error
     ).
 
-% Assert the single transition leading OUT of q3 based on the decision
+% setup_q3_transition(+Decision)
+%
+% Dynamically asserts the transition rule leading out of state q3 based on
+% the decision made by make_decision_at_q3/2.
 setup_q3_transition(accept) :-
-    assertz(transition(3, epsilon, 7, rearrange_action, no)), % Go to q7 (rearrange)
+    assertz(transition(3, epsilon, 7, rearrange_action, no)),
     print_dynamic_transition(3, epsilon, 7, rearrange_action).
 setup_q3_transition(error) :-
-    assertz(transition(3, epsilon, 5, noop, no)), % Go to q5 (error)
+    assertz(transition(3, epsilon, 5, noop, no)),
     print_dynamic_transition(3, epsilon, 5, noop).
 setup_q3_transition(reflect) :-
-    assertz(transition(3, epsilon, 6, setup_reflect_stack, no)), % Go to q6 (reflect)
+    assertz(transition(3, epsilon, 6, setup_reflect_stack, no)),
     print_dynamic_transition(3, epsilon, 6, setup_reflect_stack).
 
 % --- State 6: Reflection Loop Handling ---
+% handle_reflection_state(+State, +Input, +Stack, -Result)
+%
+% Manages the logic for the special reflective state q6. It checks the top of
+% the stack. If it's 0, the loop halts and transitions to the accept state.
+% Otherwise, it applies a "reflect_add_6_step" action to the stack and loops
+% back to q6.
 handle_reflection_state(State, Input, Stack, Result) :-
-    Stack = [CurrentBmodBase | _RestStack], % Peek at stack top (must be B mod Base)
+    Stack = [CurrentBmodBase | _RestStack],
     ( CurrentBmodBase == 0 ->
-        % HALT CONDITION MET: B mod Base is 0
         write('State q6: Halt condition met (Stack top == 0). Transitioning to Accept (q4).'), nl,
         NextState = 4,
-        NextInput = Input, % Input unchanged (epsilon transition conceptually)
-        NextStack = Stack, % Stack unchanged for this pseudo-transition
-        print_pseudo_transition(State, 'halt_check', NextState), % Log the decision
-        % Proceed directly to the accept state by calling step/4
+        NextInput = Input,
+        NextStack = Stack,
+        print_pseudo_transition(State, 'halt_check', NextState),
         step(NextState, NextInput, NextStack, Result)
     ;
-        % HALT CONDITION NOT MET: Continue looping
         write('State q6: Continuing reflection loop...'), nl,
         Action = reflect_add_6_step,
-        apply_action(Action, Stack, NextStack), % Apply the +6 mod 10 update (this now updates global stack too)
-        NextState = 6, % Loop back to self
-        NextInput = Input, % Input unchanged (epsilon transition)
-        print_pseudo_transition(State, Action, NextState), % Log the loop step
-        step(NextState, NextInput, NextStack, Result) % Continue loop
+        apply_action(Action, Stack, NextStack),
+        NextState = 6,
+        NextInput = Input,
+        print_pseudo_transition(State, Action, NextState),
+        step(NextState, NextInput, NextStack, Result)
     ).
 
 
@@ -153,16 +191,16 @@ handle_reflection_state(State, Input, Stack, Result) :-
 % Select transition based on input symbol
 % Modified to apply action and return the resulting NextStack
 select_transition(State, [Sym|RestInput], Stack, NextState, RestInput, NextStack, Action) :-
-    transition(State, Sym, NextState, Action, _), % Match on Sym
-    !, % Commit to the first matching transition
-    apply_action(Action, Stack, NextStack). % Apply action, get new stack
+    transition(State, Sym, NextState, Action, _),
+    !,
+    apply_action(Action, Stack, NextStack).
 
 % Select epsilon transition if no symbol match
 % Modified to apply action and return the resulting NextStack
 select_transition(State, Input, Stack, NextState, Input, NextStack, Action) :-
-    transition(State, epsilon, NextState, Action, _), % Match on epsilon
-    !, % Commit to the first matching epsilon transition
-    apply_action(Action, Stack, NextStack). % Apply action, get new stack
+    transition(State, epsilon, NextState, Action, _),
+    !,
+    apply_action(Action, Stack, NextStack).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -171,47 +209,46 @@ select_transition(State, Input, Stack, NextState, Input, NextStack, Action) :-
 
 % Dispatcher for actions - Actions NOW update global stack if they modify it
 
-apply_action(noop, Stack, Stack). % No operation - doesn't change stack
+apply_action(noop, Stack, Stack).
 
-apply_action(push(X), Stack, NewStack) :- % Push symbol X onto stack
-    (digit(X) ; X == '#'), !, % Ensure valid symbol is pushed
+apply_action(push(X), Stack, NewStack) :-
+    (digit(X) ; X == '#'), !,
     NewStack = [X|Stack],
-    set_global_stack(NewStack). % Update global stack
+    set_global_stack(NewStack).
 
-apply_action(pop, [_|Stack], NewStack) :- !, % Pop from stack
+apply_action(pop, [_|Stack], NewStack) :- !,
     NewStack = Stack,
-    set_global_stack(NewStack). % Update global stack
-apply_action(pop, [], []) :- !, % Pop from empty stack is noop
+    set_global_stack(NewStack).
+apply_action(pop, [], []) :- !,
     write('Warning: Pop attempted on empty stack.'), nl.
-    % No need to set stack if it was already empty
 
 apply_action(rearrange_action, InitialStack, FinalStack) :-
     write('Action: Performing RMB rearrangement...'), nl,
-    rearrange_stack(InitialStack, FinalStack), % This predicate now updates global stack internally
-    !. % Commit to this action if rearrangement succeeds
+    rearrange_stack(InitialStack, FinalStack),
+    !.
 
 apply_action(setup_reflect_stack, Stack, NewStack) :-
     write('Action: Setting up stack for reflection state q6...'), nl,
-    split_at_hash(Stack, APart, BPart), % Original stack: [DigitsB | ['#' | DigitsA]]
+    split_at_hash(Stack, APart, BPart),
     digits_to_num(BPart, B),
     base(Base),
     BmodBase is B mod Base,
-    append(['#'], APart, RestOfStack), % Keep A part and separator
-    NewStack = [BmodBase | RestOfStack], % New stack: [BmodBase, '#', DigitsA...]
+    append(['#'], APart, RestOfStack),
+    NewStack = [BmodBase | RestOfStack],
     write(' -> New stack top for B (mod Base): '), write(BmodBase), nl,
-    set_global_stack(NewStack),!. % Update global stack state
+    set_global_stack(NewStack),!.
 
 apply_action(reflect_add_6_step, Stack, NewStack) :-
-    Stack = [CurrentB | Rest], !, % CurrentB is B mod Base from previous step
+    Stack = [CurrentB | Rest], !,
     base(Base),
-    K_reflect is 6, % The "self" value being added
+    K_reflect is 6,
     NewB is (CurrentB + K_reflect) mod Base,
     write('Action: Reflection step: '),
     write(CurrentB), write(' + '), write(K_reflect), write(' mod '), write(Base), write(' = '), write(NewB), nl,
-    NewStack = [NewB | Rest], % Push the new value back
-    set_global_stack(NewStack). % Update global stack state
+    NewStack = [NewB | Rest],
+    set_global_stack(NewStack).
 
-apply_action(Action, Stack, Stack) :- % Default: if action unknown, do nothing
+apply_action(Action, Stack, Stack) :-
     write('Warning: Unknown action encountered: '), write(Action), nl.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -220,10 +257,10 @@ apply_action(Action, Stack, Stack) :- % Default: if action unknown, do nothing
 
 % Modified to use InitialStack argument instead of current_stack
 rearrange_stack(InitialStack, FinalStack) :-
-    decode_stack_final(InitialStack, A, B, K, Possible), % Use argument stack for decoding
-    ( Possible == ok, B >= K -> % Ensure it's possible and B is large enough
+    decode_stack_final(InitialStack, A, B, K, Possible),
+    ( Possible == ok, B >= K ->
         base(Base),
-        Anew is A + K, % Should always equal Base
+        Anew is A + K,
         Bnew is B - K,
         write(' -> Rearranging: A='), write(A), write(', B='), write(B),
         write(', K='), write(K), nl,
@@ -233,13 +270,13 @@ rearrange_stack(InitialStack, FinalStack) :-
         num_to_digits(Bnew, BnewDigits),
         reverse(BnewDigits, RevB),
         reverse(AnewDigits, RevA),
-        append(RevB, ['#'|RevA], NewStackReversed), % Build new stack content
+        append(RevB, ['#'|RevA], NewStackReversed),
         reverse(NewStackReversed, FinalStack),
-        set_global_stack(FinalStack), % Update global stack - *THIS* is the action's effect
+        set_global_stack(FinalStack),
         write(' -> Rearrangement complete. New stack: '), write(FinalStack), nl
-    ; % Condition not met or error during decode
+    ;
       write('Error: Rearrange action called inappropriately or decode failed.'), nl,
-      FinalStack = InitialStack % Return original stack on failure
+      FinalStack = InitialStack
     ).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -251,26 +288,26 @@ rearrange_stack(InitialStack, FinalStack) :-
 decode_stack_final(Stack, A, B, K, Possible) :-
     ( member('#', Stack) ->
         split_at_hash(Stack, APart, BPart),
-        ( digits_to_num(APart, A), digits_to_num(BPart, B) -> % Ensure conversion works
-            retractall(stored_A(_)), retractall(stored_B(_)), % Clear old stored values
-            assertz(stored_A(A)), assertz(stored_B(B)), % Store for potential later use
+        ( digits_to_num(APart, A), digits_to_num(BPart, B) ->
+            retractall(stored_A(_)), retractall(stored_B(_)),
+            assertz(stored_A(A)), assertz(stored_B(B)),
             base(Base),
-            ( A =< Base -> K is Base - A, Possible = ok % Calculate K if A is valid
-            ; write('Error: Decoded A > Base.'), nl, Possible = error % A is already >= Base? Error case.
+            ( A =< Base -> K is Base - A, Possible = ok
+            ; write('Error: Decoded A > Base.'), nl, Possible = error
             )
         ; write('Error: Failed to convert digits to numbers.'), nl, Possible = error, A = -1, B = -1, K = -1
         )
-    ; % Stack doesn't contain '#', invalid format
+    ;
         write('Error: Stack missing "#" separator.'), nl,
-        Possible = error, A = -1, B = -1, K = -1 % Assign dummy values
+        Possible = error, A = -1, B = -1, K = -1
     ).
 
 % Split stack list at '#' marker
 split_at_hash(Stack, APart, BPart) :-
-    reverse(Stack, RevStack), % Example: [5, '#', 8] -> [8, '#', 5] (A=8, B=5)
-    append(RevA, ['#'|RevB], RevStack), !, % RevA=[8], RevB=[5] ; Use cut as only one solution expected
-    reverse(RevA, APart), % APart=[8]
-    reverse(RevB, BPart). % BPart=[5]
+    reverse(Stack, RevStack),
+    append(RevA, ['#'|RevB], RevStack), !,
+    reverse(RevA, APart),
+    reverse(RevB, BPart).
 
 % Convert list of digits to number
 digits_to_num(Digs, N) :-
@@ -280,7 +317,7 @@ add_digit(D, Acc, Val) :- Val is Acc*10 + D.
 % Convert number to list of digits
 num_to_digits(0, [0]) :- !.
 num_to_digits(N, Digs) :- N > 0, num_to_digits_acc(N, [], Digs).
-num_to_digits_acc(0, Acc, Acc) :- !. % Cut for termination
+num_to_digits_acc(0, Acc, Acc) :- !.
 num_to_digits_acc(N, Acc, Digs) :-
     N > 0,
     D is N mod 10,
@@ -300,7 +337,7 @@ set_global_stack(NewStack) :-
 % Note: Main logic should rely on stack passed through step/4 arguments.
 current_stack_global(Stack) :-
     findall(X, stack_item(X), S),
-    reverse(S, Stack). % Stack items are asserted head first, so reverse to get logical order
+    reverse(S, Stack).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %     Static Transition Setup          %
@@ -309,13 +346,12 @@ current_stack_global(Stack) :-
 setup_base_transitions :-
     % q1: reading A until '+'
     forall(digit(D), assertz(transition(1, D, 1, push(D), no))),
-    assertz(transition(1, '+', 2, push('#'), no)), % Push separator on '+'
+    assertz(transition(1, '+', 2, push('#'), no)),
     % q2: reading B digits until end of input
     forall(digit(D), assertz(transition(2, D, 2, push(D), no))),
-    assertz(transition(2, epsilon, 3, noop, no)), % End of input -> goto decision q3
+    assertz(transition(2, epsilon, 3, noop, no)),
     % q7: after successful rearranging, go to q4 (accept)
     assertz(transition(7, epsilon, 4, noop, no)).
-    % Transitions FROM q3 and the loop/halt FROM q6 are handled dynamically.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %       Printing & Debug Helpers       %
@@ -326,7 +362,7 @@ print_config(State, Input, Stack) :-
     write('--------------------------------------'), nl,
     write('State: '), print_state(State),
     write(' | Input: '), write(Input),
-    write(' | Stack: '), write(Stack), nl. % USE THE ARGUMENT Stack
+    write(' | Stack: '), write(Stack), nl.
 
 print_state(S) :- write('q'), write(S).
 

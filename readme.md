@@ -1,139 +1,129 @@
 # A Synthesis of Incompatibility Semantics, CGI, and Piagetian Constructivism
 
-## Introduction
+## 1. Introduction
 
-This project presents a novel synthesis of three influential frameworks in philosophy, cognitive science, and education:
+This project presents a novel synthesis of three influential frameworks in philosophy, cognitive science, and education, implemented as a computational model in SWI-Prolog.
 
 *   **Robert Brandom's Incompatibility Semantics:** A theory asserting that the meaning of a concept is defined by what it is incompatible with. We understand what something *is* by understanding what it rules out.
 *   **Cognitively Guided Instruction (CGI):** An educational approach focused on understanding and building upon students' intuitive problem-solving strategies.
 *   **Piagetian Constructivism:** A theory of cognitive development emphasizing the learner's active construction of knowledge through assimilation and accommodation, driven by the resolution of cognitive conflict (disequilibrium).
 
-This synthesis aims to provide a formal, computational model (implemented in Prolog) for understanding conceptual development and designing instruction that respects the learner's constructive processes.
+This synthesis aims to provide a formal, computational model for understanding conceptual development and designing instruction that respects the learner's constructive processes.
 
-## Theoretical Background
+## 2. Core Concepts
 
 The core idea of this synthesis is that learning (Constructivism) occurs when a learner recognizes an incompatibility (Brandom) between their existing cognitive structures and new information or experiences. Instruction (CGI) facilitates this process by analyzing the learner's current strategies and introducing experiences that highlight relevant incompatibilities, prompting the necessary cognitive shifts (accommodation).
 
-## Features
+This is modeled in the repository through several key components:
+- **Incompatibility Semantics**: The core logic for determining entailment and contradiction is implemented in `incompatibility_semantics.pl`.
+- **Student Strategy Models**: The CGI aspect is modeled through a library of student problem-solving strategies (`sar_*.pl` for addition/subtraction and `smr_*.pl` for multiplication/division), which simulate how students with different conceptual understandings might approach a problem.
+- **Learning Cycle**: The Piagetian process of learning through disequilibrium is modeled by the **Observe-Reorganize-Reflect (ORR)** cycle, which can detect failures in its own knowledge and attempt to repair itself.
 
-*   **Concept Explorer (Brandom):** A tool to define and explore the semantic relationships between concepts based on what they entail and what they exclude.
-*   **Strategy Analyzer (CGI/Piaget):** An interface to input observed student strategies and receive an analysis of the underlying conceptual structures, the likely developmental stage, and pedagogical recommendations.
-*   **Prolog Backend:** A robust logical engine that manages the knowledge base and performs inferences.
+## 3. System Architecture
 
-## How to Use (Web-Based GUI)
+The system is composed of several distinct parts that work together.
 
-To make this framework accessible, we provide a web-based Graphical User Interface (GUI). This interface allows interaction with the underlying logic without requiring knowledge of Prolog.
+### 3.1. The ORR Cycle (Cognitive Core)
+This is the heart of the system's learning capability, inspired by Piagetian mechanisms.
+- **`execution_handler.pl`**: The main driver that orchestrates the ORR cycle.
+- **`meta_interpreter.pl`**: The **Observe** phase. It runs a given goal while producing a detailed execution trace, making the system's reasoning process observable to itself.
+- **`reflective_monitor.pl`**: The **Reflect** phase. It analyzes the trace from the meta-interpreter to detect signs of "disequilibrium" (e.g., goal failures, contradictions).
+- **`reorganization_engine.pl`**: The **Reorganize** phase. Triggered by disequilibrium, it attempts to modify the system's own knowledge base to resolve the conflict.
 
-### Running Locally with VS Code
+### 3.2. Knowledge Base
+- **`object_level.pl`**: Contains the system's foundational, and potentially flawed, knowledge (e.g., an inefficient rule for addition). This is the knowledge that the ORR cycle operates on and modifies.
+- **`incompatibility_semantics.pl`**: Defines the core logical and mathematical rules of the "world," including what concepts are incompatible with each other.
+- **`learned_knowledge.pl`**: An auto-generated file where new, more efficient strategies discovered by the `more_machine_learner.pl` module are stored.
 
-#### Prerequisites
-- SWI-Prolog installed on your system
-- Python 3 (for serving HTML files)
-- VS Code (optional, but recommended for development)
+### 3.3. API Servers
+There are multiple servers for different purposes:
+- **`working_server.pl`**: A robust, simplified server for powering the web-based GUI. It contains hard-coded analysis logic for stability.
+- **`api_server.pl`**: The full-featured development server that exposes the entire ORR cycle and the dynamic knowledge base.
+- **`simple_api_server.pl`** and **`test_server.pl`**: Lightweight servers for testing and demonstration.
 
-#### Quick Start (Recommended)
+## 4. Getting Started
 
-Open a terminal in VS Code and run:
+### 4.1. Prerequisites
+- **SWI-Prolog**: Ensure it is installed and accessible in your system's PATH.
+- **Python 3**: Required for the simple web server that serves the frontend files.
 
+### 4.2. Running the Web-Based GUI (Recommended)
+This is the easiest way to interact with the semantic and strategy analysis features. This mode uses the stable `working_server.pl`.
+
+In a terminal, run the provided shell script:
 ```bash
-cd /Users/tio/Documents/GitHub/Prolog
 ./start_system.sh
 ```
+This script starts both the Prolog API server (on port 8083) and the Python frontend server (on port 3000).
 
-This single script will:
-- Start the Prolog API server on port 8083
-- Start the frontend HTTP server on port 3000  
-- Display status messages and instructions
-- Handle cleanup when you press Ctrl+C
+Once the servers are running, open your web browser to: **http://localhost:3000**
 
-Then open your browser to: **http://localhost:3000**
-
-#### Manual Start (Alternative)
-
-If you prefer to start the servers manually:
+### 4.3. Running the Full ORR System (For Developers)
+To experiment with the system's learning capabilities, you need to run the full `api_server.pl`.
 
 **Step 1: Start the Prolog API Server**
 ```bash
-cd /Users/tio/Documents/GitHub/Prolog
-swipl -g "main" working_server.pl
+swipl api_server.pl
 ```
+This will start the server on port 8000 (by default).
 
-**Step 2: Start the Frontend Server** (in a new terminal)
+**Step 2: Interact via API Client**
+You can now send POST requests to the endpoints, for example, to trigger the ORR cycle:
 ```bash
-cd /Users/tio/Documents/GitHub/Prolog
-python3 serve_local.py
+# This will trigger the ORR cycle for the goal 5 + 5 = X
+curl -X POST -H "Content-Type: application/json" \
+     -d '{"goal": "add(s(s(s(s(s(0))))), s(s(s(s(s(0))))), X)"}' \
+     http://localhost:8000/solve
 ```
 
-**Step 3: Access the Interface**
-Open your web browser and navigate to: **http://localhost:3000**
+## 5. File Structure Guide
 
-### Using the Interface
+- **`index.html`, `script.js`, `style.css`**: Frontend files for the web GUI.
+- **`serve_local.py`**: A simple Python HTTP server for the frontend.
+- **`start_system.sh`**: The main startup script for the web GUI.
 
-The GUI is divided into two main tabs:
+- **API Servers**:
+  - `working_server.pl`: Powers the web GUI with stable, hard-coded logic.
+  - `api_server.pl`: Full-featured server with access to the ORR learning cycle.
+  - `simple_api_server.pl`, `test_server.pl`: Minimal servers for testing.
 
-1.  **Concept Explorer:**
-    *   Enter a statement or concept (e.g., "The shape is a square").
-    *   Click "Analyze" to see what the system infers about this statement, including its entailments and its incompatibilities.
-2.  **Strategy Analyzer:**
-    *   Select a problem context (e.g., "Early Mathematics - Addition").
-    *   Describe the student's observed strategy (e.g., "The student counted out both sets separately and then counted all the items starting from one").
-    *   Click "Analyze Strategy" to see the CGI classification, the conceptual implications, and recommendations for inducing productive disequilibrium.
+- **Cognitive Core (ORR Cycle)**:
+  - `execution_handler.pl`: Orchestrates the ORR cycle.
+  - `meta_interpreter.pl`: The "Observe" phase; runs goals and produces traces.
+  - `reflective_monitor.pl`: The "Reflect" phase; analyzes traces for disequilibrium.
+  - `reorganization_engine.pl`: The "Reorganize" phase; modifies the knowledge base.
+  - `reorganization_log.pl`: Logs the events of the ORR cycle.
 
-### Troubleshooting
+- **Knowledge & Learning**:
+  - `object_level.pl`: The initial, dynamic knowledge base of the system.
+  - `incompatibility_semantics.pl`: The core rules of logic and mathematics.
+  - `more_machine_learner.pl`: The module that implements the "protein folding" learning analogy.
+  - `learned_knowledge.pl`: **Auto-generated file** for storing learned strategies. Do not edit manually.
 
-- **Connection Error**: Ensure both servers are running. The Prolog server should be on port 8083 and the HTTP server on port 3000.
-- **CORS Issues**: Use the provided `serve_local.py` script rather than opening `index.html` directly in your browser.
-- **Port Conflicts**: If port 8083 or 3000 are in use, you can modify the ports in `working_server.pl` and `script.js` respectively.
-- **Server Won't Start**: Try using the `start_system.sh` script which handles process management automatically.
-- **Prolog Errors**: The `working_server.pl` is a simplified version that avoids complex module dependencies.
+- **Student Strategy Models**:
+  - `sar_*.pl`: Models for Student Addition and Subtraction Reasoning.
+  - `smr_*.pl`: Models for Student Multiplication and Division Reasoning.
+  - `hermeneutic_calculator.pl`: A dispatcher to run specific student strategies.
 
-## For Developers
+- **Command-Line Interfaces & Tests**:
+  - `main.pl`: A simple entry point to run a test query through the ORR cycle.
+  - `interactive_ui.pl`: A text-based menu for interacting with the learning system.
+  - `test_synthesis.pl`: `plunit` tests for the `incompatibility_semantics` module.
 
-The system consists of:
-- **Prolog Backend** (`working_server.pl`): Simplified server that handles semantic analysis and CGI strategy classification
-- **Web Frontend** (`index.html`, `script.js`, `style.css`): User interface that makes API calls to the Prolog server
-- **Local Server** (`serve_local.py`): Simple Python HTTP server for local development
-- **Startup Script** (`start_system.sh`): Automated script to start both servers
-- **Original Server** (`api_server.pl`): More complex server with full ORR system integration (may require additional setup)
+## 6. For Developers
 
-### API Endpoints
+### 6.1. Running Tests
+The repository uses `plunit` for testing. The main test file is `test_synthesis.pl`. To run the tests, start SWI-Prolog and run:
+```prolog
+?- [test_synthesis].
+?- run_tests.
+```
 
-The Prolog server (running on port 8083) provides the following REST endpoints:
+### 6.2. Code Documentation
+The Prolog source code is documented using **PlDoc**. This format allows for generating HTML documentation directly from the source comments.
 
-- `POST /analyze_semantics`: Analyzes statements using incompatibility semantics
-- `POST /analyze_strategy`: Analyzes student strategies using CGI frameworks  
-- `GET /test`: Simple health check endpoint
+## 7. Contributing
+We welcome contributions to the theoretical development, the Prolog implementation, and the frontend interface. Please open an issue to discuss potential changes.
 
-**Additional endpoints in the full system** (`api_server.pl`):
-- `POST /solve`: Runs the ORR cycle for problem solving
-- `GET /log`: Returns reorganization logs
-- `GET /knowledge`: Returns current knowledge base
-
-### Development Workflow
-
-1. Make changes to Prolog files (mainly `working_server.pl`)
-2. Stop the system with Ctrl+C and restart with `./start_system.sh`
-3. Refresh the browser to see changes in the frontend
-4. For frontend changes (`script.js`, `style.css`, `index.html`), just refresh the browser
-
-### File Structure
-
-**Core Files:**
-- `working_server.pl` - Main Prolog API server (simplified, working version)
-- `script.js` - Frontend JavaScript with API calls
-- `index.html` - Web interface
-- `start_system.sh` - Automated startup script
-- `serve_local.py` - Local HTTP server for frontend
-
-**Additional Files:**
-- `api_server.pl` - Full-featured server (may need additional setup)
-- `incompatibility_semantics.pl` - Core semantic analysis logic
-- Various strategy modules (`sar_*.pl`, `smr_*.pl`) - Mathematical strategy implementations
-
-## Contributing
-
-We welcome contributions to the theoretical development, the Prolog implementation, and the frontend interface.
-
-## License
-
-[**Note:** *Specify your license here.*]
+## 8. License
+[Note: Specify your license here.]
