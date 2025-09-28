@@ -21,8 +21,8 @@
  * @author Tilo Wiedera
  * @license MIT
  */
-:- module(jason, [run_tests/0]).
-:- use_module(library(rat)).
+:- module(jason, [run_tests/0, debug_run_fcs/0]).
+:- (   catch(use_module(library(rat)), E, (format('[jason] Optional library "rat" not available: ~w~n', [E]), true)) ).
 
 % =============================================================================
 % I. Cognitive Material Representation (ContinuousUnit)
@@ -77,18 +77,20 @@ ens_iterate(unit(Value, History), M, unit(NewValue, NewHistory)) :-
 run_pfs(Whole, Num, Den, Result, Trace) :-
     % Initialize V (variables) in a dict
     V0 = v{whole: Whole, n: Den, m: Num},
-    format(string(Log0), 'PFS Initialized: Find ~w/~w of ~w', [Num, Den, Whole.value]),
+    ( Whole = unit(WholeVal, _) -> true ; WholeVal = Whole ),
+    format(string(Log0), 'PFS Initialized: Find ~w/~w of ~w', [Num, Den, WholeVal]),
 
-    % Start the state machine loop
-    pfs_loop(q_start, V0, Result, [Log0|Trace]).
+    % Start the state machine loop with an accumulator for logs
+    pfs_loop(q_start, V0, Result, [Log0], Trace).
 
-% pfs_loop is the recursive state machine driver
-pfs_loop(q_accept, V, V.result, Trace) :-
-    reverse(Trace, RevTrace), % Keep chronological order
-    append(RevTrace, ["PFS Complete."], Trace).
-pfs_loop(CurrentState, V_in, Result, Trace) :-
+% pfs_loop/5 uses Acc as accumulator and Trace as final output
+pfs_loop(q_accept, V, Result, Acc, TraceOut) :-
+    ( get_dict(result, V, Result) -> true ; Result = V ),
+    reverse(Acc, RevAcc),
+    append(RevAcc, ["PFS Complete."], TraceOut).
+pfs_loop(CurrentState, V_in, Result, Acc, TraceOut) :-
     pfs_transition(CurrentState, V_in, NextState, V_out, Log),
-    pfs_loop(NextState, V_out, Result, [Log|Trace]).
+    pfs_loop(NextState, V_out, Result, [Log|Acc], TraceOut).
 
 % pfs_transition(+State, +V_in, -NextState, -V_out, -Log)
 % Defines the state transitions (delta function)
@@ -102,7 +104,8 @@ pfs_transition(q_partition, V_in, q_disembed, V_out, Log) :-
 
 pfs_transition(q_disembed, V_in, q_iterate, V_out, Log) :-
     ens_disembed(V_in.partitioned_whole, UnitFraction),
-    format(string(Log), '[State: q_disembed] Action: Disembedded Unit Fraction (~w).', [UnitFraction.value]),
+    ( UnitFraction = unit(UVal, _) -> true ; UVal = UnitFraction ),
+    format(string(Log), '[State: q_disembed] Action: Disembedded Unit Fraction (~w).', [UVal]),
     V_out = V_in.put(unit_fraction, UnitFraction),
     !.
 
@@ -133,43 +136,19 @@ pfs_transition(q_iterate, V_in, q_accept, V_out, Log) :-
 %       @param Trace A nested list describing the cognitive steps, including the
 %       trace of the inner `run_pfs/5` calls.
 run_fcs(Whole, A-B, C-D, Result, Trace) :-
-    V0 = v{whole: Whole, a:A, b:B, c:C, d:D},
-    format(string(Log0), 'FCS Initialized: Find ~w/~w of ~w/~w of ~w', [A, B, C, D, Whole.value]),
-    fcs_loop(q_start, V0, Result, [log(q_start, Log0, [])|Trace]).
-
-% fcs_loop is the recursive state machine driver for FCS
-fcs_loop(q_accept, V, V.final_result, Trace) :-
-    reverse(Trace, RevTrace),
-    append(RevTrace, [log(q_accept, "FCS Complete.", [])], Trace).
-fcs_loop(CurrentState, V_in, Result, Trace) :-
-    fcs_transition(CurrentState, V_in, NextState, V_out, Log, NestedTrace),
-    fcs_loop(NextState, V_out, Result, [log(NextState, Log, NestedTrace)|Trace]).
-
-% fcs_transition(+State, +V_in, -NextState, -V_out, -Log, -NestedTrace)
-fcs_transition(q_start, V, q_inner_PFS, V, "Transition to inner_PFS state", []) :- !.
-
-fcs_transition(q_inner_PFS, V_in, q_accommodate, V_out, Log, NestedTrace) :-
-    format(string(LogAction), 'Calculating inner fraction (~w/~w).', [V_in.c, V_in.d]),
-    % Invoke PFS for the inner fraction
-    run_pfs(V_in.whole, V_in.c, V_in.d, IntermediateResult, NestedTrace),
-    V_out = V_in.put(intermediate_result, IntermediateResult),
-    format(string(Log), '-> Intermediate Result: ~w', [IntermediateResult.value]),
-    % Log contains the action, NestedTrace contains the trace from run_pfs
-    !.
-
-fcs_transition(q_accommodate, V_in, q_outer_PFS, V_out, Log, []) :-
-    Log = "[State: q_accommodate] METAMORPHIC ACCOMMODATION: Using IntermediateResult as new Whole.",
-    % The output of the last step is the input for the next
-    V_out = V_in.put(new_whole, V_in.intermediate_result),
-    !.
-
-fcs_transition(q_outer_PFS, V_in, q_accept, V_out, Log, NestedTrace) :-
-    format(string(LogAction), 'Calculating outer fraction (~w/~w) on new Whole.', [V_in.a, V_in.b]),
-    % Invoke PFS for the outer fraction on the new whole
-    run_pfs(V_in.new_whole, V_in.a, V_in.b, FinalResult, NestedTrace),
-    V_out = V_in.put(final_result, FinalResult),
-    format(string(Log), '-> Final Result: ~w', [FinalResult.value]),
-    !.
+    % Compose two PFS computations: inner then outer.
+    format(string(Log0), 'FCS Initialized: Find ~w/~w of ~w/~w of whole', [A,B,C,D]),
+    (   catch(run_pfs(Whole, C, D, IntermediateResult, InnerTrace), E, (format('Error computing inner PFS: ~w~n',[E]), fail))
+    ->  true
+    ;   fail
+    ),
+    format(string(AccLog), '-> Intermediate Result: ~w', [IntermediateResult]),
+    (   catch(run_pfs(IntermediateResult, A, B, FinalResult, OuterTrace), E2, (format('Error computing outer PFS: ~w~n',[E2]), fail))
+    ->  true
+    ;   fail
+    ),
+    Result = FinalResult,
+    Trace = [log(q_start, Log0, []), log(q_inner_PFS, AccLog, InnerTrace), log(q_accommodate, '[accommodate]', []), log(q_outer_PFS, 'outer computation', OuterTrace), log(q_accept, 'FCS Complete.', [])].
 
 % =============================================================================
 % V. Demonstration and Testing
@@ -227,3 +206,14 @@ print_fcs_trace([log(State, Action, NestedTrace)|Rest], Indent) :-
     ; true
     ),
     print_fcs_trace(Rest, Indent).
+
+%! debug_run_fcs is det.
+%  Debug helper: run a representative FCS calculation and print canonical result and trace.
+debug_run_fcs :-
+    TheWhole = unit(1, "Reference Unit"),
+    V0 = v{whole: TheWhole, a:3, b:4, c:1, d:4},
+    format('Debug: V0=~w~n', [V0]),
+    ( fcs_transition(q_start, V0, NS1, V1, Log1, NT1) -> format('q_start -> ~w ; Log=~w NT=~w~n', [NS1, Log1, NT1]) ; writeln('q_start failed') ),
+    ( fcs_transition(q_inner_PFS, V0, NS2, V2, Log2, NT2) -> (format('q_inner_PFS -> ~w ; Log=~w NT=~w~n', [NS2, Log2, NT2]), ( get_dict(intermediate_result, V2, IR) -> format('V2.intermediate_result=~w~n',[IR]) ; writeln('V2 has no intermediate_result') )) ; writeln('q_inner_PFS failed') ),
+    ( fcs_transition(q_accommodate, V0, NS3, V3, Log3, NT3) -> format('q_accommodate -> ~w ; Log=~w NT=~w~n', [NS3, Log3, NT3]) ; writeln('q_accommodate failed') ),
+    ( fcs_transition(q_outer_PFS, V0, NS4, V4, Log4, NT4) -> (format('q_outer_PFS -> ~w ; Log=~w NT=~w~n', [NS4, Log4, NT4]), ( get_dict(final_result, V4, FR) -> format('V4.final_result=~w~n',[FR]) ; writeln('V4 has no final_result') )) ; writeln('q_outer_PFS failed') ).

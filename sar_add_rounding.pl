@@ -98,7 +98,7 @@ transition(state(q_loop_K, K, AR, TS, R, T, O, TB, BC, OC), _, state(q_init_Add,
     format(string(Interp), 'K needed is ~w. Target rounded to ~w.', [K, AR]).
 
 % Phase 2: Addition (using COBO sub-strategy)
-transition(state(q_init_Add, K, AR, TS, R, T, O, TB, BC, OC), Base, state(q_loop_AddBases, K, AR, AR, R, T, O, TB, OBC, OOC), Interp) :-
+transition(state(q_init_Add, K, AR, _TS, R, T, O, TB, _BC, _OC), Base, state(q_loop_AddBases, K, AR, AR, R, T, O, TB, OBC, OOC), Interp) :-
     OBC is O // Base, OOC is O mod Base,
     format(string(Interp), 'Initializing COBO: ~w + ~w. (Bases: ~w, Ones: ~w)', [AR, O, OBC, OOC]).
 

@@ -103,7 +103,7 @@ transition(state(q_loop_K, CV, D, K, TB, IT, M), _, state(q_add_chunk, CV, D, K,
     IT >= TB.
 
 % In q_add_chunk, add a strategic chunk or a large place-value chunk.
-transition(state(q_add_chunk, CV, D, K, TB, IT, M), Base, state(q_check_status, NewCV, NewD, 0, 0, 0, M), Interp) :-
+transition(state(q_add_chunk, CV, D, K, _TB, _IT, M), Base, state(q_check_status, NewCV, NewD, 0, 0, 0, M), Interp) :-
     Remaining is M - CV,
     (K > 0, K =< Remaining ->
         Chunk = K,

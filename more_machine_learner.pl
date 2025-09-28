@@ -64,8 +64,6 @@
 knowledge_file('learned_knowledge.pl').
 
 % Load persistent knowledge when this module is loaded.
-:- initialization(load_knowledge, now).
-
 load_knowledge :-
     knowledge_file(File),
     (   exists_file(File)
@@ -75,6 +73,9 @@ load_knowledge :-
         format('~N[Learner Init] Successfully loaded ~w learned strategies.~n', [Count])
     ;   format('~N[Learner Init] Knowledge file not found. Starting fresh.~n')
     ).
+
+% Ensure initialization runs after the predicate is defined
+:- initialization(load_knowledge, now).
 
 %!      save_knowledge is det.
 %

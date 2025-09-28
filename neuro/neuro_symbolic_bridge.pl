@@ -26,7 +26,7 @@
 % =================================================================
 
 knowledge_file('learned_knowledge_v2.pl').
-:- initialization(load_knowledge, now).
+%:- initialization(load_knowledge, now).
 
 load_knowledge :-
     knowledge_file(File),
@@ -35,6 +35,9 @@ load_knowledge :-
         format('~N[Bridge Init] Loaded persistent knowledge.~n')
     ;   format('~N[Bridge Init] Knowledge file not found. Starting fresh.~n')
     ).
+
+% Ensure initialization runs after the predicate is defined
+:- initialization(load_knowledge, now).
 
 save_knowledge :-
     knowledge_file(File),
@@ -101,7 +104,7 @@ solve_foundationally(A, B, Result, Trace) :-
 count_loop(CurrentA, 0, CurrentA, []) :- !.
 count_loop(CurrentA, CurrentB, Result, [step(CurrentA, NextA)|Steps]) :-
     CurrentB > 0, NextB is CurrentB - 1, successor(CurrentA, NextA),
-    count_loop(NextA, CurrentB, Result, Steps).
+    count_loop(NextA, NextB, Result, Steps).
 
 % (Trace Analysis Helpers)
 count_trace_steps(Trace, Count) :-

@@ -92,7 +92,7 @@ transition(state(q_calc_K, A, B, K, AT, BT, TB, B_init), _, state(q_calc_K, A, B
     NewK is K + 1,
     format(string(Interpretation), 'Count up: ~w. Distance (K): ~w.', [NewAT, NewK]).
 % Once K is found, transition to q_decompose_B to transfer K from B.
-transition(state(q_calc_K, A, B, K, AT, BT, TB, B_init), _, state(q_decompose_B, A, B, K, AT, B, TB, B_init), Interpretation) :-
+transition(state(q_calc_K, A, B, K, AT, _BT, TB, B_init), _, state(q_decompose_B, A, B, K, AT, B, TB, B_init), Interpretation) :-
     AT >= TB,
     format(string(Interpretation), 'K needed is ~w. Start counting down K from B.', [K]).
 

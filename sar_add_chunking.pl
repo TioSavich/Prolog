@@ -61,7 +61,7 @@ run_chunking(A, B, FinalSum, History) :-
     (last(History, step(_, FinalSum, _, _, _, _)) -> true ; FinalSum = A).
 
 % run/4 is the main loop of the state machine. It stops at the q_accept state.
-run(state(q_accept, Sum, BR, OR, K, IS, TB), _Base, Acc, FinalHistory) :-
+run(state(q_accept, Sum, BR, OR, K, _IS, _TB), _Base, Acc, FinalHistory) :-
     HistoryEntry = step(q_accept, Sum, BR, OR, K, 'Execution finished.'),
     FinalHistory = [HistoryEntry | Acc].
 
@@ -79,17 +79,17 @@ transition(state(q_init, Sum, BR, OR, K, IS, TB), _Base, state(q_add_base_chunk,
 
 % From q_add_base_chunk:
 % If there are bases remaining, add them all at once.
-transition(state(q_add_base_chunk, Sum, BR, OR, K, IS, TB), _Base, state(q_init_ones_chunk, NewSum, 0, OR, 0, 0, 0), Interpretation) :-
+transition(state(q_add_base_chunk, Sum, BR, OR, _K, _IS, _TB), _Base, state(q_init_ones_chunk, NewSum, 0, OR, 0, 0, 0), Interpretation) :-
     BR > 0,
     NewSum is Sum + BR,
     format(string(Interpretation), 'Add Base Chunk (+~w). Sum = ~w.', [BR, NewSum]).
 % If there are no bases, move on.
-transition(state(q_add_base_chunk, Sum, 0, OR, K, IS, TB), _Base, state(q_init_ones_chunk, Sum, 0, OR, 0, 0, 0),
+transition(state(q_add_base_chunk, Sum, 0, OR, _K, _IS, _TB), _Base, state(q_init_ones_chunk, Sum, 0, OR, 0, 0, 0),
            'No bases to add.').
 
 % From q_init_ones_chunk:
 % If there are ones to add, start the strategic chunking process.
-transition(state(q_init_ones_chunk, Sum, BR, OR, K, IS, TB), _Base, state(q_init_K, Sum, BR, OR, K, Sum, TargetBase), Interpretation) :-
+transition(state(q_init_ones_chunk, Sum, BR, OR, K, _IS, _TB), _Base, state(q_init_K, Sum, BR, OR, K, Sum, TargetBase), Interpretation) :-
     OR > 0,
     format(string(Interpretation), 'Begin strategic chunking of remaining ones (~w).', [OR]),
     (Sum > 0, Sum mod 10 =\= 0 -> TargetBase is ((Sum // 10) + 1) * 10 ; TargetBase is Sum).
@@ -114,13 +114,13 @@ transition(state(q_loop_K, Sum, BR, OR, K, IS, TB), _Base, state(q_add_ones_chun
 
 % From q_add_ones_chunk:
 % If we have enough ones remaining to add the strategic chunk K, do so.
-transition(state(q_add_ones_chunk, Sum, BR, OR, K, IS, TB), _Base, state(q_init_ones_chunk, NewSum, BR, NewOR, 0, 0, 0), Interpretation) :-
+transition(state(q_add_ones_chunk, Sum, BR, OR, K, _IS, _TB), _Base, state(q_init_ones_chunk, NewSum, BR, NewOR, 0, 0, 0), Interpretation) :-
     OR >= K, K > 0,
     NewSum is Sum + K,
     NewOR is OR - K,
     format(string(Interpretation), 'Add Strategic Chunk (+~w) to make base. Sum = ~w.', [K, NewSum]).
 % Otherwise, add all remaining ones. This happens if K is too large or 0.
-transition(state(q_add_ones_chunk, Sum, BR, OR, K, IS, TB), _Base, state(q_init_ones_chunk, NewSum, BR, 0, 0, 0, 0), Interpretation) :-
+transition(state(q_add_ones_chunk, Sum, BR, OR, K, _IS, _TB), _Base, state(q_init_ones_chunk, NewSum, BR, 0, 0, 0, 0), Interpretation) :-
     (OR < K ; K =< 0), OR > 0,
     NewSum is Sum + OR,
     format(string(Interpretation), 'Add Remaining Chunk (+~w). Sum = ~w.', [OR, NewSum]).

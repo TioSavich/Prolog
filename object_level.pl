@@ -30,7 +30,6 @@ enumerate(s(N)) :- enumerate(N).
 % recursive_add/3
 % This is the standard, efficient, recursive definition of addition for
 % Peano numbers. It serves as the "correct" implementation that the
-.
 % reorganization engine will synthesize and assert when the initial,
 % inefficient `add/3` rule is retracted.
 recursive_add(0, B, B).

@@ -16,14 +16,18 @@
 %
 %       The main predicate for command-line execution.
 %
-%       It runs a predefined query, `add(5, 5, X)`, using the `run_query/1`
+%       It runs a predefined query, `add(5, 5, X)`, using the `run_computation/2`
 %       predicate from the `execution_handler`. This triggers the full ORR
 %       cycle. After the cycle completes, it prints the final result for `X`
 %       and halts the Prolog system. The number 5 is represented using
 %       Peano arithmetic (`s(s(s(s(s(0)))))`).
 main :-
-    run_query(add(s(s(s(s(s(0))))), s(s(s(s(s(0))))), X)),
-    format('Final Result: ~w~n', [X]),
+    % Use a reasonable inference step limit so the ORR cycle can trigger
+    % reorganization if resource exhaustion occurs.
+    Limit = 30,
+    Goal = add(s(s(s(s(s(0))))), s(s(s(s(s(0))))), X),
+    execution_handler:run_computation(Goal, Limit),
+    format('Final Result (may be unbound if not solved): ~w~n', [X]),
     halt.
 
 % This directive makes it so that running the script from the command line

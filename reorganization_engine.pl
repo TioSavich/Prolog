@@ -26,7 +26,11 @@
 :- use_module(incompatibility_semantics).
 :- use_module(strategies). % Load all defined strategies
 
-:- reexport(learned_knowledge, [learned_rule/1]).
+% 'learned_knowledge.pl' is consulted into the learner's module at runtime
+% (see more_machine_learner:load_knowledge/0). It is not a separate module, so
+% attempting to reexport from it causes a domain error. Remove the faulty
+% reexport directive.
+% :- reexport(learned_knowledge, [learned_rule/1]).
 
 %!      reorganize_system(+Goal:term, +Trace:list) is semidet.
 %
