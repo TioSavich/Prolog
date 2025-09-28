@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cognitive Reorganization Visualization (Prolog/WASM/D3)</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swipl-wasm@3.3.1/dist/swipl-web.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; margin: 0; height: 100vh; }
+        #sidebar { width: 350px; padding: 20px; background-color: #f4f4f4; display: flex; flex-direction: column; }
+        #visualization { flex-grow: 1; }
+        
+        /* D3 Visualization Styles */
+        .link { stroke: #999; stroke-opacity: 0.6; }
+        
+        /* Node Styles: Differentiating concepts and entities */
+        .node-entity { fill: #2ca02c; } /* Green for entities */
+        .node-predicate { fill: #1f77b4; } /* Blue for predicates/facts */
+        
+        /* Visualizing Disequilibrium (Incompatibility Conflict) */
+        .inconsistent { 
+            stroke: #d62728; /* Red border */
+            stroke-width: 4px; 
+        }
+
+        /* Interface Styles */
+        #controls { margin-bottom: 20px; }
+        input[type="text"] { padding: 8px; width: 70%; font-size: 14px; }
+        button { padding: 8px 12px; margin-left: 5px; cursor: pointer; font-size: 14px; }
+        #output { flex-grow: 1; white-space: pre-wrap; background: #333; color: #f0f0f0; padding: 15px; overflow-y: auto; font-family: monospace; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+<div id="sidebar">
+    <h2>Cognitive Model Control</h2>
+    <p>Visualize the synthesis of Incompatibility Semantics and Piagetian Constructivism.</p>
+    
+    <div id="controls">
+        <label for="newFact">Introduce Information:</label><br>
+        <input type="text" id="newFact" placeholder="e.g., penguin(tweety)">
+        <button onclick="introduceInformation()">Learn</button>
+        <p><i>Try introducing conflicting information (e.g., <code>penguin(tweety)</code> or <code>mammal(willy)</code>) to observe accommodation.</i></p>
+    </div>
+
+    <h3>Engine Output (Equilibration Process)</h3>
+    <div id="output">Initializing Prolog WASM engine...</div>
+</div>
+
+<div id="visualization">
+    <svg width="100%" height="100%"></svg>
+</div>
+
+<script type="text/prolog" id="cognitionCode">
+% ----------------------------------------------------------------
+% Cognitive Model: Incompatibility, Constructivism, Embodiment
+% ----------------------------------------------------------------
+
+% Ensure facts can be dynamically added/removed during reorganization
+:- dynamic fact/1.
+
+% Initial knowledge base (Example)
+fact(flies(tweety)).
+fact(bird(tweety)).
+fact(swims(willy)).
+fact(fish(willy)).
+fact(breathes_air(willy)).
+
+% Incompatibility Semantics (Brandom)
+% Defining what cannot be materially true simultaneously.
+incompatible(flies(X), penguin(X)).
+incompatible(fish(X), mammal(X)).
+% Example incorporating embodiment: physical constraints
+incompatible(breathes_air(X), lives_underwater(X)). 
+
+% ----------------------------------------------------------------
+% Reasoning Mechanisms (Piaget)
+% ----------------------------------------------------------------
+
+% Check for inconsistencies (Cognitive Disequilibrium)
+find_inconsistency(Entity, Fact1, Fact2) :-
+    fact(Fact1),
+    fact(Fact2),
+    Fact1 \= Fact2,
+    % Check incompatibility in both directions
+    (incompatible(Fact1, Fact2); incompatible(Fact2, Fact1)),
+    % Ensure they apply to the same entity (simplified unification check)
+    Fact1 =.. [_, Entity],
+    Fact2 =.. [_, Entity].
+
+% Equilibration Process: Assimilation and Accommodation
+learn(NewFact) :-
+    % 1. Attempt Assimilation: Add the fact to the knowledge base
+    assertz(fact(NewFact)),
+    write('Assimilating: '), write(NewFact), nl,
+    
+    % 2. Check for Disequilibrium
+    findall((E, F1, F2), find_inconsistency(E, F1, F2), Inconsistencies),
+    
+    ( Inconsistencies \= [] ->
+        % Disequilibrium detected
+        write('Disequilibrium detected. Initiating accommodation...\n'),
+        % 3. Initiate Accommodation: Reorganize the structure
+        resolve_inconsistencies(Inconsistencies),
+        write('Accommodation complete: Structure reorganized.\n')
+    ;
+        % No conflict
+        write('Assimilation successful: Knowledge structure stable.\n')
+    ).
+
+% Accommodation Logic (Resolution Strategy)
+% This defines the prioritization of beliefs and how the system adapts.
+resolve_inconsistencies([]).
+
+% Specific resolution rule 1: If we learn X is a penguin, we prioritize this over the default belief that X flies.
+resolve_inconsistencies([(E, flies(E), penguin(E))|T]) :-
+    retract(fact(flies(E))),
+    format('  Resolved: Retracted flies(~w) due to new evidence penguin(~w).\n', [E, E]),
+    resolve_inconsistencies(T).
+resolve_inconsistencies([(E, penguin(E), flies(E))|T]) :-
+    retract(fact(flies(E))),
+    format('  Resolved: Retracted flies(~w) due to new evidence penguin(~w).\n', [E, E]),
+    resolve_inconsistencies(T).
+
+
+% Specific resolution rule 2: If we learn X is a mammal, we retract that X is a fish.
+resolve_inconsistencies([(E, fish(E), mammal(E))|T]) :-
+    retract(fact(fish(E))),
+    format('  Resolved: Retracted fish(~w) due to reclassification as mammal(~w).\n', [E, E]),
+    resolve_inconsistencies(T).
+resolve_inconsistencies([(E, mammal(E), fish(E))|T]) :-
+     retract(fact(fish(E))),
+    format('  Resolved: Retracted fish(~w) due to reclassification as mammal(~w).\n', [E, E]),
+    resolve_inconsistencies(T).
+
+
+% Fallback resolution
+resolve_inconsistencies([_|T]) :- 
+    resolve_inconsistencies(T).
+
+% ----------------------------------------------------------------
+% Visualization Extraction Utility
+% ----------------------------------------------------------------
+
+% Extract graph data (Nodes and Edges) for D3.js
+get_graph_data(Nodes, Edges) :-
+    % 1. Collect all current facts
+    findall(F, fact(F), Facts),
+    
+    % 2. Identify entities currently involved in inconsistencies (if any remain after accommodation)
+    findall(E, find_inconsistency(E, _, _), InconsistentEntitiesRaw),
+    sort(InconsistentEntitiesRaw, InconsistentEntities),
+    
+    % 3. Process facts into raw nodes and edges
+    process_facts(Facts, NodesList, EdgesList),
+    
+    % 4. Deduplicate nodes and mark those involved in conflicts
+    deduplicate_and_mark(NodesList, InconsistentEntities, Nodes),
+    Edges = EdgesList.
+
+% Convert Prolog facts into graph elements
+process_facts([], [], []).
+process_facts([Fact|T], [NodeE, NodeP|NodesT], [Edge|EdgesT]) :-
+    Fact =.. [Predicate, Entity],
+    format(atom(PName), '~w', [Predicate]),
+    format(atom(EName), '~w', [Entity]),
+    
+    % Define Nodes (Entity and Predicate)
+    NodeE = node{id: EName, type: entity},
+    NodeP = node{id: PName, type: predicate},
+    
+    % Define Edge (Connection between Entity and Predicate)
+    Edge = edge{source: EName, target: PName},
+    process_facts(T, NodesT, EdgesT).
+
+% Utility to ensure unique nodes and apply the 'inconsistent' flag
+deduplicate_and_mark(NodesList, InconsistentEntities, FinalNodes) :-
+    % Apply the inconsistency marking to the raw list
+    maplist(mark_node(InconsistentEntities), NodesList, MarkedNodes),
+    % Use sort/2 to remove duplicates (Prolog standard way)
+    sort(0, @<, MarkedNodes, FinalNodes).
+
+mark_node(InconsistentEntities, Node, MarkedNode) :-
+    % Check if the node's ID (the entity name) is in the list of conflicts
+    ( member(Node.id, InconsistentEntities) ->
+        MarkedNode = Node.put(inconsistent, true)
+    ;
+        MarkedNode = Node.put(inconsistent, false)
+    ).
+
+</script>
+
+<script>
+    let prolog;
+    const outputDiv = document.getElementById('output');
+
+    // Initialize SWIPL-WASM
+    (async function() {
+        prolog = await SWIPL({
+            arguments: ["-q"],
+            // Redirect Prolog output to the web console
+            print: (text) => {
+                outputDiv.innerHTML += text;
+                outputDiv.scrollTop = outputDiv.scrollHeight; // Auto-scroll
+            },
+            on_error: (text) => outputDiv.innerHTML += 'ERROR: ' + text + '\n',
+        });
+        
+        // Load the Prolog code into the WASM virtual filesystem
+        const code = document.getElementById('cognitionCode').textContent;
+        prolog.FS.writeFile('/home/web_user/model.pl', code);
+        prolog.call('consult(model).');
+        
+        outputDiv.innerHTML += 'Prolog engine ready. Visualization initialized.\n';
+        updateVisualization();
+    })();
+
+    // Function to handle user input
+    async function introduceInformation() {
+        const fact = document.getElementById('newFact').value.trim();
+        if (!fact) return;
+
+        outputDiv.innerHTML += `\n> User introducing: ${fact}\n`;
+        
+        // Call the 'learn' predicate which handles the equilibration process
+        const query = `learn(${fact}).`;
+        try {
+            prolog.call(query);
+            updateVisualization();
+        } catch (e) {
+            outputDiv.innerHTML += `Error executing query: ${e}\n`;
+        }
+        document.getElementById('newFact').value = ''; // Clear input
+    }
+
+    // Function to fetch the current cognitive structure from Prolog
+    async function updateVisualization() {
+        if (!prolog) return;
+
+        const query = "get_graph_data(Nodes, Edges).";
+        try {
+            // Query Prolog and process the results
+            const result = prolog.query(query).once();
+            
+            if (result) {
+                // Convert Prolog data structures (lists of dicts) to JavaScript arrays of objects
+                const nodes = Array.from(result.Nodes).map(n => Object.fromEntries(n));
+                const edges = Array.from(result.Edges).map(e => Object.fromEntries(e));
+                
+                drawGraph(nodes, edges);
+            }
+        } catch (e) {
+            console.error("Error querying graph data:", e);
+        }
+    }
+
+    // D3.js Force-Directed Graph Rendering Logic
+    function drawGraph(nodes, links) {
+        const svg = d3.select("#visualization svg");
+        svg.selectAll("*").remove(); // Clear previous graph
+
+        const width = svg.node().getBoundingClientRect().width;
+        const height = svg.node().getBoundingClientRect().height;
+
+        // Create the force simulation
+        const simulation = d3.forceSimulation(nodes)
+            .force("link", d3.forceLink(links).id(d => d.id).distance(120))
+            .force("charge", d3.forceManyBody().strength(-350))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("collision", d3.forceCollide().radius(30));
+
+        // Draw links (relationships)
+        const link = svg.append("g")
+            .selectAll("line")
+            .data(links)
+            .enter().append("line")
+            .attr("class", "link");
+
+        // Draw nodes (concepts/entities)
+        const node = svg.append("g")
+            .selectAll("circle")
+            .data(nodes)
+            .enter().append("circle")
+            .attr("r", 15)
+            // Apply CSS classes based on node type and inconsistency status
+            .attr("class", d => {
+                let classes = `node-${d.type}`;
+                // If the node is involved in a conflict, highlight it
+                if (d.inconsistent) {
+                    classes += " inconsistent";
+                }
+                return classes;
+            })
+            // Enable dragging functionality
+            .call(d3.drag()
+                .on("start", dragstarted)
+                .on("drag", dragged)
+                .on("end", dragended));
+
+        // Draw labels
+        const label = svg.append("g")
+            .selectAll("text")
+            .data(nodes)
+            .enter().append("text")
+            .attr("x", 20)
+            .attr("y", 5)
+            .text(d => d.id)
+            .style("font-size", "14px")
+            .style("pointer-events", "none");
+
+        // Update positions on simulation tick (animation loop)
+        simulation.on("tick", () => {
+            link
+                .attr("x1", d => d.source.x)
+                .attr("y1", d => d.source.y)
+                .attr("x2", d => d.target.x)
+                .attr("y2", d => d.target.y);
+
+            node
+                .attr("cx", d => d.x)
+                .attr("cy", d => d.y);
+            
+            label
+                .attr("transform", d => `translate(${d.x}, ${d.y})`);
+        });
+
+        // Drag event handlers
+        function dragstarted(event, d) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            d.fx = d.x;
+            d.fy = d.y;
+        }
+
+        function dragged(event, d) {
+            d.fx = event.x;
+            d.fy = event.y;
+        }
+
+        function dragended(event, d) {
+            if (!event.active) simulation.alphaTarget(0);
+            d.fx = null;
+            d.fy = null;
+        }
+    }
+</script>
+</body>
+</html>
