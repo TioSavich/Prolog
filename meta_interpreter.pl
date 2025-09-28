@@ -1,36 +1,40 @@
-:- module(meta_interpreter, [solve/3]).
+:- module(meta_interpreter, [solve/4]).
 :- use_module(object_level). % Ensure we can access the object-level code
 
-% Predicate signature: solve(Goal, InferencesIn, InferencesOut)
+% Predicate signature: solve(Goal, InferencesIn, InferencesOut, Trace)
+% Trace is a list of events that occurred during the proof search.
 
-% Base case: 'true' consumes no inferences.
-solve(true, I, I) :- !.
+% Base case: 'true' succeeds with an empty trace.
+solve(true, I, I, []) :- !.
 
-% Conjunction
-solve((A, B), I_In, I_Out) :-
+% Conjunction: The trace is the combination of the traces for A and B.
+solve((A, B), I_In, I_Out, [trace(A, A_Trace), trace(B, B_Trace)]) :-
     !,
-    solve(A, I_In, I_Mid),
-    solve(B, I_Mid, I_Out).
+    solve(A, I_In, I_Mid, A_Trace),
+    solve(B, I_Mid, I_Out, B_Trace).
 
-% System predicates (CRITICAL: Must be handled explicitly)
-solve(Goal, I_In, I_Out) :-
+% System predicates: Record the call in the trace.
+solve(Goal, I_In, I_Out, [call(Goal)]) :-
     predicate_property(Goal, built_in),
     !,
     check_viability(I_In),
-    I_Out is I_In - 1, % Assign a cost (e.g., 1)
+    I_Out is I_In - 1,
     call(Goal).
 
-% Object-level execution
-solve(Goal, I_In, I_Out) :-
-    % Check viability BEFORE the inference step.
+% Object-level execution: Record which clause was used.
+% This is the core of the observation mechanism.
+solve(Goal, I_In, I_Out, [clause(object_level:(Goal:-Body)), trace(Body, BodyTrace)]) :-
     check_viability(I_In),
     I_Mid is I_In - 1,
-
-    % Access object-level schemes. We must specify the module where schemes reside.
-    % Assuming schemes are in a module named 'object_level'.
     clause(object_level:Goal, Body),
+    solve(Body, I_Mid, I_Out, BodyTrace).
 
-    solve(Body, I_Mid, I_Out).
+% Failure case: If a goal cannot be solved by any clause, record the failure.
+% This makes backtracking an observable event in the trace.
+solve(Goal, I, I, [fail(Goal)]) :-
+    \+ predicate_property(Goal, built_in),
+    \+ clause(object_level:Goal, _), !.
+
 
 % --- Viability Check ---
 check_viability(I) :- I > 0, !.
