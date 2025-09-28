@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Synthesis Explorer: Brandom, CGI, Piaget</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <h1>Synthesis Explorer</h1>
+        <p>Incompatibility Semantics, Cognitively Guided Instruction, and Constructivism</p>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-button active" onclick="openTab(event, 'CGI')">Strategy Analyzer (CGI/Piaget)</button>
+            <button class="tab-button" onclick="openTab(event, 'Explorer')">Concept Explorer (Brandom)</button>
+        </div>
+
+        <div id="CGI" class="tab-content active">
+            <h2>Strategy Analyzer</h2>
+            <p>Analyze a student's problem-solving strategy to understand their cognitive structure and identify next steps.</p>
+            <div class="input-group">
+                <label for="problemContext">Problem Context:</label>
+                <select id="problemContext">
+                    <option value="Math-JRU">Math: Join (Result Unknown) e.g., 5 + 3 = ?</option>
+                    <option value="Math-JCU">Math: Join (Change Unknown) e.g., 5 + ? = 8</option>
+                    <option value="Science-Float">Science: Sink or Float Prediction</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label for="strategyInput">Observed Strategy/Reasoning:</label>
+                <textarea id="strategyInput" rows="4" placeholder="Describe how the student solved the problem or explained their reasoning..."></textarea>
+            </div>
+            <button onclick="analyzeCGI()">Analyze Strategy</button>
+            <div id="cgiResult" class="results">
+                <i>Analysis results will appear here.</i>
+            </div>
+        </div>
+
+        <div id="Explorer" class="tab-content">
+            <h2>Concept Explorer</h2>
+            <p>Enter a statement to explore its semantic content based on what it excludes (incompatibility) and what it implies (entailment).</p>
+            <div class="input-group">
+                <label for="conceptInput">Statement:</label>
+                <input type="text" id="conceptInput" placeholder="e.g., The object is red">
+            </div>
+            <button onclick="analyzeIncompatibility()">Analyze</button>
+            <div id="incompatibilityResult" class="results">
+                <i>Analysis results will appear here.</i>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
