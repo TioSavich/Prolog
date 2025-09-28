@@ -11,89 +11,64 @@
  * @author Tilo Wiedera
  * @license MIT
  */
-:- module(execution_handler, [run_query/1]).
+:- module(execution_handler, [run_computation/2]).
 
-% Load all components of the ORR architecture
 :- use_module(meta_interpreter).
-:- use_module(reflective_monitor).
 :- use_module(reorganization_engine).
-:- use_module(reorganization_log).
-:- use_module(config).
 :- use_module(object_level).
 
-%!      run_query(+Goal:term) is det.
+%!      run_computation(+Goal:term, +Limit:integer) is semidet.
 %
-%       Initiates the Observe-Reorganize-Reflect (ORR) cycle for a given Goal.
+%       The main entry point for the self-reorganizing system. It attempts
+%       to solve the given `Goal` within the specified `Limit` of
+%       computational steps.
 %
-%       This predicate serves as the main entry point for the system. It
-%       first clears any previous logs and stress maps, then starts the
-%       `orr_cycle/2` with the maximum number of retries specified in the
-%       configuration.
+%       If the computation exceeds the resource limit, it triggers the
+%       reorganization process and then retries the goal.
 %
-%       @param Goal The initial goal to be solved by the system.
-run_query(Goal) :-
-    % Clear logs and stress maps for a clean run.
-    clear_log,
-    reset_stress_map,
-    max_retries(MaxRetries),
-    orr_cycle(Goal, MaxRetries).
-
-% orr_cycle(+Goal, +RetriesLeft)
-% This is the core recursive loop of the architecture. It attempts to solve
-% the goal, reflecting on failures and triggering reorganization if necessary.
-
-orr_cycle(Goal, RetriesLeft) :-
-    RetriesLeft > 0,
-    format('~n--- OBSERVING (Attempt ~w) ---~n', [RetriesLeft]),
-    format('Goal: ~w~n', [Goal]),
-    log_event(orr_cycle_start(Goal)), % Log start
-
-    max_inferences(MaxI),
-    % The catch/3 block handles critical failures (perturbations) from the meta-interpreter.
+%       @param Goal The computational goal to be solved.
+%       @param Limit The maximum number of inference steps allowed.
+run_computation(Goal, Limit) :-
     catch(
-        (
-            % 1. OBSERVE: Attempt to solve the goal using the meta-interpreter.
-            solve(Goal, MaxI, _, Trace),
-            % 2. REFLECT: Analyze the trace for signs of disequilibrium.
-            (   reflect(Trace, Trigger)
-            ->  % Disequilibrium found, handle it.
-                format('~n--- REFLECTION ---~n'),
-                format('Disequilibrium detected: ~w~n', [Trigger]),
-                log_event(disequilibrium(Trigger)),
-                handle_disequilibrium(Trigger, Goal, RetriesLeft)
-            ;   % No disequilibrium, goal is solved and coherent.
-                format('~n--- EQUILIBRIUM REACHED ---~n'),
-                format('Goal succeeded and is coherent.~n'),
-                log_event(equilibrium)
-            )
-        ),
-        perturbation(Type),
-        % Handle critical perturbations (e.g., infinite loops) caught by solve/4.
-        (
-            format('~n--- REFLECTION (Critical) ---~n'),
-            format('System perturbation detected: ~w~n', [Type]),
-            log_event(disequilibrium(perturbation(Type))),
-            handle_disequilibrium(perturbation(Type), Goal, RetriesLeft)
-        )
+        call_meta_interpreter(Goal, Limit, Trace),
+        Error,
+        handle_perturbation(Error, Goal, Trace, Limit)
     ).
 
-orr_cycle(_, 0) :-
-    format('~n--- FAILURE TO EQUILIBRATE ---~n'),
-    format('Max reorganization attempts reached. Aborting.~n').
+%!      call_meta_interpreter(+Goal, +Limit, -Trace) is det.
+%
+%       A wrapper for the `meta_interpreter:solve/4` predicate. It
+%       executes the goal and, upon success, reports that the computation
+%       is complete.
+%
+%       @param Goal The goal to be solved.
+%       @param Limit The inference limit.
+%       @param Trace The resulting execution trace.
+call_meta_interpreter(Goal, Limit, Trace) :-
+    meta_interpreter:solve(Goal, Limit, _, Trace),
+    writeln('Computation successful.').
 
-% handle_disequilibrium(+Trigger, +Goal, +RetriesLeft)
-% Manages the reorganization process when disequilibrium is detected.
+%!      handle_perturbation(+Error, +Goal, +Trace, +Limit) is semidet.
+%
+%       Catches errors from the meta-interpreter and initiates the
+%       reorganization process.
+%
+%       This predicate specifically handles `perturbation(resource_exhaustion)`.
+%       Upon catching this error, it logs the event, invokes the
+%       `reorganization_engine`, and then recursively retries the original
+%       goal with the same limit.
+%
+%       @param Error The error term thrown by `catch/3`.
+%       @param Goal The original goal that was being attempted.
+%       @param Trace The execution trace produced before the error occurred.
+%       @param Limit The original resource limit.
+handle_perturbation(perturbation(resource_exhaustion), Goal, Trace, Limit) :-
+    writeln('Resource exhaustion detected. Initiating reorganization...'),
+    reorganize_system(Goal, Trace),
+    writeln('Reorganization complete. Retrying goal...'),
+    run_computation(Goal, Limit).
 
-handle_disequilibrium(Trigger, Goal, RetriesLeft) :-
-    format('~n--- REORGANIZING ---~n'),
-    % 3. REORGANIZE: Attempt to accommodate the trigger.
-    (   accommodate(Trigger)
-    ->  % Reorganization was successful, retry the cycle.
-        format('Reorganization successful. Retrying goal.~n'),
-        NextRetries is RetriesLeft - 1,
-        orr_cycle(Goal, NextRetries)
-    ;   % Reorganization failed, abort the process.
-        format('~n--- FAILURE TO REORGANIZE ---~n'),
-        format('Accommodation failed for trigger: ~w. Aborting.~n', [Trigger]),
-        log_event(reorganization_failure)
-    ).
+handle_perturbation(Error, _, _, _) :-
+    writeln('An unhandled error occurred:'),
+    writeln(Error),
+    fail.
