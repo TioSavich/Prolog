@@ -22,6 +22,70 @@
 :- use_module(object_level).
 :- use_module(reflective_monitor).
 :- use_module(reorganization_log).
+:- use_module(more_machine_learner).
+:- use_module(incompatibility_semantics).
+:- use_module(strategies). % Load all defined strategies
+
+:- reexport(learned_knowledge, [learned_rule/1]).
+
+%!      reorganize_system(+Goal:term, +Trace:list) is semidet.
+%
+%       The main entry point for the reorganization process, triggered when
+%       a perturbation (e.g., resource exhaustion) occurs. This predicate
+%       orchestrates the analysis, synthesis, validation, and integration of
+%       a new, more efficient strategy.
+%
+%       @param Goal The goal that failed.
+%       @param Trace The execution trace leading to the failure.
+reorganize_system(Goal, _Trace) :-
+    % Deconstruct the goal to get the arguments
+    Goal =.. [Pred, A, B, _Result],
+    ( (Pred = add ; Pred = multiply) ->
+        % Convert Peano numbers to integers for the learner
+        peano_to_int(A, IntA),
+        peano_to_int(B, IntB),
+
+        writeln('Invoking machine learner to discover new strategies...'),
+        % The learner will analyze, validate, and assert the new rule internally
+        (   more_machine_learner:discover_strategy(IntA, IntB, StrategyName) ->
+            format('Learner discovered and asserted strategy: ~w~n', [StrategyName]),
+            more_machine_learner:save_knowledge,
+            writeln('New knowledge has been persisted.')
+        ;   writeln('Learner did not find a new strategy for this case.'),
+            fail
+        )
+    ;
+        format('Reorganization for predicate ~w is not supported.~n', [Pred]),
+        fail
+    ).
+
+%!      peano_to_int(+Peano, -Int) is det.
+%
+%       Converts a Peano number (e.g., `s(s(0))`) to an integer.
+peano_to_int(0, 0).
+peano_to_int(s(N), Int) :-
+    peano_to_int(N, SubInt),
+    Int is SubInt + 1.
+
+%!      integrate_new_rule(+Rule:term) is det.
+%
+%       Integrates a validated new rule into the system's knowledge base.
+%       It retracts the old, inefficient rule and asserts the new one in
+%       the `object_level` module.
+integrate_new_rule((Head :- Body)) :-
+    functor(Head, Name, Arity),
+    retractall(object_level:Name/Arity),
+    assertz(object_level:(Head :- Body)),
+    log_event(reorganized(from(Name/Arity), to(Head :- Body))).
+
+%!      save_learned_rule(+Rule:term) is det.
+%
+%       Persists a newly learned rule to the `learned_knowledge.pl` file
+%       so that it can be reused across sessions.
+save_learned_rule(Rule) :-
+    open('learned_knowledge.pl', append, Stream),
+    format(Stream, 'learned_rule(~q).~n', [Rule]),
+    close(Stream).
 
 %!      accommodate(+Trigger:term) is semidet.
 %

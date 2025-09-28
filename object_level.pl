@@ -14,9 +14,10 @@
  * @author Tilo Wiedera
  * @license MIT
  */
-:- module(object_level, [add/3]).
+:- module(object_level, [add/3, multiply/3]).
 
 :- dynamic add/3.
+:- dynamic multiply/3.
 
 % enumerate/1
 % Helper to force enumeration of a Peano number. Its primary purpose
@@ -55,3 +56,24 @@ add(A, B, Sum) :-
     enumerate(A),
     enumerate(B),
     recursive_add(A, B, Sum).
+
+%!      multiply(?A, ?B, ?Product) is nondet.
+%
+%       The initial, inefficient definition of multiplication.
+%       This predicate is designed to simulate multiplication via repeated
+%       addition. It is computationally expensive and intended to trigger
+%       reorganization for larger numbers.
+%
+%       This predicate is declared `dynamic` and will be replaced by a more
+%       efficient version by the `reorganization_engine`.
+multiply(A, B, Product) :-
+    enumerate(A),
+    enumerate(B),
+    recursive_multiply(A, B, Product).
+
+% recursive_multiply/3
+% This is the standard, efficient, recursive definition of multiplication.
+recursive_multiply(0, _, 0).
+recursive_multiply(s(A), B, Product) :-
+    recursive_multiply(A, B, PartialProduct),
+    add(PartialProduct, B, Product).
