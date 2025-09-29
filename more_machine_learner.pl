@@ -19,8 +19,8 @@
  *     efficient strategy clauses. These new clauses are then asserted into
  *     the knowledge base.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(more_machine_learner,
           [ critique_and_bootstrap/1,

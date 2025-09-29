@@ -21,8 +21,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, Groups, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_mult_cbo,
           [ run_cbo_mult/5

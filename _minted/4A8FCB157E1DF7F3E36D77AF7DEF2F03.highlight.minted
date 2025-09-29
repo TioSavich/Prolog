@@ -15,11 +15,13 @@
 \PYG{c+cm}{ *  \PYGZhy{} Support for multiple arithmetic domains (n, z, q) via `set\PYGZus{}domain/1`.}
 \PYG{c+cm}{ *  \PYGZhy{} A rich set of logical operators and domain\PYGZhy{}specific predicates.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,}
-          \PYG{p}{[} \PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{obj\PYGZus{}coll}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{incoherent}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{current\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}
+          \PYG{p}{[} \PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}
+          \PYG{p}{,} \PYG{l+s+sAtom}{is\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2} \PYG{c+c1}{\PYGZpc{} obj\PYGZus{}coll/1 is deprecated}
+          \PYG{p}{,} \PYG{l+s+sAtom}{incoherent}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{current\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}
           \PYG{c+c1}{\PYGZpc{} Updated exports}
           \PYG{p}{,} \PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{o}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{n}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{neg}\PYG{o}{/}\PYG{l+m+mi}{1}
           \PYG{p}{,} \PYG{l+s+sAtom}{highlander}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{bounded\PYGZus{}region}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+s+sAtom}{equality\PYGZus{}iterator}\PYG{o}{/}\PYG{l+m+mi}{3}
@@ -32,6 +34,8 @@
           \PYG{p}{,} \PYG{l+s+sAtom}{rdiv}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{iterate}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{partition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2} \PYG{c+c1}{\PYGZpc{} Export normalize}
           \PYG{p}{]).}
 \PYG{c+c1}{\PYGZpc{} Declare predicates that are defined across different sections.}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{hermeneutic\PYGZus{}calculator}\PYG{p}{).}
+
 \PYG{p}{:\PYGZhy{}} \PYG{l+s+sAtom}{discontiguous} \PYG{l+s+sAtom}{proves\PYGZus{}impl}\PYG{o}{/}\PYG{l+m+mf}{2.}
 \PYG{p}{:\PYGZhy{}} \PYG{l+s+sAtom}{discontiguous} \PYG{l+s+sAtom}{is\PYGZus{}incoherent}\PYG{o}{/}\PYG{l+m+mf}{1.} \PYG{c+c1}{\PYGZpc{} Non\PYGZhy{}recursive check}
 
@@ -96,23 +100,58 @@
     \PYG{p}{(} \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{n}\PYG{p}{,} \PYG{l+s+sAtom}{z}\PYG{p}{,} \PYG{l+s+sAtom}{q}\PYG{p}{])} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)),} \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{))} \PYG{p}{;} \PYG{l+s+sAtom}{true}\PYG{p}{).}
 
 
-\PYG{c+c1}{\PYGZpc{}!      obj\PYGZus{}coll(+Term) is semidet.}
+\PYG{c+c1}{\PYGZpc{} Deprecated: obj\PYGZus{}coll/1. Replaced by is\PYGZus{}recollection/2.}
+\PYG{c+c1}{\PYGZpc{} The old obj\PYGZus{}coll/1 predicate checked for static, timeless properties.}
+\PYG{c+c1}{\PYGZpc{} The new ontology requires that a number\PYGZsq{}s validity is proven by}
+\PYG{c+c1}{\PYGZpc{} demonstrating a constructive history (an anaphoric recollection).}
 \PYG{c+c1}{\PYGZpc{}}
-\PYG{c+c1}{\PYGZpc{}       Checks if a `Term` is a valid object in the `current\PYGZus{}domain/1`.}
-\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} In domain `n`, `Term` must be a non\PYGZhy{}negative integer.}
-\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} In domain `z`, `Term` must be an integer.}
-\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} In domain `q`, `Term` can be an integer or a rational number}
-\PYG{c+c1}{\PYGZpc{}         represented as `N rdiv D`.}
+\PYG{c+c1}{\PYGZpc{} obj\PYGZus{}coll(N) :\PYGZhy{} current\PYGZus{}domain(n), !, integer(N), N \PYGZgt{}= 0.}
+\PYG{c+c1}{\PYGZpc{} obj\PYGZus{}coll(N) :\PYGZhy{} current\PYGZus{}domain(z), !, integer(N).}
+\PYG{c+c1}{\PYGZpc{} obj\PYGZus{}coll(X) :\PYGZhy{} current\PYGZus{}domain(q), !,}
+\PYG{c+c1}{\PYGZpc{}     ( integer(X)}
+\PYG{c+c1}{\PYGZpc{}     ; (X = N rdiv D, integer(N), integer(D), D \PYGZgt{} 0)}
+\PYG{c+c1}{\PYGZpc{}     ).}
+
+\PYG{c+c1}{\PYGZpc{}!      is\PYGZus{}recollection(?Term, ?History) is semidet.}
 \PYG{c+c1}{\PYGZpc{}}
-\PYG{c+c1}{\PYGZpc{}       @param Term The term to check.}
-\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{),} \PYG{p}{!,} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mf}{0.}
-\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{z}\PYG{p}{),} \PYG{p}{!,} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{).}
-\PYG{c+c1}{\PYGZpc{} Domain Q recognizes integers AND rationals.}
-\PYG{c+c1}{\PYGZpc{} Use a single clause with disjunction (;) for correctness.}
-\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{X}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{),} \PYG{p}{!,}
-    \PYG{p}{(} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{X}\PYG{p}{)}
-    \PYG{p}{;} \PYG{p}{(}\PYG{n+nv}{X} \PYG{o}{=} \PYG{n+nv}{N} \PYG{l+s+sAtom}{rdiv} \PYG{n+nv}{D}\PYG{p}{,} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{),} \PYG{n+nv}{D} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{)}
-    \PYG{p}{).}
+\PYG{c+c1}{\PYGZpc{}       The new core ontological predicate. It succeeds if `Term` is a}
+\PYG{c+c1}{\PYGZpc{}       validly constructed number, where `History` is the execution}
+\PYG{c+c1}{\PYGZpc{}       trace of the calculation that constructed it. This replaces the}
+\PYG{c+c1}{\PYGZpc{}       static `obj\PYGZus{}coll/1` check with a dynamic, process\PYGZhy{}based validation.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Term The numerical term to be validated (e.g., 5).}
+\PYG{c+c1}{\PYGZpc{}       @param History The constructive trace that proves the term\PYGZsq{}s existence.}
+
+\PYG{c+c1}{\PYGZpc{} Base case: 0 is axiomatically a number.}
+\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{axiom}\PYG{p}{(}\PYG{l+s+sAtom}{zero}\PYG{p}{)]).}
+
+\PYG{c+c1}{\PYGZpc{} Recursive case for positive integers: N is a recollection if N\PYGZhy{}1 is, and we}
+\PYG{c+c1}{\PYGZpc{} can construct N by adding 1 using the hermeneutic calculator.}
+\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),}
+    \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{Prev} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{Prev}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} Foundational check on the predecessor}
+    \PYG{l+s+sAtom}{hermeneutic\PYGZus{}calculator:}\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{Prev}\PYG{p}{,} \PYG{l+s+sAtom}{+}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Case for negative integers: A negative number is constructed by subtracting}
+\PYG{c+c1}{\PYGZpc{} its absolute value from 0.}
+\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),}
+    \PYG{n+nv}{N} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} Grounded in the axiom of zero}
+    \PYG{n+nv}{Val} \PYG{o}{is} \PYG{n+nf}{abs}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),}
+    \PYG{l+s+sAtom}{hermeneutic\PYGZus{}calculator:}\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{Val}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Case for rational numbers: A rational N/D is a recollection if its}
+\PYG{c+c1}{\PYGZpc{} numerator and denominator are themselves valid recollections.}
+\PYG{c+c1}{\PYGZpc{} The history records this compositional validation.}
+\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N} \PYG{l+s+sAtom}{rdiv} \PYG{n+nv}{D}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{history}\PYG{p}{(}\PYG{l+s+sAtom}{rational}\PYG{p}{,} \PYG{n+nf}{from}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{D}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Denominator must be a positive integer. We check its recollection status.}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+    \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{),} \PYG{n+nv}{D} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{c+c1}{\PYGZpc{} Numerator can be any recollected number.}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{).}
 
 
 \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Helpers for Rational Arithmetic \PYGZhy{}\PYGZhy{}\PYGZhy{}}
@@ -175,7 +214,7 @@
     \PYG{n+nf}{fraction\PYGZus{}predicates}\PYG{p}{(}\PYG{n+nv}{F}\PYG{p}{),}
     \PYG{n+nf}{append}\PYG{p}{(}\PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{NT}\PYG{p}{,} \PYG{n+nv}{Temp}\PYG{p}{),}
     \PYG{n+nf}{append}\PYG{p}{(}\PYG{n+nv}{Temp}\PYG{p}{,} \PYG{n+nv}{F}\PYG{p}{,} \PYG{n+nv}{DomainPreds}\PYG{p}{),}
-    \PYG{n+nf}{append}\PYG{p}{([}\PYG{l+s+sAtom}{neg}\PYG{p}{,} \PYG{l+s+sAtom}{conj}\PYG{p}{,} \PYG{l+s+sAtom}{nec}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}nec}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}poss}\PYG{p}{,} \PYG{l+s+sAtom}{obj\PYGZus{}coll}\PYG{p}{],} \PYG{n+nv}{DomainPreds}\PYG{p}{,} \PYG{n+nv}{AllPreds}\PYG{p}{).}
+    \PYG{n+nf}{append}\PYG{p}{([}\PYG{l+s+sAtom}{neg}\PYG{p}{,} \PYG{l+s+sAtom}{conj}\PYG{p}{,} \PYG{l+s+sAtom}{nec}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}nec}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}poss}\PYG{p}{,} \PYG{l+s+sAtom}{is\PYGZus{}recollection}\PYG{p}{],} \PYG{n+nv}{DomainPreds}\PYG{p}{,} \PYG{n+nv}{AllPreds}\PYG{p}{).}
 
 \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Helpers for Number Theory (Grounded) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
 
@@ -236,11 +275,11 @@
     \PYG{n+nf}{incompatible\PYGZus{}pair}\PYG{p}{(}\PYG{n+nv}{Shape}\PYG{p}{,} \PYG{n+nv}{Restriction}\PYG{p}{),} \PYG{p}{!.}
 
 \PYG{c+c1}{\PYGZpc{} Arithmetic Incompatibility (Generalized to handle fractions)}
+\PYG{c+c1}{\PYGZpc{} This is incoherent if a norm demands an impossible recollection.}
 \PYG{n+nf}{is\PYGZus{}incoherent}\PYG{p}{(}\PYG{n+nv}{X}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{))),} \PYG{n+nv}{X}\PYG{p}{),}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{)),} \PYG{n+nv}{X}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} Check for the normative proposition}
     \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{),}
-    \PYG{c+c1}{\PYGZpc{} Normalize before comparison to handle integers and fractions correctly.}
-    \PYG{c+c1}{\PYGZpc{} Use normalize/2 which ensures A and B are valid arithmetic objects before comparison.}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} Operands must be valid numbers}
     \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{NA}\PYG{p}{),} \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{NB}\PYG{p}{),}
     \PYG{n+nv}{NA} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{NB}\PYG{p}{,} \PYG{p}{!.}
 
@@ -291,22 +330,22 @@
 
 \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Arithmetic Grounding (Extended for Q) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
 \PYG{n+nf}{proves\PYGZus{}impl}\PYG{p}{(}\PYG{k}{\PYGZus{}} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{eq}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{))],} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
     \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{NA}\PYG{p}{),} \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{NB}\PYG{p}{),}
     \PYG{n+nv}{NA} \PYG{o}{==} \PYG{n+nv}{NB}\PYG{p}{.}
 
 \PYG{n+nf}{proves\PYGZus{}impl}\PYG{p}{(}\PYG{k}{\PYGZus{}} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{,}\PYG{n+nv}{C}\PYG{p}{))],} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
     \PYG{n+nf}{arith\PYGZus{}op}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{l+s+sAtom}{+}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),}
-    \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{C}\PYG{p}{).}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{C}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{).}
 
 \PYG{n+nf}{proves\PYGZus{}impl}\PYG{p}{(}\PYG{k}{\PYGZus{}} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{,}\PYG{n+nv}{C}\PYG{p}{))],} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{),} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),}
+    \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{),} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
     \PYG{n+nf}{arith\PYGZus{}op}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),}
     \PYG{c+c1}{\PYGZpc{} Subtraction constraints only apply to N. We must normalize C before comparison.}
     \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{C}\PYG{p}{,} \PYG{n+nv}{NC}\PYG{p}{),}
     \PYG{p}{((}\PYG{n+nv}{D}\PYG{o}{=}\PYG{l+s+sAtom}{n}\PYG{p}{,} \PYG{n+nv}{NC} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{;} \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{z}\PYG{p}{,} \PYG{l+s+sAtom}{q}\PYG{p}{])),}
-    \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{C}\PYG{p}{).}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{C}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{).}
 
 \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Arithmetic Material Inferences \PYGZhy{}\PYGZhy{}\PYGZhy{}}
 \PYG{n+nf}{proves\PYGZus{}impl}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{,}\PYG{n+nv}{C}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{C}\PYG{p}{))],} \PYG{k}{\PYGZus{}}\PYG{p}{).}
@@ -334,7 +373,7 @@
 
 \PYG{c+c1}{\PYGZpc{} Grounding: Iterating (Multiplication)}
 \PYG{n+nf}{proves\PYGZus{}impl}\PYG{p}{(([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{iterate}\PYG{p}{(}\PYG{n+nv}{U}\PYG{p}{,} \PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{))]),} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{U}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{),} \PYG{n+nv}{M} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{U}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{),} \PYG{n+nv}{M} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{,}
     \PYG{c+c1}{\PYGZpc{} R = U * M}
     \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{U}\PYG{p}{,} \PYG{n+nv}{NU}\PYG{p}{),}
     \PYG{p}{(}\PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{NU}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{N1}\PYG{o}{=}\PYG{n+nv}{NU}\PYG{p}{,} \PYG{n+nv}{D1}\PYG{o}{=}\PYG{l+m+mi}{1} \PYG{p}{;} \PYG{n+nv}{NU} \PYG{o}{=} \PYG{n+nv}{N1} \PYG{l+s+sAtom}{rdiv} \PYG{n+nv}{D1}\PYG{p}{),}
@@ -344,7 +383,7 @@
 
 \PYG{c+c1}{\PYGZpc{} Grounding: Partitioning (Division)}
 \PYG{n+nf}{proves\PYGZus{}impl}\PYG{p}{(([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{partition}\PYG{p}{(}\PYG{n+nv}{W}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{U}\PYG{p}{))]),} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{W}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{W}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
     \PYG{c+c1}{\PYGZpc{} U = W / N}
     \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{W}\PYG{p}{,} \PYG{n+nv}{NW}\PYG{p}{),}
     \PYG{p}{(}\PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{NW}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{N1}\PYG{o}{=}\PYG{n+nv}{NW}\PYG{p}{,} \PYG{n+nv}{D1}\PYG{o}{=}\PYG{l+m+mi}{1} \PYG{p}{;} \PYG{n+nv}{NW} \PYG{o}{=} \PYG{n+nv}{N1} \PYG{l+s+sAtom}{rdiv} \PYG{n+nv}{D1}\PYG{p}{),}

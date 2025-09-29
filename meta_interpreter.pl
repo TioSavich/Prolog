@@ -13,8 +13,8 @@
  * It produces a detailed `Trace` of the execution, which is the primary
  * data source for the `reflective_monitor`.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(meta_interpreter, [solve/4]).
 :- use_module(object_level). % Ensure we can access the object-level code

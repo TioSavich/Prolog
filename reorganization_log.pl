@@ -11,8 +11,8 @@
  * Log entries are stored as dynamic facts of the form:
  * `log_entry(Timestamp, Event)`.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(reorganization_log, [
     log_event/1,

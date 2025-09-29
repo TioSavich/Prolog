@@ -10,7 +10,7 @@
  * synthesis, and validation.
  *
  * @author Jules
- * @license MIT
+ * 
  */
 
 :- module(strategies, []).

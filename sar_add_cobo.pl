@@ -16,8 +16,8 @@
  * The history of execution is captured as a list of steps:
  * `step(StateName, CurrentSum, BaseCounter, OneCounter, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_add_cobo,
           [ run_cobo/4

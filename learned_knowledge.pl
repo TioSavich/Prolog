@@ -13,7 +13,7 @@
  *  overwritten.
  *
  * @author More Machine Learner (Auto-Generated)
- * @license MIT
+ * 
  */
 
 % Automatically generated knowledge base.

@@ -18,8 +18,8 @@
 \PYG{c+cm}{ * The stress map is stored as dynamic facts of the form:}
 \PYG{c+cm}{ * `stress(PredicateSignature, Count)`.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{reflective\PYGZus{}monitor}\PYG{p}{,} \PYG{p}{[}
     \PYG{l+s+sAtom}{reflect}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}

@@ -18,8 +18,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, GroupsDone, ItemInGroup, Total, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_mult_c2c,
           [ run_c2c/4

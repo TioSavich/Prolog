@@ -5,8 +5,8 @@
 \PYG{c+cm}{ * without depending on complex modules that may have loading issues.}
 \PYG{c+cm}{ * It is the main entry point for the web application.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{http}\PYG{o}{/}\PYG{l+s+sAtom}{thread\PYGZus{}httpd}\PYG{p}{)).}

@@ -14,8 +14,8 @@
  * replaces a failing `add/3` implementation with a more robust, recursive
  * one based on the Peano axioms.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(reorganization_engine, [accommodate/1]).
 

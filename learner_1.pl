@@ -15,8 +15,8 @@
  *      - If strategies disagree, the result is `incompatible`.
  *      - If no strategy can solve the problem, the result is `unknown`.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(learner_1, [compute/3]).
 

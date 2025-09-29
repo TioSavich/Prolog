@@ -23,8 +23,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, CurrentValue, Distance, K, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_sub_chunking_b,
           [ run_chunking_b/4

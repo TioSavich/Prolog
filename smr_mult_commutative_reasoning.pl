@@ -20,8 +20,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, Groups, Items, Total, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_mult_commutative_reasoning,
           [ run_commutative_mult/4

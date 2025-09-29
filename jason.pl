@@ -18,8 +18,8 @@
  *
  * The primary entry point for demonstration is `run_tests/0`.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(jason, [run_tests/0, debug_run_fcs/0]).
 :- (   catch(use_module(library(rat)), E, (format('[jason] Optional library "rat" not available: ~w~n', [E]), true)) ).

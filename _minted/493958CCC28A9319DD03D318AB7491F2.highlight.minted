@@ -20,19 +20,19 @@
 \PYG{c+cm}{ *     efficient strategy clauses. These new clauses are then asserted into}
 \PYG{c+cm}{ *     the knowledge base.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner}\PYG{p}{,}
           \PYG{p}{[} \PYG{l+s+sAtom}{critique\PYGZus{}and\PYGZus{}bootstrap}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
-            \PYG{l+s+sAtom}{explore}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
             \PYG{l+s+sAtom}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{,}
             \PYG{l+s+sAtom}{solve}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
-            \PYG{l+s+sAtom}{save\PYGZus{}knowledge}\PYG{o}{/}\PYG{l+m+mi}{0}
+            \PYG{l+s+sAtom}{save\PYGZus{}knowledge}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{,}
+            \PYG{l+s+sAtom}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{o}{/}\PYG{l+m+mi}{1}
           \PYG{p}{]).}
 
 \PYG{c+c1}{\PYGZpc{} Use the semantics engine for validation}
-\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{current\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{obj\PYGZus{}coll}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{current\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{is\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{random}\PYG{p}{)).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
 
@@ -97,58 +97,7 @@
     \PYG{p}{).}
 
 \PYG{c+c1}{\PYGZpc{} =================================================================}
-\PYG{c+c1}{\PYGZpc{} Part 1: The Generative\PYGZhy{}Reflective Loop (Exploration)}
-\PYG{c+c1}{\PYGZpc{} =================================================================}
-
-\PYG{c+c1}{\PYGZpc{}!      explore(+Domain:atom) is det.}
-\PYG{c+c1}{\PYGZpc{}}
-\PYG{c+c1}{\PYGZpc{}       Initiates a session of autonomous exploration and learning for a}
-\PYG{c+c1}{\PYGZpc{}       given domain.}
-\PYG{c+c1}{\PYGZpc{}}
-\PYG{c+c1}{\PYGZpc{}       It repeatedly generates random problems, solves them using the current}
-\PYG{c+c1}{\PYGZpc{}       best strategy, and then reflects on the solution trace to discover}
-\PYG{c+c1}{\PYGZpc{}       and assert new, more efficient strategies.}
-\PYG{c+c1}{\PYGZpc{}}
-\PYG{c+c1}{\PYGZpc{}       @param Domain The domain to explore (currently only `addition` is supported).}
-\PYG{n+nf}{explore}\PYG{p}{(}\PYG{l+s+sAtom}{addition}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=====================================================\PYGZsq{}}\PYG{p}{),}
-    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Autonomous Exploration Initiated: Addition (Protein Folding) \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
-    \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{),}
-    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Current Semantic Domain: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{D}\PYG{p}{]),}
-    \PYG{p}{(}\PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{D}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{n}\PYG{p}{,} \PYG{l+s+sAtom}{z}\PYG{p}{,} \PYG{l+s+sAtom}{q}\PYG{p}{])} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
-        \PYG{n+nf}{explore\PYGZus{}addition\PYGZus{}loop}\PYG{p}{(}\PYG{l+m+mi}{50}\PYG{p}{)}
-    \PYG{p}{;}
-        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Exploration requires domain (n, z, or q).\PYGZsq{}}\PYG{p}{)}
-    \PYG{p}{).}
-
-\PYG{c+c1}{\PYGZpc{} explore\PYGZus{}addition\PYGZus{}loop(+N)}
-\PYG{c+c1}{\PYGZpc{} The main loop for the exploration process.}
-\PYG{n+nf}{explore\PYGZus{}addition\PYGZus{}loop}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZbs{}nExploration limit reached. Saving knowledge base...\PYGZsq{}}\PYG{p}{),}
-    \PYG{l+s+sAtom}{save\PYGZus{}knowledge}\PYG{p}{,}
-    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Knowledge base saved.\PYGZsq{}}\PYG{p}{),}
-    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=====================================================\PYGZsq{}}\PYG{p}{),} \PYG{p}{!.}
-\PYG{n+nf}{explore\PYGZus{}addition\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{I}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{generate\PYGZus{}addition\PYGZus{}problem}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),}
-    \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{AN}\PYG{p}{),} \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{BN}\PYG{p}{),}
-    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZbs{}n[Cycle \PYGZti{}w] Exploring Problem: \PYGZti{}w + \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{AN}\PYG{p}{,} \PYG{n+nv}{BN}\PYG{p}{]),}
-    \PYG{p}{(}   \PYG{n+nf}{discover\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{)}
-    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZgt{} Strategy Discovery Processed: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StrategyName}\PYG{p}{])}
-    \PYG{p}{;}   \PYG{l+s+sAtom}{true}
-    \PYG{p}{),}
-    \PYG{n+nv}{NextI} \PYG{o}{is} \PYG{n+nv}{I} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
-    \PYG{n+nf}{explore\PYGZus{}addition\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{NextI}\PYG{p}{).}
-
-\PYG{c+c1}{\PYGZpc{} Problem Generation (Heuristic)}
-\PYG{n+nf}{generate\PYGZus{}addition\PYGZus{}problem}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{random\PYGZus{}between}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{12}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{),}
-    \PYG{p}{(}   \PYG{n+nf}{random}\PYG{p}{(}\PYG{n+nv}{R}\PYG{p}{),} \PYG{n+nv}{R} \PYG{o}{\PYGZlt{}} \PYG{l+m+mf}{0.3} \PYG{c+c1}{\PYGZpc{} 30\PYGZpc{} chance}
-    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nv}{B} \PYG{o}{=} \PYG{n+nv}{A}
-    \PYG{p}{;}   \PYG{n+nf}{random\PYGZus{}between}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
-    \PYG{p}{).}
-
-\PYG{c+c1}{\PYGZpc{} =================================================================}
-\PYG{c+c1}{\PYGZpc{} Part 2: The Unified Solver (Strategy Hierarchy)}
+\PYG{c+c1}{\PYGZpc{} Part 1: The Unified Solver (Strategy Hierarchy)}
 \PYG{c+c1}{\PYGZpc{} =================================================================}
 
 \PYG{c+c1}{\PYGZpc{}!      solve(+A, +B, \PYGZhy{}Result, \PYGZhy{}Trace) is semidet.}
@@ -172,25 +121,37 @@
     \PYG{p}{).}
 
 \PYG{c+c1}{\PYGZpc{} =================================================================}
-\PYG{c+c1}{\PYGZpc{} Part 3: Strategy Discovery (The Core Learner)}
+\PYG{c+c1}{\PYGZpc{} Part 2: Reflection and Learning}
 \PYG{c+c1}{\PYGZpc{} =================================================================}
 
-\PYG{c+c1}{\PYGZpc{} discover\PYGZus{}strategy(+A, +B, \PYGZhy{}StrategyName)}
+\PYG{c+c1}{\PYGZpc{}!      reflect\PYGZus{}and\PYGZus{}learn(+Result:dict) is semidet.}
 \PYG{c+c1}{\PYGZpc{}}
-\PYG{c+c1}{\PYGZpc{} The core of the learning process. It solves a problem, then analyzes the}
-\PYG{c+c1}{\PYGZpc{} trace for patterns that suggest a more efficient strategy could be created.}
-\PYG{n+nf}{discover\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
-    \PYG{n+nf}{count\PYGZus{}trace\PYGZus{}steps}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{TraceLength}\PYG{p}{),}
-    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Solution found via [\PYGZti{}w]: \PYGZti{}w. Steps: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{strategy}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{TraceLength}\PYG{p}{]),}
-    \PYG{p}{(}   \PYG{n+nf}{detect\PYGZus{}cob\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{cob}\PYG{p}{,}
-        \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}cob}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
-    \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}rmb\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{),} \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{rmb}\PYG{p}{,}
-        \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}rmb}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{)}
-    \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}doubles\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{doubles}\PYG{p}{,}
-        \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}doubles}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
-    \PYG{p}{;}   \PYG{l+s+sAtom}{fail}
+\PYG{c+c1}{\PYGZpc{}       The core reflective learning trigger. It analyzes a computation\PYGZsq{}s}
+\PYG{c+c1}{\PYGZpc{}       result, which includes the goal and execution trace, to find}
+\PYG{c+c1}{\PYGZpc{}       opportunities for creating more efficient strategies.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Result A dict containing at least `goal` and `trace`.}
+\PYG{n+nf}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nv}{Result}\PYG{p}{.}\PYG{l+s+sAtom}{goal}\PYG{p}{,}
+    \PYG{n+nv}{Trace} \PYG{o}{=} \PYG{n+nv}{Result}\PYG{p}{.}\PYG{l+s+sAtom}{trace}\PYG{p}{,}
+    \PYG{c+c1}{\PYGZpc{} We only learn from addition, and only if we have a trace.}
+    \PYG{p}{(}   \PYG{n+nf}{nonvar}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{),} \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{p}{(}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    (Reflecting on addition trace...)\PYGZsq{}}\PYG{p}{),}
+            \PYG{p}{(}   \PYG{n+nf}{detect\PYGZus{}cob\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}cob}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}rmb\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}rmb}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}doubles\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}doubles}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{l+s+sAtom}{true} \PYG{c+c1}{\PYGZpc{} Succeed even if no new strategy is found}
+            \PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{p}{;}   \PYG{l+s+sAtom}{true} \PYG{c+c1}{\PYGZpc{} Succeed if not an addition goal or no trace}
     \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 3: Foundational Abilities \PYGZam{} Trace Analysis}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
 
 \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 3.1 Foundational Ability: Counting \PYGZhy{}\PYGZhy{}\PYGZhy{}}
 
@@ -202,7 +163,7 @@
 \PYG{c+c1}{\PYGZpc{} from A, B times. This is deliberately inefficient to provide rich traces}
 \PYG{c+c1}{\PYGZpc{} for the reflective process to analyze.}
 \PYG{n+nf}{solve\PYGZus{}foundationally}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
     \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{B} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{,}
     \PYG{n+nf}{count\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Steps}\PYG{p}{),}
     \PYG{n+nv}{Trace} \PYG{o}{=} \PYG{l+s+sAtom}{trace}\PYG{p}{\PYGZob{}}\PYG{l+s+sAtom}{a\PYGZus{}start:}\PYG{n+nv}{A}\PYG{p}{,} \PYG{l+s+sAtom}{b\PYGZus{}start:}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nn}{strategy}\PYG{p}{:}\PYG{l+s+sAtom}{counting}\PYG{p}{,} \PYG{n+nn}{steps}\PYG{p}{:}\PYG{n+nv}{Steps}\PYG{p}{\PYGZcb{}.}

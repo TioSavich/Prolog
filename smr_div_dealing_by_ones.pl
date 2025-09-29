@@ -20,8 +20,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, RemainingItems, Groups, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_div_dealing_by_ones,
           [ run_dealing_by_ones/4

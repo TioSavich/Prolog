@@ -19,8 +19,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, S1, S2, P1, P2, Total, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_mult_dr,
           [ run_dr/4

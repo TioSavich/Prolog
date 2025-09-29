@@ -4,8 +4,8 @@
  * without depending on complex modules that may have loading issues.
  * It is the main entry point for the web application.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 
 :- use_module(library(http/thread_httpd)).

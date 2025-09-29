@@ -18,8 +18,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, A, B, K, A_temp, B_temp, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_add_rmb,
           [ run_rmb/4

@@ -9,8 +9,8 @@
  * This server is intended for development and provides a richer set of
  * endpoints compared to `working_server.pl`.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).

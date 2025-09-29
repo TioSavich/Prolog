@@ -11,7 +11,7 @@
 \PYG{c+cm}{ * synthesis, and validation.}
 \PYG{c+cm}{ *}
 \PYG{c+cm}{ * @author Jules}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{strategies}\PYG{p}{,} \PYG{p}{[]).}

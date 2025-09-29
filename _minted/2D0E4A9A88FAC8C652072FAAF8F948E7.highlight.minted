@@ -1,0 +1,166 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Embodied Tracing Meta\PYGZhy{}Interpreter}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module provides the core \PYGZdq{}Observe\PYGZdq{} capability of the ORR cycle.}
+\PYG{c+cm}{ * It contains a stateful meta\PYGZhy{}interpreter, `solve/4`, which executes goals}
+\PYG{c+cm}{ * defined in the `object\PYGZus{}level` module.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This version is \PYGZdq{}embodied\PYGZdq{}: it maintains a `ModalContext` (e.g., neutral,}
+\PYG{c+cm}{ * compressive, expansive) that alters its reasoning behavior. For example,}
+\PYG{c+cm}{ * in a `compressive` context, the cost of inferences increases, simulating}
+\PYG{c+cm}{ * cognitive tension and narrowing the search. This context is switched when}
+\PYG{c+cm}{ * the interpreter encounters modal operators defined in `incompatibility\PYGZus{}semantics`.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * It produces a detailed `Trace` of the execution, which is the primary}
+\PYG{c+cm}{ * data source for the `reflective\PYGZus{}monitor`.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{solve}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).} \PYG{c+c1}{\PYGZpc{} Ensure we can access the object\PYGZhy{}level code}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{hermeneutic\PYGZus{}calculator}\PYG{p}{).} \PYG{c+c1}{\PYGZpc{} For strategic choice}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).} \PYG{c+c1}{\PYGZpc{} For modal operators}
+
+\PYG{c+c1}{\PYGZpc{} Note: is\PYGZus{}list/1 is a built\PYGZhy{}in, no need to import from library(lists).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Embodied Cognition Helpers \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      is\PYGZus{}modal\PYGZus{}operator(?Goal, ?ModalContext) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Identifies an embodied modal operator and maps it to a context.}
+\PYG{n+nf}{is\PYGZus{}modal\PYGZus{}operator}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{compressive}\PYG{p}{).}
+\PYG{n+nf}{is\PYGZus{}modal\PYGZus{}operator}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}poss}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{compressive}\PYG{p}{).}
+\PYG{n+nf}{is\PYGZus{}modal\PYGZus{}operator}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}nec}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{expansive}\PYG{p}{).}
+\PYG{n+nf}{is\PYGZus{}modal\PYGZus{}operator}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{expansive}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      get\PYGZus{}inference\PYGZus{}cost(+ModalContext, \PYGZhy{}Cost) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Determines the inference cost based on the current modal context.}
+\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} `compressive`: Cost is 2 (cognitive narrowing).}
+\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} `neutral`, `expansive`: Cost is 1.}
+\PYG{n+nf}{get\PYGZus{}inference\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{compressive}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{).}
+\PYG{n+nf}{get\PYGZus{}inference\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{expansive}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{).}
+\PYG{n+nf}{get\PYGZus{}inference\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{neutral}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Arithmetic Goal Handling \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      is\PYGZus{}arithmetic\PYGZus{}goal(?Goal, ?Op) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Identifies arithmetic goals and maps them to standard operators.}
+\PYG{c+c1}{\PYGZpc{}       This allows the meta\PYGZhy{}interpreter to intercept these goals and}
+\PYG{c+c1}{\PYGZpc{}       handle them with the Hermeneutic Calculator instead of the}
+\PYG{c+c1}{\PYGZpc{}       inefficient object\PYGZhy{}level definitions.}
+\PYG{n+nf}{is\PYGZus{}arithmetic\PYGZus{}goal}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{+}\PYG{p}{).}
+\PYG{n+nf}{is\PYGZus{}arithmetic\PYGZus{}goal}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{*}\PYG{p}{).}
+\PYG{c+c1}{\PYGZpc{} Add other operations like subtract/3, divide/3 here if needed.}
+
+
+\PYG{c+c1}{\PYGZpc{}!      peano\PYGZus{}to\PYGZus{}int(?Peano, ?Int) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Converts a Peano number (s(s(0))) to an integer.}
+\PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{P}\PYG{p}{),} \PYG{n+nv}{I}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{P}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}prev}\PYG{p}{),}
+    \PYG{n+nv}{I} \PYG{o}{is} \PYG{n+nv}{I\PYGZus{}prev} \PYG{o}{+} \PYG{l+m+mf}{1.}
+
+\PYG{c+c1}{\PYGZpc{}!      int\PYGZus{}to\PYGZus{}peano(?Int, ?Peano) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Converts an integer to a Peano number.}
+\PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{P}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{I} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{I\PYGZus{}prev} \PYG{o}{is} \PYG{n+nv}{I} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{I\PYGZus{}prev}\PYG{p}{,} \PYG{n+nv}{P}\PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{}!      solve(+Goal, +InferencesIn, \PYGZhy{}InferencesOut, \PYGZhy{}Trace) is nondet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Public wrapper for the stateful meta\PYGZhy{}interpreter.}
+\PYG{c+c1}{\PYGZpc{}       Initializes the `ModalContext` to `neutral` and calls the}
+\PYG{c+c1}{\PYGZpc{}       internal `solve/6` predicate.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{l+s+sAtom}{neutral}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{}!      solve(+Goal, +CtxIn, \PYGZhy{}CtxOut, +I\PYGZus{}In, \PYGZhy{}I\PYGZus{}Out, \PYGZhy{}Trace) is nondet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The core stateful, embodied meta\PYGZhy{}interpreter.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The goal to be solved.}
+\PYG{c+c1}{\PYGZpc{}       @param CtxIn The current `ModalContext`.}
+\PYG{c+c1}{\PYGZpc{}       @param CtxOut The `ModalContext` after the goal is solved.}
+\PYG{c+c1}{\PYGZpc{}       @param I\PYGZus{}In The initial number of available inference steps.}
+\PYG{c+c1}{\PYGZpc{}       @param I\PYGZus{}Out The remaining number of inference steps.}
+\PYG{c+c1}{\PYGZpc{}       @param Trace A list representing the execution trace.}
+\PYG{c+c1}{\PYGZpc{}       @error perturbation(resource\PYGZus{}exhaustion) if inference counter drops to zero.}
+
+\PYG{c+c1}{\PYGZpc{} Base case: `true` always succeeds. Context is unchanged.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{l+s+sAtom}{true}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{p}{[])} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+
+\PYG{c+c1}{\PYGZpc{} Modal Operator: Detect a modal operator, switch context for the sub\PYGZhy{}proof,}
+\PYG{c+c1}{\PYGZpc{} and restore it upon completion.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{ModalGoal}\PYG{p}{),} \PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{modal\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{ModalGoal}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{SubTrace}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{is\PYGZus{}modal\PYGZus{}operator}\PYG{p}{(}\PYG{n+nv}{ModalGoal}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{),}
+    \PYG{p}{!,}
+    \PYG{n+nv}{ModalGoal} \PYG{l+s+sAtom}{=..} \PYG{p}{[}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{InnerGoal}\PYG{p}{],}
+    \PYG{c+c1}{\PYGZpc{} The context is switched for the InnerGoal, but restored to CtxIn afterward.}
+    \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{InnerGoal}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{n+nv}{SubTrace}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Conjunction: Solve `A` then `B`. The context flows from `A` to `B`.}
+\PYG{n+nf}{solve}\PYG{p}{((}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{CtxOut}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{trace}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}Trace}\PYG{p}{),} \PYG{n+nf}{trace}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}Trace}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{!,}
+    \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{CtxMid}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Mid}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}Trace}\PYG{p}{),}
+    \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{CtxMid}\PYG{p}{,} \PYG{n+nv}{CtxOut}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Mid}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}Trace}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} System predicates: Use context\PYGZhy{}dependent cost. Context is unchanged.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{l+s+sAtom}{built\PYGZus{}in}\PYG{p}{),}
+    \PYG{p}{!,}
+    \PYG{n+nf}{get\PYGZus{}inference\PYGZus{}cost}\PYG{p}{(}\PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
+    \PYG{n+nf}{check\PYGZus{}viability}\PYG{p}{(}\PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
+    \PYG{n+nv}{I\PYGZus{}Out} \PYG{o}{is} \PYG{n+nv}{I\PYGZus{}In} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Cost}\PYG{p}{,}
+    \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Arithmetic predicates: Use context\PYGZhy{}dependent cost. Context is unchanged.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{arithmetic\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{is\PYGZus{}arithmetic\PYGZus{}goal}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Op}\PYG{p}{),}
+    \PYG{p}{!,}
+    \PYG{n+nf}{get\PYGZus{}inference\PYGZus{}cost}\PYG{p}{(}\PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
+    \PYG{n+nf}{check\PYGZus{}viability}\PYG{p}{(}\PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
+    \PYG{n+nv}{I\PYGZus{}Out} \PYG{o}{is} \PYG{n+nv}{I\PYGZus{}In} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Cost}\PYG{p}{,}
+    \PYG{n+nv}{Goal} \PYG{l+s+sAtom}{=..} \PYG{p}{[}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Peano1}\PYG{p}{,} \PYG{n+nv}{Peano2}\PYG{p}{,} \PYG{n+nv}{PeanoResult}\PYG{p}{],}
+    \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{Peano1}\PYG{p}{,} \PYG{n+nv}{N1}\PYG{p}{),}
+    \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{Peano2}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{),}
+    \PYG{n+nf}{list\PYGZus{}strategies}\PYG{p}{(}\PYG{n+nv}{Op}\PYG{p}{,} \PYG{n+nv}{Strategies}\PYG{p}{),}
+    \PYG{p}{(} \PYG{n+nf}{is\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{Strategies}\PYG{p}{),} \PYG{n+nv}{Strategies} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{Strategy}\PYG{p}{|}\PYG{k}{\PYGZus{}}\PYG{p}{]} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{n+nf}{throw}\PYG{p}{(}\PYG{n+nf}{error}\PYG{p}{(}\PYG{n+nf}{no\PYGZus{}strategy\PYGZus{}found}\PYG{p}{(}\PYG{n+nv}{Op}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{p}{),}
+    \PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{Op}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{PeanoResult}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Object\PYGZhy{}level predicates: Use context\PYGZhy{}dependent cost. Context flows through sub\PYGZhy{}proof.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{CtxOut}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{clause}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{:\PYGZhy{}}\PYG{n+nv}{Body}\PYG{p}{)),} \PYG{n+nf}{trace}\PYG{p}{(}\PYG{n+nv}{Body}\PYG{p}{,} \PYG{n+nv}{BodyTrace}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}inference\PYGZus{}cost}\PYG{p}{(}\PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
+    \PYG{n+nf}{check\PYGZus{}viability}\PYG{p}{(}\PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
+    \PYG{n+nv}{I\PYGZus{}Mid} \PYG{o}{is} \PYG{n+nv}{I\PYGZus{}In} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Cost}\PYG{p}{,}
+    \PYG{n+nf}{clause}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Body}\PYG{p}{),}
+    \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Body}\PYG{p}{,} \PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{CtxOut}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Mid}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{n+nv}{BodyTrace}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Failure case: If a goal is not a built\PYGZhy{}in and has no matching clauses,}
+\PYG{c+c1}{\PYGZpc{} record the failure. Context is unchanged.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{fail}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{l+s+sAtom}{built\PYGZus{}in}\PYG{p}{),}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{p}{(}\PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{s}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{functor}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{l+s+sAtom}{s}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{)),} \PYG{c+c1}{\PYGZpc{} Don\PYGZsq{}t fail on modal operators here}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{clause}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{p}{!.}
+
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Viability Check \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{} check\PYGZus{}viability(+Inferences, +Cost)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Succeeds if the inference counter is sufficient for the next step\PYGZsq{}s cost.}
+\PYG{n+nf}{check\PYGZus{}viability}\PYG{p}{(}\PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{I} \PYG{o}{\PYGZgt{}=} \PYG{n+nv}{Cost}\PYG{p}{,} \PYG{p}{!.}
+\PYG{n+nf}{check\PYGZus{}viability}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Constraint violated: PERTURBATION DETECTED}
+    \PYG{n+nf}{throw}\PYG{p}{(}\PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{)).}
+\end{MintedVerbatim}

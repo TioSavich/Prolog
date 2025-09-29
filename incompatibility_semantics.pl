@@ -14,8 +14,8 @@
  *  - Support for multiple arithmetic domains (n, z, q) via `set_domain/1`.
  *  - A rich set of logical operators and domain-specific predicates.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(incompatibility_semantics,
           [ proves/1

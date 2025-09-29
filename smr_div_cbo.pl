@@ -23,8 +23,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, Quotient, Remainder, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_div_cbo,
           [ run_cbo_div/5

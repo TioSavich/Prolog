@@ -20,8 +20,8 @@
  * The history of execution is captured as a list of steps:
  * `step(StateName, Result_Tens, Result_Ones, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_sub_decomposition,
           [ run_decomposition/4

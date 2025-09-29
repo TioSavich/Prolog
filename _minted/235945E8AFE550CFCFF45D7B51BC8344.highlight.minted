@@ -8,8 +8,8 @@
 \PYG{c+cm}{ * It is not part of the main application logic but can be useful for}
 \PYG{c+cm}{ * debugging or initial environment setup verification.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{http}\PYG{o}{/}\PYG{l+s+sAtom}{thread\PYGZus{}httpd}\PYG{p}{)).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{http}\PYG{o}{/}\PYG{l+s+sAtom}{http\PYGZus{}dispatch}\PYG{p}{)).}

@@ -11,8 +11,8 @@
  * The input to the automaton is a series of `tick` events, each causing the
  * counter to increment by one.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(counting2,
           [ run_counter/2

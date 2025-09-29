@@ -8,8 +8,8 @@
  * It is likely intended for testing, demonstration, or as a simplified
  * alternative to the more complex, modularized servers.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).

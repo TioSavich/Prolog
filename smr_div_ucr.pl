@@ -22,8 +22,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, Total_Accumulated, Quotient_PerGroup, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_div_ucr,
           [ run_ucr/4

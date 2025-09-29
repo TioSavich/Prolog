@@ -23,8 +23,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, K, M_adj, S_adj, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_sub_sliding,
           [ run_sliding/4

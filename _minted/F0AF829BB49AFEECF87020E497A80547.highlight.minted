@@ -9,8 +9,8 @@
 \PYG{c+cm}{ * It is likely intended for testing, demonstration, or as a simplified}
 \PYG{c+cm}{ * alternative to the more complex, modularized servers.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{http}\PYG{o}{/}\PYG{l+s+sAtom}{thread\PYGZus{}httpd}\PYG{p}{)).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{http}\PYG{o}{/}\PYG{l+s+sAtom}{http\PYGZus{}dispatch}\PYG{p}{)).}

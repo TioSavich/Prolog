@@ -7,8 +7,8 @@
  * It is not part of the main application logic but can be useful for
  * debugging or initial environment setup verification.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).

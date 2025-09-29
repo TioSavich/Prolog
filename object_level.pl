@@ -11,8 +11,8 @@
  * deliberately inefficient to create opportunities for the system to detect
  * disequilibrium and self-improve.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(object_level, [add/3, multiply/3]).
 

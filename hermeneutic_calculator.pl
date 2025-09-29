@@ -8,8 +8,8 @@
  * This allows the user interface or other components to abstract away the
  * details of individual strategy modules.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(hermeneutic_calculator,
           [ calculate/6

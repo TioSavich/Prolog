@@ -11,8 +11,8 @@
 \PYG{c+cm}{ * across units, tens, and hundreds places, which are stored on the stack.}
 \PYG{c+cm}{ * This provides a more complex model of cognitive counting processes.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{counting\PYGZus{}on\PYGZus{}back}\PYG{p}{,}
           \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}counter}\PYG{o}{/}\PYG{l+m+mi}{3}

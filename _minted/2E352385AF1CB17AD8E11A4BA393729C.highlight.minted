@@ -20,8 +20,8 @@
 \PYG{c+cm}{ * The history of execution is captured as a list of steps:}
 \PYG{c+cm}{ * `step(Name, S1, S2, P1, P2, Total, Interpretation)`}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}dr}\PYG{p}{,}
           \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}dr}\PYG{o}{/}\PYG{l+m+mi}{4}

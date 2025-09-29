@@ -12,8 +12,8 @@
 \PYG{c+cm}{ * Log entries are stored as dynamic facts of the form:}
 \PYG{c+cm}{ * `log\PYGZus{}entry(Timestamp, Event)`.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}log}\PYG{p}{,} \PYG{p}{[}
     \PYG{l+s+sAtom}{log\PYGZus{}event}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}

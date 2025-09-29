@@ -20,8 +20,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, K, RoundedTarget, TempSum, CurrentResult, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_add_rounding,
           [ run_rounding/4

@@ -7,8 +7,8 @@
  * When executed, it invokes the ORR (Observe, Reorganize, Reflect) cycle
  * with a predefined goal and prints the final result to the console.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- use_module(execution_handler).
 

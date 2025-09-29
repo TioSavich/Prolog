@@ -18,8 +18,8 @@
  * The history of execution is captured as a list of steps:
  * `step(StateName, CurrentSum, BasesRemaining, OnesRemaining, K, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_add_chunking,
           [ run_chunking/4

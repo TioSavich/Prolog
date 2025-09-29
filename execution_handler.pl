@@ -8,8 +8,8 @@
  * The primary entry point is `run_query/1`, which initiates the ORR cycle
  * for a given goal.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(execution_handler, [run_computation/2]).
 

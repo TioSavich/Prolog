@@ -8,8 +8,8 @@
 \PYG{c+cm}{ * When executed, it invokes the ORR (Observe, Reorganize, Reflect) cycle}
 \PYG{c+cm}{ * with a predefined goal and prints the final result to the console.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{).}
 

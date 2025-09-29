@@ -12,8 +12,8 @@
 \PYG{c+cm}{ * The main entry point is `start/0`, which initializes the system and}
 \PYG{c+cm}{ * displays the main menu.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{interactive\PYGZus{}ui}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{start}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{]).}
 

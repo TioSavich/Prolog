@@ -23,8 +23,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, Remainder, TotalQuotient, PartialTotal, PartialQuotient, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(smr_div_idp,
           [ run_idp/5

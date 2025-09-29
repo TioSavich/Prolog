@@ -10,8 +10,8 @@
  * across units, tens, and hundreds places, which are stored on the stack.
  * This provides a more complex model of cognitive counting processes.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(counting_on_back,
           [ run_counter/3

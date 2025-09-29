@@ -18,8 +18,8 @@
  * The history of execution is captured as a list of steps:
  * `step(Name, CurrentValue, BaseCounter, OneCounter, Interpretation)`
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(sar_sub_cbbo_take_away,
           [ run_cbbo_ta/4

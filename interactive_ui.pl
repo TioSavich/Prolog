@@ -11,8 +11,8 @@
  * The main entry point is `start/0`, which initializes the system and
  * displays the main menu.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(interactive_ui, [start/0]).
 

@@ -17,8 +17,8 @@
  * The stress map is stored as dynamic facts of the form:
  * `stress(PredicateSignature, Count)`.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(reflective_monitor, [
     reflect/2,

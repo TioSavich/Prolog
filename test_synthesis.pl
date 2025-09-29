@@ -15,8 +15,8 @@
  * To run these tests, execute `run_tests(unified_synthesis).` from the
  * SWI-Prolog console after loading this file.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 % Load the module under test. Explicitly qualify imports to avoid ambiguity in tests.
 :- use_module(incompatibility_semantics, [

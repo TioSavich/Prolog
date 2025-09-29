@@ -16,12 +16,12 @@
 \PYG{c+cm}{ * To run these tests, execute `run\PYGZus{}tests(unified\PYGZus{}synthesis).` from the}
 \PYG{c+cm}{ * SWI\PYGZhy{}Prolog console after loading this file.}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{c+c1}{\PYGZpc{} Load the module under test. Explicitly qualify imports to avoid ambiguity in tests.}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}
-    \PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{incoherent}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{obj\PYGZus{}coll}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}
+    \PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{incoherent}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{is\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}
 \PYG{p}{]).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{plunit}\PYG{p}{)).}
 
@@ -49,13 +49,16 @@
     \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{))])).}
 
 \PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{)))])).}
+    \PYG{c+c1}{\PYGZpc{} This tests that demanding a subtraction resulting in a negative number}
+    \PYG{c+c1}{\PYGZpc{} is incoherent in the domain of natural numbers.}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{))])).}
 
 \PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n\PYGZus{}persistence}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{))),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{)])).}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{)),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{)])).}
 
 \PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}z}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{z}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{)))]))).}
+    \PYG{c+c1}{\PYGZpc{} The same subtraction is coherent in the domain of integers.}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{))])).}
 
 \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Part 3: Embodied Modal Logic (EML) \PYGZhy{} UPDATED \PYGZhy{}\PYGZhy{}\PYGZhy{}}
 \PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{eml\PYGZus{}dynamic\PYGZus{}u\PYGZus{}to\PYGZus{}a}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{u}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{a}\PYG{p}{)])).}
@@ -159,14 +162,16 @@
 
 \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Fractions (Jason.pl integration) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
 
-\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}obj\PYGZus{}coll\PYGZus{}q}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{)),}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)),}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{0}\PYG{p}{)).}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}is\PYGZus{}recollection}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
 
-\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}obj\PYGZus{}coll\PYGZus{}n}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{)),}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)).}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{integer\PYGZus{}is\PYGZus{}recollection}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} is\PYGZus{}recollection is domain\PYGZhy{}independent; it checks constructive possibility.}
+    \PYG{c+c1}{\PYGZpc{} A fraction can be a valid recollection even if its use is restricted by domain norms.}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
 
 \PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}normalization}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
     \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{normalize}\PYG{p}{(}\PYG{l+m+mi}{4} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{8}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{)),}
@@ -187,7 +192,7 @@
 \PYG{c+c1}{\PYGZpc{} Test subtraction constraints in N with fractions}
 \PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
     \PYG{c+c1}{\PYGZpc{} 1/3 \PYGZhy{} 1/2 = \PYGZhy{}1/6. Incoherent in N.}
-    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)))])).}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{))])).}
 
 \PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}iteration\PYGZus{}grounding}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
     \PYG{c+c1}{\PYGZpc{} (1/3) * 4 = 4/3}

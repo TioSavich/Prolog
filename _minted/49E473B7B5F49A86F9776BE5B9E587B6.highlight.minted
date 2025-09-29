@@ -21,8 +21,8 @@
 \PYG{c+cm}{ * The history of execution is captured as a list of steps:}
 \PYG{c+cm}{ * `step(Name, CurrentValue, Distance, Interpretation)`}
 \PYG{c+cm}{ *}
-\PYG{c+cm}{ * @author Tilo Wiedera}
-\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
 \PYG{c+cm}{ */}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}cobo\PYGZus{}missing\PYGZus{}addend}\PYG{p}{,}
           \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}cobo\PYGZus{}ma}\PYG{o}{/}\PYG{l+m+mi}{4}

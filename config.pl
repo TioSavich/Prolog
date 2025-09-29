@@ -4,8 +4,8 @@
  * Reorganize, Reflect) system. These parameters control the behavior of the
  * cognitive cycle, such as resource limits.
  *
- * @author Tilo Wiedera
- * @license MIT
+ * 
+ * 
  */
 :- module(config, [
     max_inferences/1,
