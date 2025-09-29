@@ -14,7 +14,6 @@
 :- module(execution_handler, [run_computation/2]).
 
 :- use_module(meta_interpreter).
-:- use_module(reorganization_engine).
 :- use_module(object_level).
 :- use_module(more_machine_learner, [reflect_and_learn/1]).
 
@@ -99,8 +98,6 @@ handle_perturbation(perturbation(resource_exhaustion), Goal, Trace, Limit) :-
     normalize_trace(Trace, NormalizedTrace),
     Result = _{goal:Goal, trace:NormalizedTrace},
     reflect_and_learn(Result),
-    % Then, proceed with the original reorganization logic
-    reorganize_system(Goal, Trace),
     writeln('Reorganization complete. Retrying goal...'),
     run_computation(Goal, Limit).
 
