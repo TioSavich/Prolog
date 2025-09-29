@@ -18,7 +18,9 @@
  * @license MIT
  */
 :- module(incompatibility_semantics,
-          [ proves/1, obj_coll/1, incoherent/1, set_domain/1, current_domain/1
+          [ proves/1
+          , is_recollection/2 % obj_coll/1 is deprecated
+          , incoherent/1, set_domain/1, current_domain/1
           % Updated exports
           , s/1, o/1, n/1, comp_nec/1, exp_nec/1, exp_poss/1, comp_poss/1, neg/1
           , highlander/2, bounded_region/4, equality_iterator/3
@@ -31,6 +33,8 @@
           , rdiv/2, iterate/3, partition/3, normalize/2 % Export normalize
           ]).
 % Declare predicates that are defined across different sections.
+:- use_module(hermeneutic_calculator).
+
 :- discontiguous proves_impl/2.
 :- discontiguous is_incoherent/1. % Non-recursive check
 
@@ -95,23 +99,58 @@ set_domain(D) :-
     ( member(D, [n, z, q]) -> retractall(current_domain(_)), assertz(current_domain(D)) ; true).
 
 
-%!      obj_coll(+Term) is semidet.
+% Deprecated: obj_coll/1. Replaced by is_recollection/2.
+% The old obj_coll/1 predicate checked for static, timeless properties.
+% The new ontology requires that a number's validity is proven by
+% demonstrating a constructive history (an anaphoric recollection).
 %
-%       Checks if a `Term` is a valid object in the `current_domain/1`.
-%       - In domain `n`, `Term` must be a non-negative integer.
-%       - In domain `z`, `Term` must be an integer.
-%       - In domain `q`, `Term` can be an integer or a rational number
-%         represented as `N rdiv D`.
+% obj_coll(N) :- current_domain(n), !, integer(N), N >= 0.
+% obj_coll(N) :- current_domain(z), !, integer(N).
+% obj_coll(X) :- current_domain(q), !,
+%     ( integer(X)
+%     ; (X = N rdiv D, integer(N), integer(D), D > 0)
+%     ).
+
+%!      is_recollection(?Term, ?History) is semidet.
 %
-%       @param Term The term to check.
-obj_coll(N) :- current_domain(n), !, integer(N), N >= 0.
-obj_coll(N) :- current_domain(z), !, integer(N).
-% Domain Q recognizes integers AND rationals.
-% Use a single clause with disjunction (;) for correctness.
-obj_coll(X) :- current_domain(q), !,
-    ( integer(X)
-    ; (X = N rdiv D, integer(N), integer(D), D > 0)
-    ).
+%       The new core ontological predicate. It succeeds if `Term` is a
+%       validly constructed number, where `History` is the execution
+%       trace of the calculation that constructed it. This replaces the
+%       static `obj_coll/1` check with a dynamic, process-based validation.
+%
+%       @param Term The numerical term to be validated (e.g., 5).
+%       @param History The constructive trace that proves the term's existence.
+
+% Base case: 0 is axiomatically a number.
+is_recollection(0, [axiom(zero)]).
+
+% Recursive case for positive integers: N is a recollection if N-1 is, and we
+% can construct N by adding 1 using the hermeneutic calculator.
+is_recollection(N, History) :-
+    integer(N),
+    N > 0,
+    Prev is N - 1,
+    is_recollection(Prev, _), % Foundational check on the predecessor
+    hermeneutic_calculator:calculate(Prev, +, 1, _Strategy, N, History).
+
+% Case for negative integers: A negative number is constructed by subtracting
+% its absolute value from 0.
+is_recollection(N, History) :-
+    integer(N),
+    N < 0,
+    is_recollection(0, _), % Grounded in the axiom of zero
+    Val is abs(N),
+    hermeneutic_calculator:calculate(0, -, Val, _Strategy, N, History).
+
+% Case for rational numbers: A rational N/D is a recollection if its
+% numerator and denominator are themselves valid recollections.
+% The history records this compositional validation.
+is_recollection(N rdiv D, [history(rational, from(N, D))]) :-
+    % Denominator must be a positive integer. We check its recollection status.
+    is_recollection(D, _),
+    integer(D), D > 0,
+    % Numerator can be any recollected number.
+    is_recollection(N, _).
 
 
 % --- Helpers for Rational Arithmetic ---
@@ -174,7 +213,7 @@ excluded_predicates(AllPreds) :-
     fraction_predicates(F),
     append(G, NT, Temp),
     append(Temp, F, DomainPreds),
-    append([neg, conj, nec, comp_nec, exp_nec, exp_poss, comp_poss, obj_coll], DomainPreds, AllPreds).
+    append([neg, conj, nec, comp_nec, exp_nec, exp_poss, comp_poss, is_recollection], DomainPreds, AllPreds).
 
 % --- Helpers for Number Theory (Grounded) ---
 
@@ -235,11 +274,11 @@ is_incoherent(X) :-
     incompatible_pair(Shape, Restriction), !.
 
 % Arithmetic Incompatibility (Generalized to handle fractions)
+% This is incoherent if a norm demands an impossible recollection.
 is_incoherent(X) :-
-    member(n(obj_coll(minus(A,B,_))), X),
+    member(n(minus(A,B,_)), X), % Check for the normative proposition
     current_domain(n),
-    % Normalize before comparison to handle integers and fractions correctly.
-    % Use normalize/2 which ensures A and B are valid arithmetic objects before comparison.
+    is_recollection(A, _), is_recollection(B, _), % Operands must be valid numbers
     normalize(A, NA), normalize(B, NB),
     NA < NB, !.
 
@@ -290,22 +329,22 @@ proves_impl((Premises => _), _) :-
 
 % --- Arithmetic Grounding (Extended for Q) ---
 proves_impl(_ => [o(eq(A,B))], _) :-
-    obj_coll(A), obj_coll(B),
+    is_recollection(A, _), is_recollection(B, _),
     normalize(A, NA), normalize(B, NB),
     NA == NB.
 
 proves_impl(_ => [o(plus(A,B,C))], _) :-
-    obj_coll(A), obj_coll(B),
+    is_recollection(A, _), is_recollection(B, _),
     arith_op(A, B, +, C),
-    obj_coll(C).
+    is_recollection(C, _).
 
 proves_impl(_ => [o(minus(A,B,C))], _) :-
-    current_domain(D), obj_coll(A), obj_coll(B),
+    current_domain(D), is_recollection(A, _), is_recollection(B, _),
     arith_op(A, B, -, C),
     % Subtraction constraints only apply to N. We must normalize C before comparison.
     normalize(C, NC),
     ((D=n, NC >= 0) ; member(D, [z, q])),
-    obj_coll(C).
+    is_recollection(C, _).
 
 % --- Arithmetic Material Inferences ---
 proves_impl([n(plus(A,B,C))] => [n(plus(B,A,C))], _).
@@ -333,7 +372,7 @@ proves_impl([s(t_n)] => [s(comp_nec t_b)], _).
 
 % Grounding: Iterating (Multiplication)
 proves_impl(([] => [o(iterate(U, M, R))]), _) :-
-    obj_coll(U), integer(M), M >= 0,
+    is_recollection(U, _), integer(M), M >= 0,
     % R = U * M
     normalize(U, NU),
     (integer(NU) -> N1=NU, D1=1 ; NU = N1 rdiv D1),
@@ -343,7 +382,7 @@ proves_impl(([] => [o(iterate(U, M, R))]), _) :-
 
 % Grounding: Partitioning (Division)
 proves_impl(([] => [o(partition(W, N, U))]), _) :-
-    obj_coll(W), integer(N), N > 0,
+    is_recollection(W, _), integer(N), N > 0,
     % U = W / N
     normalize(W, NW),
     (integer(NW) -> N1=NW, D1=1 ; NW = N1 rdiv D1),

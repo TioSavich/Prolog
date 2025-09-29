@@ -31,7 +31,7 @@
           ]).
 
 % Use the semantics engine for validation
-:- use_module(incompatibility_semantics, [proves/1, set_domain/1, current_domain/1, obj_coll/1, normalize/2]).
+:- use_module(incompatibility_semantics, [proves/1, set_domain/1, current_domain/1, is_recollection/2, normalize/2]).
 :- use_module(library(random)).
 :- use_module(library(lists)).
 
@@ -201,7 +201,7 @@ successor(X, Y) :- proves([] => [o(plus(X, 1, Y))]).
 % from A, B times. This is deliberately inefficient to provide rich traces
 % for the reflective process to analyze.
 solve_foundationally(A, B, Result, Trace) :-
-    obj_coll(A), obj_coll(B),
+    is_recollection(A, _), is_recollection(B, _),
     integer(A), integer(B), B >= 0,
     count_loop(A, B, Result, Steps),
     Trace = trace{a_start:A, b_start:B, strategy:counting, steps:Steps}.

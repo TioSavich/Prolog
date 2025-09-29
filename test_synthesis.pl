@@ -20,7 +20,7 @@
  */
 % Load the module under test. Explicitly qualify imports to avoid ambiguity in tests.
 :- use_module(incompatibility_semantics, [
-    proves/1, incoherent/1, set_domain/1, obj_coll/1, normalize/2
+    proves/1, incoherent/1, set_domain/1, is_recollection/2, normalize/2
 ]).
 :- use_module(library(plunit)).
 
@@ -48,13 +48,16 @@ test(arithmetic_commutativity_normative) :-
     assertion(proves([n(plus(2,3,5))] => [n(plus(3,2,5))])).
 
 test(arithmetic_subtraction_limit_n, [setup(set_domain(n))]) :-
-    assertion(incoherent([n(obj_coll(minus(3,5,_)))])).
+    % This tests that demanding a subtraction resulting in a negative number
+    % is incoherent in the domain of natural numbers.
+    assertion(incoherent([n(minus(3,5,_))])).
 
 test(arithmetic_subtraction_limit_n_persistence, [setup(set_domain(n))]) :-
-    assertion(incoherent([n(obj_coll(minus(3,5,_))), s(p)])).
+    assertion(incoherent([n(minus(3,5,_)), s(p)])).
 
 test(arithmetic_subtraction_limit_z, [setup(set_domain(z))]) :-
-    assertion(\+(incoherent([n(obj_coll(minus(3,5,_)))]))).
+    % The same subtraction is coherent in the domain of integers.
+    \+ assertion(incoherent([n(minus(3,5,_))])).
 
 % --- Tests for Part 3: Embodied Modal Logic (EML) - UPDATED ---
 test(eml_dynamic_u_to_a) :- assertion(proves([s(u)] => [s(a)])).
@@ -158,14 +161,16 @@ test(euclid_theorem_empty_list) :-
 
 % --- Tests for Fractions (Jason.pl integration) ---
 
-test(fraction_obj_coll_q, [setup(set_domain(q))]) :-
-    assertion(obj_coll(1 rdiv 2)),
-    assertion(obj_coll(5)),
-    assertion(\+ obj_coll(1 rdiv 0)).
+test(fraction_is_recollection, [setup(set_domain(q))]) :-
+    assertion(is_recollection(1 rdiv 2, _)),
+    assertion(is_recollection(5, _)),
+    assertion(\+ is_recollection(1 rdiv 0, _)).
 
-test(fraction_obj_coll_n, [setup(set_domain(n))]) :-
-    assertion(\+ obj_coll(1 rdiv 2)),
-    assertion(obj_coll(5)).
+test(integer_is_recollection, [setup(set_domain(n))]) :-
+    % is_recollection is domain-independent; it checks constructive possibility.
+    % A fraction can be a valid recollection even if its use is restricted by domain norms.
+    assertion(is_recollection(1 rdiv 2, _)),
+    assertion(is_recollection(5, _)).
 
 test(fraction_normalization) :-
     assertion(normalize(4 rdiv 8, 1 rdiv 2)),
@@ -186,7 +191,7 @@ test(fraction_subtraction_grounding, [setup(set_domain(q))]) :-
 % Test subtraction constraints in N with fractions
 test(fraction_subtraction_limit_n, [setup(set_domain(n))]) :-
     % 1/3 - 1/2 = -1/6. Incoherent in N.
-    assertion(incoherent([n(obj_coll(minus(1 rdiv 3, 1 rdiv 2, _)))])).
+    assertion(incoherent([n(minus(1 rdiv 3, 1 rdiv 2, _))])).
 
 test(fraction_iteration_grounding, [setup(set_domain(q))]) :-
     % (1/3) * 4 = 4/3
