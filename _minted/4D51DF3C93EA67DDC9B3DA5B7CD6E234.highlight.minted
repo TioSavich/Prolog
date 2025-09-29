@@ -1,0 +1,34 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{begin\PYGZus{}tests}\PYG{p}{(}\PYG{l+s+sAtom}{full\PYGZus{}reorganization\PYGZus{}loop}\PYG{p}{).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper to create a Peano number}
+\PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{P}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{I} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{I\PYGZus{}prev} \PYG{o}{is} \PYG{n+nv}{I} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{I\PYGZus{}prev}\PYG{p}{,} \PYG{n+nv}{P}\PYG{p}{).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}on\PYGZus{}add}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{retractall}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{add}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{)))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Define an inefficient add rule for the test}
+    \PYG{n+nf}{assertz}\PYG{p}{((}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+        \PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{enumerate}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),}
+        \PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{enumerate}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),}
+        \PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{recursive\PYGZus{}add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{))),}
+
+    \PYG{c+c1}{\PYGZpc{} This goal is inefficient because 3 is smaller than 10.}
+    \PYG{c+c1}{\PYGZpc{} The learner should discover the \PYGZdq{}Count On Bigger\PYGZdq{} (COB) strategy.}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{PeanoA}\PYG{p}{),}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{PeanoB}\PYG{p}{),}
+    \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{PeanoA}\PYG{p}{,} \PYG{n+nv}{PeanoB}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Result}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Set a low limit to ensure the initial attempt fails}
+    \PYG{n+nv}{Limit} \PYG{o}{=} \PYG{l+m+mi}{15}\PYG{p}{,}
+
+    \PYG{c+c1}{\PYGZpc{} This should succeed after reorganization}
+    \PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{end\PYGZus{}tests}\PYG{p}{(}\PYG{l+s+sAtom}{full\PYGZus{}reorganization\PYGZus{}loop}\PYG{p}{).}
+\end{MintedVerbatim}

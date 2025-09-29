@@ -1,0 +1,109 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Bidirectional Counting Automaton (Up and Down)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a Deterministic Pushdown Automaton (DPDA) that}
+\PYG{c+cm}{ * simulates counting both forwards and backwards. It extends the functionality}
+\PYG{c+cm}{ * of `counting2.pl` by handling two types of input events:}
+\PYG{c+cm}{ * \PYGZhy{} `tick`: Increments the counter by one.}
+\PYG{c+cm}{ * \PYGZhy{} `tock`: Decrements the counter by one.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The automaton manages carrying (for `tick`) and borrowing (for `tock`)}
+\PYG{c+cm}{ * across units, tens, and hundreds places, which are stored on the stack.}
+\PYG{c+cm}{ * This provides a more complex model of cognitive counting processes.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Tilo Wiedera}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{counting\PYGZus{}on\PYGZus{}back}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}counter}\PYG{o}{/}\PYG{l+m+mi}{3}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}counter(+StartN:integer, +Ticks:list, \PYGZhy{}FinalValue:integer) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Runs the bidirectional counting automaton.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes the DPDA\PYGZsq{}s stack to represent `StartN`,}
+\PYG{c+c1}{\PYGZpc{}       then processes a list of `Ticks`, where each element is either `tick`}
+\PYG{c+c1}{\PYGZpc{}       (increment) or `tock` (decrement). Finally, it converts the resulting}
+\PYG{c+c1}{\PYGZpc{}       stack back into an integer.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param StartN The integer value to start counting from.}
+\PYG{c+c1}{\PYGZpc{}       @param Ticks A list of `tick` and `tock` atoms.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalValue The final integer value after processing all ticks.}
+\PYG{n+nf}{run\PYGZus{}counter}\PYG{p}{(}\PYG{n+nv}{StartN}\PYG{p}{,} \PYG{n+nv}{Ticks}\PYG{p}{,} \PYG{n+nv}{FinalValue}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Set up initial stack from the starting number.}
+    \PYG{n+nv}{H} \PYG{o}{is} \PYG{n+nv}{StartN} \PYG{o}{//} \PYG{l+m+mi}{100}\PYG{p}{,}
+    \PYG{n+nv}{T} \PYG{o}{is} \PYG{p}{(}\PYG{n+nv}{StartN} \PYG{o}{mod} \PYG{l+m+mi}{100}\PYG{p}{)} \PYG{o}{//} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nv}{U} \PYG{o}{is} \PYG{n+nv}{StartN} \PYG{o}{mod} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{U}\PYG{p}{,} \PYG{n+nv}{US}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{TS}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{,} \PYG{n+nv}{HS}\PYG{p}{),}
+    \PYG{n+nv}{InitialStack} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{US}\PYG{p}{,} \PYG{n+nv}{TS}\PYG{p}{,} \PYG{n+nv}{HS}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{],}
+    \PYG{n+nv}{InitialPDA} \PYG{o}{=} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{n+nv}{InitialStack}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Run the DPDA with the list of ticks/tocks.}
+    \PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{InitialPDA}\PYG{p}{,} \PYG{n+nv}{Ticks}\PYG{p}{,} \PYG{n+nv}{FinalPDA}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Convert the final stack configuration to an integer.}
+    \PYG{n+nv}{FinalPDA} \PYG{o}{=} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{),}
+    \PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{FinalStack}\PYG{p}{,} \PYG{n+nv}{FinalValue}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} run\PYGZus{}pda(+PDA, +Input, \PYGZhy{}FinalPDA)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} The main recursive loop that drives the automaton.}
+\PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{PDA}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{PDA}\PYG{p}{).}
+\PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{PDA}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Input}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{FinalPDA}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{PDA}\PYG{p}{,} \PYG{n+nv}{Input}\PYG{p}{,} \PYG{n+nv}{NextPDA}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{NextPDA}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{FinalPDA}\PYG{p}{).}
+\PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{State}\PYG{p}{,} \PYG{n+nv}{Stack}\PYG{p}{),} \PYG{p}{[],} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{FinalState}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{State}\PYG{p}{,} \PYG{n+nv}{Stack}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{FinalState}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{)),}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{FinalState}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} ensure it\PYGZsq{}s a final epsilon transition}
+    \PYG{p}{!.}
+
+\PYG{c+c1}{\PYGZpc{} transition(+CurrentPDA, +Input, \PYGZhy{}NextPDA)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Defines the state transition rules for the up/down counter.}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Unit Transitions \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{} Increment (tick)}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{U}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{tick}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NewU}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{U}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewU}\PYG{p}{).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{tick}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}tens}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{)).}
+\PYG{c+c1}{\PYGZpc{} Decrement (tock)}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{U}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{tock}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NewU}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{U}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewU}\PYG{p}{).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{tock}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}dec\PYGZus{}tens}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{)).}
+
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tens Transitions (Epsilon\PYGZhy{}driven) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{} Carry from units}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}tens}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}tens}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}hundreds}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{)).}
+\PYG{c+c1}{\PYGZpc{} Borrow from tens}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}dec\PYGZus{}tens}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}dec\PYGZus{}tens}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}dec\PYGZus{}hundreds}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{)).}
+
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Hundreds Transitions (Epsilon\PYGZhy{}driven) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{} Carry from tens}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}hundreds}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewH}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewH}\PYG{p}{).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}hundreds}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}H9\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}halt}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{])).}
+\PYG{c+c1}{\PYGZpc{} Borrow from hundreds}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}dec\PYGZus{}hundreds}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewH}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewH}\PYG{p}{).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}dec\PYGZus{}hundreds}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}underflow}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}H9\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{])).}
+
+
+\PYG{c+c1}{\PYGZpc{} stack\PYGZus{}to\PYGZus{}int(+Stack, \PYGZhy{}Value)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Converts the final stack representation back into an integer.}
+\PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int}\PYG{p}{([}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{],} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int}\PYG{p}{([}\PYG{n+nv}{U}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{],} \PYG{n+nv}{Value}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{U\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{U}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{U\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{U\PYGZus{}val}\PYG{p}{),}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{T\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{T\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{T\PYGZus{}val}\PYG{p}{),}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{H\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{H\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{H\PYGZus{}val}\PYG{p}{),}
+    \PYG{n+nv}{Value} \PYG{o}{is} \PYG{n+nv}{U\PYGZus{}val} \PYG{o}{+} \PYG{n+nv}{T\PYGZus{}val} \PYG{o}{*} \PYG{l+m+mi}{10} \PYG{o}{+} \PYG{n+nv}{H\PYGZus{}val} \PYG{o}{*} \PYG{l+m+mf}{100.}
+\end{MintedVerbatim}

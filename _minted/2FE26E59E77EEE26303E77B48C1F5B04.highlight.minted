@@ -1,0 +1,349 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cp}{\PYGZlt{}!DOCTYPE html\PYGZgt{}}
+\PYG{p}{\PYGZlt{}}\PYG{n+nt}{html} \PYG{n+na}{lang}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}en\PYGZdq{}}\PYG{p}{\PYGZgt{}}
+\PYG{p}{\PYGZlt{}}\PYG{n+nt}{head}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{meta} \PYG{n+na}{charset}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}UTF\PYGZhy{}8\PYGZdq{}}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{title}\PYG{p}{\PYGZgt{}}Cognitive Reorganization Visualization (Prolog/WASM/D3)\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{title}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{script} \PYG{n+na}{src}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}https://d3js.org/d3.v7.min.js\PYGZdq{}}\PYG{p}{\PYGZgt{}\PYGZlt{}/}\PYG{n+nt}{script}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{script} \PYG{n+na}{src}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}https://cdn.jsdelivr.net/npm/swipl\PYGZhy{}wasm@3.3.1/dist/swipl\PYGZhy{}web.js\PYGZdq{}}\PYG{p}{\PYGZgt{}\PYGZlt{}/}\PYG{n+nt}{script}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{style}\PYG{p}{\PYGZgt{}}
+\PYG{+w}{        }\PYG{n+nt}{body}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{font\PYGZhy{}family}\PYG{p}{:}\PYG{+w}{ }\PYG{n}{Arial}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kc}{sans\PYGZhy{}serif}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{display}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kc}{flex}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{margin}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{0}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{height}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{100}\PYG{k+kt}{vh}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{p}{\PYGZsh{}}\PYG{n+nn}{sidebar}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{width}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{350}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{padding}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{20}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{background\PYGZhy{}color}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mh}{\PYGZsh{}f4f4f4}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{display}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kc}{flex}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{flex\PYGZhy{}direction}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kc}{column}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{p}{\PYGZsh{}}\PYG{n+nn}{visualization}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{flex\PYGZhy{}grow}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }
+\PYG{+w}{        }\PYG{c}{/* D3 Visualization Styles */}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n+nc}{link}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{stroke}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mh}{\PYGZsh{}999}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{stroke\PYGZhy{}opacity}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mf}{0.6}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }
+\PYG{+w}{        }\PYG{c}{/* Node Styles: Differentiating concepts and entities */}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n+nc}{node\PYGZhy{}entity}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{fill}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mh}{\PYGZsh{}2ca02c}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{c}{/* Green for entities */}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n+nc}{node\PYGZhy{}predicate}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{fill}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mh}{\PYGZsh{}1f77b4}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{c}{/* Blue for predicates/facts */}
+\PYG{+w}{        }
+\PYG{+w}{        }\PYG{c}{/* Visualizing Disequilibrium (Incompatibility Conflict) */}
+\PYG{+w}{        }\PYG{p}{.}\PYG{n+nc}{inconsistent}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }
+\PYG{+w}{            }\PYG{k}{stroke}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mh}{\PYGZsh{}d62728}\PYG{p}{;}\PYG{+w}{ }\PYG{c}{/* Red border */}
+\PYG{+w}{            }\PYG{k}{stroke\PYGZhy{}width}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{4}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{        }\PYG{c}{/* Interface Styles */}
+\PYG{+w}{        }\PYG{p}{\PYGZsh{}}\PYG{n+nn}{controls}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{margin\PYGZhy{}bottom}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{20}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{n+nt}{input}\PYG{o}{[}\PYG{n+nt}{type}\PYG{o}{=}\PYG{l+s+s2}{\PYGZdq{}text\PYGZdq{}}\PYG{o}{]}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{padding}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{8}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{width}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{70}\PYG{k+kt}{\PYGZpc{}}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{font\PYGZhy{}size}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{14}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{n+nt}{button}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{padding}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{8}\PYG{k+kt}{px}\PYG{+w}{ }\PYG{l+m+mi}{12}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{margin\PYGZhy{}left}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{5}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{cursor}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kc}{pointer}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{font\PYGZhy{}size}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{14}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{p}{\PYGZsh{}}\PYG{n+nn}{output}\PYG{+w}{ }\PYG{p}{\PYGZob{}}\PYG{+w}{ }\PYG{k}{flex\PYGZhy{}grow}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{1}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{white\PYGZhy{}space}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kc}{pre\PYGZhy{}wrap}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{background}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mh}{\PYGZsh{}333}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{color}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mh}{\PYGZsh{}f0f0f0}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{padding}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{15}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{overflow\PYGZhy{}y}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kc}{auto}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{font\PYGZhy{}family}\PYG{p}{:}\PYG{+w}{ }\PYG{k+kc}{monospace}\PYG{p}{;}\PYG{+w}{ }\PYG{k}{font\PYGZhy{}size}\PYG{p}{:}\PYG{+w}{ }\PYG{l+m+mi}{13}\PYG{k+kt}{px}\PYG{p}{;}\PYG{+w}{ }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{style}\PYG{p}{\PYGZgt{}}
+\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{head}\PYG{p}{\PYGZgt{}}
+\PYG{p}{\PYGZlt{}}\PYG{n+nt}{body}\PYG{p}{\PYGZgt{}}
+
+\PYG{p}{\PYGZlt{}}\PYG{n+nt}{div} \PYG{n+na}{id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}sidebar\PYGZdq{}}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{h2}\PYG{p}{\PYGZgt{}}Cognitive Model Control\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{h2}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{p}\PYG{p}{\PYGZgt{}}Visualize the synthesis of Incompatibility Semantics and Piagetian Constructivism.\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{p}\PYG{p}{\PYGZgt{}}
+    
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{div} \PYG{n+na}{id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}controls\PYGZdq{}}\PYG{p}{\PYGZgt{}}
+        \PYG{p}{\PYGZlt{}}\PYG{n+nt}{label} \PYG{n+na}{for}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}newFact\PYGZdq{}}\PYG{p}{\PYGZgt{}}Introduce Information:\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{label}\PYG{p}{\PYGZgt{}\PYGZlt{}}\PYG{n+nt}{br}\PYG{p}{\PYGZgt{}}
+        \PYG{p}{\PYGZlt{}}\PYG{n+nt}{input} \PYG{n+na}{type}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}text\PYGZdq{}} \PYG{n+na}{id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}newFact\PYGZdq{}} \PYG{n+na}{placeholder}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}e.g., penguin(tweety)\PYGZdq{}}\PYG{p}{\PYGZgt{}}
+        \PYG{p}{\PYGZlt{}}\PYG{n+nt}{button} \PYG{n+na}{onclick}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}introduceInformation()\PYGZdq{}}\PYG{p}{\PYGZgt{}}Learn\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{button}\PYG{p}{\PYGZgt{}}
+        \PYG{p}{\PYGZlt{}}\PYG{n+nt}{p}\PYG{p}{\PYGZgt{}\PYGZlt{}}\PYG{n+nt}{i}\PYG{p}{\PYGZgt{}}Try introducing conflicting information (e.g., \PYG{p}{\PYGZlt{}}\PYG{n+nt}{code}\PYG{p}{\PYGZgt{}}penguin(tweety)\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{code}\PYG{p}{\PYGZgt{}} or \PYG{p}{\PYGZlt{}}\PYG{n+nt}{code}\PYG{p}{\PYGZgt{}}mammal(willy)\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{code}\PYG{p}{\PYGZgt{}}) to observe accommodation.\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{i}\PYG{p}{\PYGZgt{}\PYGZlt{}/}\PYG{n+nt}{p}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}/}\PYG{n+nt}{div}\PYG{p}{\PYGZgt{}}
+
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{h3}\PYG{p}{\PYGZgt{}}Engine Output (Equilibration Process)\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{h3}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{div} \PYG{n+na}{id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}output\PYGZdq{}}\PYG{p}{\PYGZgt{}}Initializing Prolog WASM engine...\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{div}\PYG{p}{\PYGZgt{}}
+\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{div}\PYG{p}{\PYGZgt{}}
+
+\PYG{p}{\PYGZlt{}}\PYG{n+nt}{div} \PYG{n+na}{id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}visualization\PYGZdq{}}\PYG{p}{\PYGZgt{}}
+    \PYG{p}{\PYGZlt{}}\PYG{n+nt}{svg} \PYG{n+na}{width}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}100\PYGZpc{}\PYGZdq{}} \PYG{n+na}{height}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}100\PYGZpc{}\PYGZdq{}}\PYG{p}{\PYGZgt{}\PYGZlt{}/}\PYG{n+nt}{svg}\PYG{p}{\PYGZgt{}}
+\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{div}\PYG{p}{\PYGZgt{}}
+
+\PYG{p}{\PYGZlt{}}\PYG{n+nt}{script} \PYG{n+na}{type}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}text/prolog\PYGZdq{}} \PYG{n+na}{id}\PYG{o}{=}\PYG{l+s}{\PYGZdq{}cognitionCode\PYGZdq{}}\PYG{p}{\PYGZgt{}}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Cognitive}\PYG{+w}{ }\PYG{n+nx}{Model}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{Incompatibility}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Constructivism}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Embodiment}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Ensure}\PYG{+w}{ }\PYG{n+nx}{facts}\PYG{+w}{ }\PYG{n+nx}{can}\PYG{+w}{ }\PYG{n+nx}{be}\PYG{+w}{ }\PYG{n+nx}{dynamically}\PYG{+w}{ }\PYG{n+nx}{added}\PYG{o}{/}\PYG{n+nx}{removed}\PYG{+w}{ }\PYG{n+nx}{during}\PYG{+w}{ }\PYG{n+nx}{reorganization}
+\PYG{o}{:\PYGZhy{}}\PYG{+w}{ }\PYG{n+nx}{dynamic}\PYG{+w}{ }\PYG{n+nx}{fact}\PYG{o}{/}\PYG{l+m+mf}{1.}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Initial}\PYG{+w}{ }\PYG{n+nx}{knowledge}\PYG{+w}{ }\PYG{n+nx}{base}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Example}\PYG{p}{)}
+\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{flies}\PYG{p}{(}\PYG{n+nx}{tweety}\PYG{p}{)).}
+\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{bird}\PYG{p}{(}\PYG{n+nx}{tweety}\PYG{p}{)).}
+\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{swims}\PYG{p}{(}\PYG{n+nx}{willy}\PYG{p}{)).}
+\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{fish}\PYG{p}{(}\PYG{n+nx}{willy}\PYG{p}{)).}
+\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{breathes\PYGZus{}air}\PYG{p}{(}\PYG{n+nx}{willy}\PYG{p}{)).}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Incompatibility}\PYG{+w}{ }\PYG{n+nx}{Semantics}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Brandom}\PYG{p}{)}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Defining}\PYG{+w}{ }\PYG{n+nx}{what}\PYG{+w}{ }\PYG{n+nx}{cannot}\PYG{+w}{ }\PYG{n+nx}{be}\PYG{+w}{ }\PYG{n+nx}{materially}\PYG{+w}{ }\PYG{k+kc}{true}\PYG{+w}{ }\PYG{n+nx}{simultaneously}\PYG{p}{.}
+\PYG{n+nx}{incompatible}\PYG{p}{(}\PYG{n+nx}{flies}\PYG{p}{(}\PYG{n+nx}{X}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{penguin}\PYG{p}{(}\PYG{n+nx}{X}\PYG{p}{)).}
+\PYG{n+nx}{incompatible}\PYG{p}{(}\PYG{n+nx}{fish}\PYG{p}{(}\PYG{n+nx}{X}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{mammal}\PYG{p}{(}\PYG{n+nx}{X}\PYG{p}{)).}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Example}\PYG{+w}{ }\PYG{n+nx}{incorporating}\PYG{+w}{ }\PYG{n+nx}{embodiment}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{physical}\PYG{+w}{ }\PYG{n+nx}{constraints}
+\PYG{n+nx}{incompatible}\PYG{p}{(}\PYG{n+nx}{breathes\PYGZus{}air}\PYG{p}{(}\PYG{n+nx}{X}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{lives\PYGZus{}underwater}\PYG{p}{(}\PYG{n+nx}{X}\PYG{p}{)).}\PYG{+w}{ }
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Reasoning}\PYG{+w}{ }\PYG{n+nx}{Mechanisms}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Piaget}\PYG{p}{)}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Check}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n+nx}{inconsistencies}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Cognitive}\PYG{+w}{ }\PYG{n+nx}{Disequilibrium}\PYG{p}{)}
+\PYG{n+nx}{find\PYGZus{}inconsistency}\PYG{p}{(}\PYG{n+nx}{Entity}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Fact1}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Fact2}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{Fact1}\PYG{p}{),}
+\PYG{+w}{    }\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{Fact2}\PYG{p}{),}
+\PYG{+w}{    }\PYG{n+nx}{Fact1}\PYG{+w}{ }\PYG{err}{\PYGZbs{}}\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{Fact2}\PYG{p}{,}
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Check}\PYG{+w}{ }\PYG{n+nx}{incompatibility}\PYG{+w}{ }\PYG{o+ow}{in}\PYG{+w}{ }\PYG{n+nx}{both}\PYG{+w}{ }\PYG{n+nx}{directions}
+\PYG{+w}{    }\PYG{p}{(}\PYG{n+nx}{incompatible}\PYG{p}{(}\PYG{n+nx}{Fact1}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Fact2}\PYG{p}{);}\PYG{+w}{ }\PYG{n+nx}{incompatible}\PYG{p}{(}\PYG{n+nx}{Fact2}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Fact1}\PYG{p}{)),}
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Ensure}\PYG{+w}{ }\PYG{n+nx}{they}\PYG{+w}{ }\PYG{n+nx}{apply}\PYG{+w}{ }\PYG{n+nx}{to}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{same}\PYG{+w}{ }\PYG{n+nx}{entity}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{simplified}\PYG{+w}{ }\PYG{n+nx}{unification}\PYG{+w}{ }\PYG{n+nx}{check}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n+nx}{Fact1}\PYG{+w}{ }\PYG{o}{=}\PYG{p}{..}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Entity}\PYG{p}{],}
+\PYG{+w}{    }\PYG{n+nx}{Fact2}\PYG{+w}{ }\PYG{o}{=}\PYG{p}{..}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Entity}\PYG{p}{].}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Equilibration}\PYG{+w}{ }\PYG{n+nx}{Process}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{Assimilation}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{Accommodation}
+\PYG{n+nx}{learn}\PYG{p}{(}\PYG{n+nx}{NewFact}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mf}{1.}\PYG{+w}{ }\PYG{n+nx}{Attempt}\PYG{+w}{ }\PYG{n+nx}{Assimilation}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{Add}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{fact}\PYG{+w}{ }\PYG{n+nx}{to}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{knowledge}\PYG{+w}{ }\PYG{n+nx}{base}
+\PYG{+w}{    }\PYG{n+nx}{assertz}\PYG{p}{(}\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{NewFact}\PYG{p}{)),}
+\PYG{+w}{    }\PYG{n+nx}{write}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}Assimilating: \PYGZsq{}}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{write}\PYG{p}{(}\PYG{n+nx}{NewFact}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{nl}\PYG{p}{,}
+\PYG{+w}{    }
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mf}{2.}\PYG{+w}{ }\PYG{n+nx}{Check}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n+nx}{Disequilibrium}
+\PYG{+w}{    }\PYG{n+nx}{findall}\PYG{p}{((}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{F1}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{F2}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{find\PYGZus{}inconsistency}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{F1}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{F2}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{Inconsistencies}\PYG{p}{),}
+\PYG{+w}{    }
+\PYG{+w}{    }\PYG{p}{(}\PYG{+w}{ }\PYG{n+nx}{Inconsistencies}\PYG{+w}{ }\PYG{err}{\PYGZbs{}}\PYG{o}{=}\PYG{+w}{ }\PYG{p}{[]}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}
+\PYG{+w}{        }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Disequilibrium}\PYG{+w}{ }\PYG{n+nx}{detected}
+\PYG{+w}{        }\PYG{n+nx}{write}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}Disequilibrium detected. Initiating accommodation...\PYGZbs{}n\PYGZsq{}}\PYG{p}{),}
+\PYG{+w}{        }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mf}{3.}\PYG{+w}{ }\PYG{n+nx}{Initiate}\PYG{+w}{ }\PYG{n+nx}{Accommodation}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{Reorganize}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{structure}
+\PYG{+w}{        }\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{(}\PYG{n+nx}{Inconsistencies}\PYG{p}{),}
+\PYG{+w}{        }\PYG{n+nx}{write}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}Accommodation complete: Structure reorganized.\PYGZbs{}n\PYGZsq{}}\PYG{p}{)}
+\PYG{+w}{    }\PYG{p}{;}
+\PYG{+w}{        }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{No}\PYG{+w}{ }\PYG{n+nx}{conflict}
+\PYG{+w}{        }\PYG{n+nx}{write}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}Assimilation successful: Knowledge structure stable.\PYGZbs{}n\PYGZsq{}}\PYG{p}{)}
+\PYG{+w}{    }\PYG{p}{).}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Accommodation}\PYG{+w}{ }\PYG{n+nx}{Logic}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Resolution}\PYG{+w}{ }\PYG{n+nx}{Strategy}\PYG{p}{)}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{This}\PYG{+w}{ }\PYG{n+nx}{defines}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{prioritization}\PYG{+w}{ }\PYG{k}{of}\PYG{+w}{ }\PYG{n+nx}{beliefs}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{how}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{system}\PYG{+w}{ }\PYG{n+nx}{adapts}\PYG{p}{.}
+\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{([]).}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Specific}\PYG{+w}{ }\PYG{n+nx}{resolution}\PYG{+w}{ }\PYG{n+nx}{rule}\PYG{+w}{ }\PYG{l+m+mf}{1}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{If}\PYG{+w}{ }\PYG{n+nx}{we}\PYG{+w}{ }\PYG{n+nx}{learn}\PYG{+w}{ }\PYG{n+nx}{X}\PYG{+w}{ }\PYG{n+nx}{is}\PYG{+w}{ }\PYG{n+nx}{a}\PYG{+w}{ }\PYG{n+nx}{penguin}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{we}\PYG{+w}{ }\PYG{n+nx}{prioritize}\PYG{+w}{ }\PYG{k}{this}\PYG{+w}{ }\PYG{n+nx}{over}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{k}{default}\PYG{+w}{ }\PYG{n+nx}{belief}\PYG{+w}{ }\PYG{n+nx}{that}\PYG{+w}{ }\PYG{n+nx}{X}\PYG{+w}{ }\PYG{n+nx}{flies}\PYG{p}{.}
+\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{([(}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{flies}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{penguin}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))}\PYG{o}{|}\PYG{n+nx}{T}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{n+nx}{retract}\PYG{p}{(}\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{flies}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))),}
+\PYG{+w}{    }\PYG{n+nx}{format}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}  Resolved: Retracted flies(\PYGZti{}w) due to new evidence penguin(\PYGZti{}w).\PYGZbs{}n\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{E}\PYG{p}{]),}
+\PYG{+w}{    }\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{(}\PYG{n+nx}{T}\PYG{p}{).}
+\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{([(}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{penguin}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{flies}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))}\PYG{o}{|}\PYG{n+nx}{T}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{n+nx}{retract}\PYG{p}{(}\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{flies}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))),}
+\PYG{+w}{    }\PYG{n+nx}{format}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}  Resolved: Retracted flies(\PYGZti{}w) due to new evidence penguin(\PYGZti{}w).\PYGZbs{}n\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{E}\PYG{p}{]),}
+\PYG{+w}{    }\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{(}\PYG{n+nx}{T}\PYG{p}{).}
+
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Specific}\PYG{+w}{ }\PYG{n+nx}{resolution}\PYG{+w}{ }\PYG{n+nx}{rule}\PYG{+w}{ }\PYG{l+m+mf}{2}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{If}\PYG{+w}{ }\PYG{n+nx}{we}\PYG{+w}{ }\PYG{n+nx}{learn}\PYG{+w}{ }\PYG{n+nx}{X}\PYG{+w}{ }\PYG{n+nx}{is}\PYG{+w}{ }\PYG{n+nx}{a}\PYG{+w}{ }\PYG{n+nx}{mammal}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{we}\PYG{+w}{ }\PYG{n+nx}{retract}\PYG{+w}{ }\PYG{n+nx}{that}\PYG{+w}{ }\PYG{n+nx}{X}\PYG{+w}{ }\PYG{n+nx}{is}\PYG{+w}{ }\PYG{n+nx}{a}\PYG{+w}{ }\PYG{n+nx}{fish}\PYG{p}{.}
+\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{([(}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{fish}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{mammal}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))}\PYG{o}{|}\PYG{n+nx}{T}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{n+nx}{retract}\PYG{p}{(}\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{fish}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))),}
+\PYG{+w}{    }\PYG{n+nx}{format}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}  Resolved: Retracted fish(\PYGZti{}w) due to reclassification as mammal(\PYGZti{}w).\PYGZbs{}n\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{E}\PYG{p}{]),}
+\PYG{+w}{    }\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{(}\PYG{n+nx}{T}\PYG{p}{).}
+\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{([(}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{mammal}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{fish}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))}\PYG{o}{|}\PYG{n+nx}{T}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{     }\PYG{n+nx}{retract}\PYG{p}{(}\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{fish}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{))),}
+\PYG{+w}{    }\PYG{n+nx}{format}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}  Resolved: Retracted fish(\PYGZti{}w) due to reclassification as mammal(\PYGZti{}w).\PYGZbs{}n\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{E}\PYG{p}{]),}
+\PYG{+w}{    }\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{(}\PYG{n+nx}{T}\PYG{p}{).}
+
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Fallback}\PYG{+w}{ }\PYG{n+nx}{resolution}
+\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{([}\PYG{n+nx}{\PYGZus{}}\PYG{o}{|}\PYG{n+nx}{T}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}\PYG{+w}{ }
+\PYG{+w}{    }\PYG{n+nx}{resolve\PYGZus{}inconsistencies}\PYG{p}{(}\PYG{n+nx}{T}\PYG{p}{).}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Visualization}\PYG{+w}{ }\PYG{n+nx}{Extraction}\PYG{+w}{ }\PYG{n+nx}{Utility}
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Extract}\PYG{+w}{ }\PYG{n+nx}{graph}\PYG{+w}{ }\PYG{n+nx}{data}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Nodes}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{Edges}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{for}\PYG{+w}{ }\PYG{n+nx}{D3}\PYG{p}{.}\PYG{n+nx}{js}
+\PYG{n+nx}{get\PYGZus{}graph\PYGZus{}data}\PYG{p}{(}\PYG{n+nx}{Nodes}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Edges}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mf}{1.}\PYG{+w}{ }\PYG{n+nx}{Collect}\PYG{+w}{ }\PYG{n+nx}{all}\PYG{+w}{ }\PYG{n+nx}{current}\PYG{+w}{ }\PYG{n+nx}{facts}
+\PYG{+w}{    }\PYG{n+nx}{findall}\PYG{p}{(}\PYG{n+nx}{F}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{fact}\PYG{p}{(}\PYG{n+nx}{F}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{Facts}\PYG{p}{),}
+\PYG{+w}{    }
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mf}{2.}\PYG{+w}{ }\PYG{n+nx}{Identify}\PYG{+w}{ }\PYG{n+nx}{entities}\PYG{+w}{ }\PYG{n+nx}{currently}\PYG{+w}{ }\PYG{n+nx}{involved}\PYG{+w}{ }\PYG{o+ow}{in}\PYG{+w}{ }\PYG{n+nx}{inconsistencies}\PYG{+w}{ }\PYG{p}{(}\PYG{k}{if}\PYG{+w}{ }\PYG{n+nx}{any}\PYG{+w}{ }\PYG{n+nx}{remain}\PYG{+w}{ }\PYG{n+nx}{after}\PYG{+w}{ }\PYG{n+nx}{accommodation}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n+nx}{findall}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{find\PYGZus{}inconsistency}\PYG{p}{(}\PYG{n+nx}{E}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{\PYGZus{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{\PYGZus{}}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{InconsistentEntitiesRaw}\PYG{p}{),}
+\PYG{+w}{    }\PYG{n+nx}{sort}\PYG{p}{(}\PYG{n+nx}{InconsistentEntitiesRaw}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{InconsistentEntities}\PYG{p}{),}
+\PYG{+w}{    }
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mf}{3.}\PYG{+w}{ }\PYG{n+nx}{Process}\PYG{+w}{ }\PYG{n+nx}{facts}\PYG{+w}{ }\PYG{n+nx}{into}\PYG{+w}{ }\PYG{n+nx}{raw}\PYG{+w}{ }\PYG{n+nx}{nodes}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{edges}
+\PYG{+w}{    }\PYG{n+nx}{process\PYGZus{}facts}\PYG{p}{(}\PYG{n+nx}{Facts}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{NodesList}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{EdgesList}\PYG{p}{),}
+\PYG{+w}{    }
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{l+m+mf}{4.}\PYG{+w}{ }\PYG{n+nx}{Deduplicate}\PYG{+w}{ }\PYG{n+nx}{nodes}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{mark}\PYG{+w}{ }\PYG{n+nx}{those}\PYG{+w}{ }\PYG{n+nx}{involved}\PYG{+w}{ }\PYG{o+ow}{in}\PYG{+w}{ }\PYG{n+nx}{conflicts}
+\PYG{+w}{    }\PYG{n+nx}{deduplicate\PYGZus{}and\PYGZus{}mark}\PYG{p}{(}\PYG{n+nx}{NodesList}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{InconsistentEntities}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Nodes}\PYG{p}{),}
+\PYG{+w}{    }\PYG{n+nx}{Edges}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{EdgesList}\PYG{p}{.}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Convert}\PYG{+w}{ }\PYG{n+nx}{Prolog}\PYG{+w}{ }\PYG{n+nx}{facts}\PYG{+w}{ }\PYG{n+nx}{into}\PYG{+w}{ }\PYG{n+nx}{graph}\PYG{+w}{ }\PYG{n+nx}{elements}
+\PYG{n+nx}{process\PYGZus{}facts}\PYG{p}{([],}\PYG{+w}{ }\PYG{p}{[],}\PYG{+w}{ }\PYG{p}{[]).}
+\PYG{n+nx}{process\PYGZus{}facts}\PYG{p}{([}\PYG{n+nx}{Fact}\PYG{o}{|}\PYG{n+nx}{T}\PYG{p}{],}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{NodeE}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{NodeP}\PYG{o}{|}\PYG{n+nx}{NodesT}\PYG{p}{],}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{Edge}\PYG{o}{|}\PYG{n+nx}{EdgesT}\PYG{p}{])}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{n+nx}{Fact}\PYG{+w}{ }\PYG{o}{=}\PYG{p}{..}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{Predicate}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Entity}\PYG{p}{],}
+\PYG{+w}{    }\PYG{n+nx}{format}\PYG{p}{(}\PYG{n+nx}{atom}\PYG{p}{(}\PYG{n+nx}{PName}\PYG{p}{),}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}\PYGZti{}w\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{Predicate}\PYG{p}{]),}
+\PYG{+w}{    }\PYG{n+nx}{format}\PYG{p}{(}\PYG{n+nx}{atom}\PYG{p}{(}\PYG{n+nx}{EName}\PYG{p}{),}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}\PYGZti{}w\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{[}\PYG{n+nx}{Entity}\PYG{p}{]),}
+\PYG{+w}{    }
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Define}\PYG{+w}{ }\PYG{n+nx}{Nodes}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Entity}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{Predicate}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n+nx}{NodeE}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{node}\PYG{p}{\PYGZob{}}\PYG{n+nx}{id}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{EName}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{type}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{entity}\PYG{p}{\PYGZcb{},}
+\PYG{+w}{    }\PYG{n+nx}{NodeP}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{node}\PYG{p}{\PYGZob{}}\PYG{n+nx}{id}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{PName}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{type}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{predicate}\PYG{p}{\PYGZcb{},}
+\PYG{+w}{    }
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Define}\PYG{+w}{ }\PYG{n+nx}{Edge}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Connection}\PYG{+w}{ }\PYG{n+nx}{between}\PYG{+w}{ }\PYG{n+nx}{Entity}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{Predicate}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n+nx}{Edge}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{edge}\PYG{p}{\PYGZob{}}\PYG{n+nx}{source}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{EName}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{target}\PYG{o}{:}\PYG{+w}{ }\PYG{n+nx}{PName}\PYG{p}{\PYGZcb{},}
+\PYG{+w}{    }\PYG{n+nx}{process\PYGZus{}facts}\PYG{p}{(}\PYG{n+nx}{T}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{NodesT}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{EdgesT}\PYG{p}{).}
+
+\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Utility}\PYG{+w}{ }\PYG{n+nx}{to}\PYG{+w}{ }\PYG{n+nx}{ensure}\PYG{+w}{ }\PYG{n+nx}{unique}\PYG{+w}{ }\PYG{n+nx}{nodes}\PYG{+w}{ }\PYG{n+nx}{and}\PYG{+w}{ }\PYG{n+nx}{apply}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}inconsistent\PYGZsq{}}\PYG{+w}{ }\PYG{n+nx}{flag}
+\PYG{n+nx}{deduplicate\PYGZus{}and\PYGZus{}mark}\PYG{p}{(}\PYG{n+nx}{NodesList}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{InconsistentEntities}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{FinalNodes}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Apply}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{inconsistency}\PYG{+w}{ }\PYG{n+nx}{marking}\PYG{+w}{ }\PYG{n+nx}{to}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{raw}\PYG{+w}{ }\PYG{n+nx}{list}
+\PYG{+w}{    }\PYG{n+nx}{maplist}\PYG{p}{(}\PYG{n+nx}{mark\PYGZus{}node}\PYG{p}{(}\PYG{n+nx}{InconsistentEntities}\PYG{p}{),}\PYG{+w}{ }\PYG{n+nx}{NodesList}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{MarkedNodes}\PYG{p}{),}
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Use}\PYG{+w}{ }\PYG{n+nx}{sort}\PYG{o}{/}\PYG{l+m+mf}{2}\PYG{+w}{ }\PYG{n+nx}{to}\PYG{+w}{ }\PYG{n+nx}{remove}\PYG{+w}{ }\PYG{n+nx}{duplicates}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{Prolog}\PYG{+w}{ }\PYG{n+nx}{standard}\PYG{+w}{ }\PYG{n+nx}{way}\PYG{p}{)}
+\PYG{+w}{    }\PYG{n+nx}{sort}\PYG{p}{(}\PYG{l+m+mf}{0}\PYG{p}{,}\PYG{+w}{ }\PYG{err}{@}\PYG{o}{\PYGZlt{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{MarkedNodes}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{FinalNodes}\PYG{p}{).}
+
+\PYG{n+nx}{mark\PYGZus{}node}\PYG{p}{(}\PYG{n+nx}{InconsistentEntities}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{Node}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{MarkedNode}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{:\PYGZhy{}}
+\PYG{+w}{    }\PYG{o}{\PYGZpc{}}\PYG{+w}{ }\PYG{n+nx}{Check}\PYG{+w}{ }\PYG{k}{if}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{node}\PYG{err}{\PYGZsq{}}\PYG{n+nx}{s}\PYG{+w}{ }\PYG{n+nx}{ID}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{entity}\PYG{+w}{ }\PYG{n+nx}{name}\PYG{p}{)}\PYG{+w}{ }\PYG{n+nx}{is}\PYG{+w}{ }\PYG{o+ow}{in}\PYG{+w}{ }\PYG{n+nx}{the}\PYG{+w}{ }\PYG{n+nx}{list}\PYG{+w}{ }\PYG{k}{of}\PYG{+w}{ }\PYG{n+nx}{conflicts}
+\PYG{+w}{    }\PYG{p}{(}\PYG{+w}{ }\PYG{n+nx}{member}\PYG{p}{(}\PYG{n+nx}{Node}\PYG{p}{.}\PYG{n+nx}{id}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{InconsistentEntities}\PYG{p}{)}\PYG{+w}{ }\PYG{o}{\PYGZhy{}\PYGZgt{}}
+\PYG{+w}{        }\PYG{n+nx}{MarkedNode}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{Node}\PYG{p}{.}\PYG{n+nx}{put}\PYG{p}{(}\PYG{n+nx}{inconsistent}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kc}{true}\PYG{p}{)}
+\PYG{+w}{    }\PYG{p}{;}
+\PYG{+w}{        }\PYG{n+nx}{MarkedNode}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{Node}\PYG{p}{.}\PYG{n+nx}{put}\PYG{p}{(}\PYG{n+nx}{inconsistent}\PYG{p}{,}\PYG{+w}{ }\PYG{k+kc}{false}\PYG{p}{)}
+\PYG{+w}{    }\PYG{p}{).}
+
+\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{script}\PYG{p}{\PYGZgt{}}
+
+\PYG{p}{\PYGZlt{}}\PYG{n+nt}{script}\PYG{p}{\PYGZgt{}}
+\PYG{+w}{    }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nx}{prolog}\PYG{p}{;}
+\PYG{+w}{    }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{outputDiv}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{document}\PYG{p}{.}\PYG{n+nx}{getElementById}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}output\PYGZsq{}}\PYG{p}{);}
+
+\PYG{+w}{    }\PYG{c+c1}{// Initialize SWIPL\PYGZhy{}WASM}
+\PYG{+w}{    }\PYG{p}{(}\PYG{k}{async}\PYG{+w}{ }\PYG{k+kd}{function}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{n+nx}{prolog}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k}{await}\PYG{+w}{ }\PYG{n+nx}{SWIPL}\PYG{p}{(\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nx}{arguments}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}q\PYGZdq{}}\PYG{p}{],}
+\PYG{+w}{            }\PYG{c+c1}{// Redirect Prolog output to the web console}
+\PYG{+w}{            }\PYG{n+nx}{print}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{text}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{n+nx}{outputDiv}\PYG{p}{.}\PYG{n+nx}{innerHTML}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{n+nx}{text}\PYG{p}{;}
+\PYG{+w}{                }\PYG{n+nx}{outputDiv}\PYG{p}{.}\PYG{n+nx}{scrollTop}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{outputDiv}\PYG{p}{.}\PYG{n+nx}{scrollHeight}\PYG{p}{;}\PYG{+w}{ }\PYG{c+c1}{// Auto\PYGZhy{}scroll}
+\PYG{+w}{            }\PYG{p}{\PYGZcb{},}
+\PYG{+w}{            }\PYG{n+nx}{on\PYGZus{}error}\PYG{o}{:}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{text}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{outputDiv}\PYG{p}{.}\PYG{n+nx}{innerHTML}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}ERROR: \PYGZsq{}}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{n+nx}{text}\PYG{+w}{ }\PYG{o}{+}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}\PYGZbs{}n\PYGZsq{}}\PYG{p}{,}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{});}
+\PYG{+w}{        }
+\PYG{+w}{        }\PYG{c+c1}{// Load the Prolog code into the WASM virtual filesystem}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{code}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{document}\PYG{p}{.}\PYG{n+nx}{getElementById}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}cognitionCode\PYGZsq{}}\PYG{p}{).}\PYG{n+nx}{textContent}\PYG{p}{;}
+\PYG{+w}{        }\PYG{n+nx}{prolog}\PYG{p}{.}\PYG{n+nx}{FS}\PYG{p}{.}\PYG{n+nx}{writeFile}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/home/web\PYGZus{}user/model.pl\PYGZsq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{code}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n+nx}{prolog}\PYG{p}{.}\PYG{n+nx}{call}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}consult(model).\PYGZsq{}}\PYG{p}{);}
+\PYG{+w}{        }
+\PYG{+w}{        }\PYG{n+nx}{outputDiv}\PYG{p}{.}\PYG{n+nx}{innerHTML}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}Prolog engine ready. Visualization initialized.\PYGZbs{}n\PYGZsq{}}\PYG{p}{;}
+\PYG{+w}{        }\PYG{n+nx}{updateVisualization}\PYG{p}{();}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{})();}
+
+\PYG{+w}{    }\PYG{c+c1}{// Function to handle user input}
+\PYG{+w}{    }\PYG{k}{async}\PYG{+w}{ }\PYG{k+kd}{function}\PYG{+w}{ }\PYG{n+nx}{introduceInformation}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{fact}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{document}\PYG{p}{.}\PYG{n+nx}{getElementById}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}newFact\PYGZsq{}}\PYG{p}{).}\PYG{n+nx}{value}\PYG{p}{.}\PYG{n+nx}{trim}\PYG{p}{();}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n+nx}{fact}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{return}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{n+nx}{outputDiv}\PYG{p}{.}\PYG{n+nx}{innerHTML}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+s+sb}{`\PYGZbs{}n\PYGZgt{} User introducing: }\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{fact}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{\PYGZbs{}n`}\PYG{p}{;}
+\PYG{+w}{        }
+\PYG{+w}{        }\PYG{c+c1}{// Call the \PYGZsq{}learn\PYGZsq{} predicate which handles the equilibration process}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{query}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+sb}{`learn(}\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{fact}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{).`}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{try}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nx}{prolog}\PYG{p}{.}\PYG{n+nx}{call}\PYG{p}{(}\PYG{n+nx}{query}\PYG{p}{);}
+\PYG{+w}{            }\PYG{n+nx}{updateVisualization}\PYG{p}{();}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k}{catch}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{e}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nx}{outputDiv}\PYG{p}{.}\PYG{n+nx}{innerHTML}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+s+sb}{`Error executing query: }\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{\PYGZbs{}n`}\PYG{p}{;}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{n+nb}{document}\PYG{p}{.}\PYG{n+nx}{getElementById}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}newFact\PYGZsq{}}\PYG{p}{).}\PYG{n+nx}{value}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{;}\PYG{+w}{ }\PYG{c+c1}{// Clear input}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{c+c1}{// Function to fetch the current cognitive structure from Prolog}
+\PYG{+w}{    }\PYG{k}{async}\PYG{+w}{ }\PYG{k+kd}{function}\PYG{+w}{ }\PYG{n+nx}{updateVisualization}\PYG{p}{()}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n+nx}{prolog}\PYG{p}{)}\PYG{+w}{ }\PYG{k}{return}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{query}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}get\PYGZus{}graph\PYGZus{}data(Nodes, Edges).\PYGZdq{}}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k}{try}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{c+c1}{// Query Prolog and process the results}
+\PYG{+w}{            }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{result}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{prolog}\PYG{p}{.}\PYG{n+nx}{query}\PYG{p}{(}\PYG{n+nx}{query}\PYG{p}{).}\PYG{n+nx}{once}\PYG{p}{();}
+\PYG{+w}{            }
+\PYG{+w}{            }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{result}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{c+c1}{// Convert Prolog data structures (lists of dicts) to JavaScript arrays of objects}
+\PYG{+w}{                }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{nodes}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Array}\PYG{p}{.}\PYG{k+kr}{from}\PYG{p}{(}\PYG{n+nx}{result}\PYG{p}{.}\PYG{n+nx}{Nodes}\PYG{p}{).}\PYG{n+nx}{map}\PYG{p}{(}\PYG{n+nx}{n}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Object}\PYG{p}{.}\PYG{n+nx}{fromEntries}\PYG{p}{(}\PYG{n+nx}{n}\PYG{p}{));}
+\PYG{+w}{                }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{edges}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nb}{Array}\PYG{p}{.}\PYG{k+kr}{from}\PYG{p}{(}\PYG{n+nx}{result}\PYG{p}{.}\PYG{n+nx}{Edges}\PYG{p}{).}\PYG{n+nx}{map}\PYG{p}{(}\PYG{n+nx}{e}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nb}{Object}\PYG{p}{.}\PYG{n+nx}{fromEntries}\PYG{p}{(}\PYG{n+nx}{e}\PYG{p}{));}
+\PYG{+w}{                }
+\PYG{+w}{                }\PYG{n+nx}{drawGraph}\PYG{p}{(}\PYG{n+nx}{nodes}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{edges}\PYG{p}{);}
+\PYG{+w}{            }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}\PYG{+w}{ }\PYG{k}{catch}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{e}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nx}{console}\PYG{p}{.}\PYG{n+nx}{error}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Error querying graph data:\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{e}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{    }\PYG{c+c1}{// D3.js Force\PYGZhy{}Directed Graph Rendering Logic}
+\PYG{+w}{    }\PYG{k+kd}{function}\PYG{+w}{ }\PYG{n+nx}{drawGraph}\PYG{p}{(}\PYG{n+nx}{nodes}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{links}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{svg}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{d3}\PYG{p}{.}\PYG{n+nx}{select}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZsh{}visualization svg\PYGZdq{}}\PYG{p}{);}
+\PYG{+w}{        }\PYG{n+nx}{svg}\PYG{p}{.}\PYG{n+nx}{selectAll}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}*\PYGZdq{}}\PYG{p}{).}\PYG{n+nx}{remove}\PYG{p}{();}\PYG{+w}{ }\PYG{c+c1}{// Clear previous graph}
+
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{width}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{svg}\PYG{p}{.}\PYG{n+nx}{node}\PYG{p}{().}\PYG{n+nx}{getBoundingClientRect}\PYG{p}{().}\PYG{n+nx}{width}\PYG{p}{;}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{height}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{svg}\PYG{p}{.}\PYG{n+nx}{node}\PYG{p}{().}\PYG{n+nx}{getBoundingClientRect}\PYG{p}{().}\PYG{n+nx}{height}\PYG{p}{;}
+
+\PYG{+w}{        }\PYG{c+c1}{// Create the force simulation}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{simulation}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{d3}\PYG{p}{.}\PYG{n+nx}{forceSimulation}\PYG{p}{(}\PYG{n+nx}{nodes}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{force}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}link\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d3}\PYG{p}{.}\PYG{n+nx}{forceLink}\PYG{p}{(}\PYG{n+nx}{links}\PYG{p}{).}\PYG{n+nx}{id}\PYG{p}{(}\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{id}\PYG{p}{).}\PYG{n+nx}{distance}\PYG{p}{(}\PYG{l+m+mf}{120}\PYG{p}{))}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{force}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}charge\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d3}\PYG{p}{.}\PYG{n+nx}{forceManyBody}\PYG{p}{().}\PYG{n+nx}{strength}\PYG{p}{(}\PYG{o}{\PYGZhy{}}\PYG{l+m+mf}{350}\PYG{p}{))}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{force}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}center\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d3}\PYG{p}{.}\PYG{n+nx}{forceCenter}\PYG{p}{(}\PYG{n+nx}{width}\PYG{+w}{ }\PYG{o}{/}\PYG{+w}{ }\PYG{l+m+mf}{2}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{height}\PYG{+w}{ }\PYG{o}{/}\PYG{+w}{ }\PYG{l+m+mf}{2}\PYG{p}{))}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{force}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}collision\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d3}\PYG{p}{.}\PYG{n+nx}{forceCollide}\PYG{p}{().}\PYG{n+nx}{radius}\PYG{p}{(}\PYG{l+m+mf}{30}\PYG{p}{));}
+
+\PYG{+w}{        }\PYG{c+c1}{// Draw links (relationships)}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{link}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{svg}\PYG{p}{.}\PYG{n+nx}{append}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}g\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{selectAll}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}line\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{data}\PYG{p}{(}\PYG{n+nx}{links}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{enter}\PYG{p}{().}\PYG{n+nx}{append}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}line\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}class\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}link\PYGZdq{}}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{c+c1}{// Draw nodes (concepts/entities)}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{node}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{svg}\PYG{p}{.}\PYG{n+nx}{append}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}g\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{selectAll}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}circle\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{data}\PYG{p}{(}\PYG{n+nx}{nodes}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{enter}\PYG{p}{().}\PYG{n+nx}{append}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}circle\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}r\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{15}\PYG{p}{)}
+\PYG{+w}{            }\PYG{c+c1}{// Apply CSS classes based on node type and inconsistency status}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}class\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                }\PYG{k+kd}{let}\PYG{+w}{ }\PYG{n+nx}{classes}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{l+s+sb}{`node\PYGZhy{}}\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{type}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{`}\PYG{p}{;}
+\PYG{+w}{                }\PYG{c+c1}{// If the node is involved in a conflict, highlight it}
+\PYG{+w}{                }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{inconsistent}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{                    }\PYG{n+nx}{classes}\PYG{+w}{ }\PYG{o}{+=}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{} inconsistent\PYGZdq{}}\PYG{p}{;}
+\PYG{+w}{                }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{                }\PYG{k}{return}\PYG{+w}{ }\PYG{n+nx}{classes}\PYG{p}{;}
+\PYG{+w}{            }\PYG{p}{\PYGZcb{})}
+\PYG{+w}{            }\PYG{c+c1}{// Enable dragging functionality}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{call}\PYG{p}{(}\PYG{n+nx}{d3}\PYG{p}{.}\PYG{n+nx}{drag}\PYG{p}{()}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{on}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}start\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{dragstarted}\PYG{p}{)}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{on}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}drag\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{dragged}\PYG{p}{)}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{on}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}end\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{dragended}\PYG{p}{));}
+
+\PYG{+w}{        }\PYG{c+c1}{// Draw labels}
+\PYG{+w}{        }\PYG{k+kd}{const}\PYG{+w}{ }\PYG{n+nx}{label}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{svg}\PYG{p}{.}\PYG{n+nx}{append}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}g\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{selectAll}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}text\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{data}\PYG{p}{(}\PYG{n+nx}{nodes}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{enter}\PYG{p}{().}\PYG{n+nx}{append}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}text\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}x\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{20}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}y\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+m+mf}{5}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{text}\PYG{p}{(}\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{id}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{style}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}font\PYGZhy{}size\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}14px\PYGZdq{}}\PYG{p}{)}
+\PYG{+w}{            }\PYG{p}{.}\PYG{n+nx}{style}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}pointer\PYGZhy{}events\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}none\PYGZdq{}}\PYG{p}{);}
+
+\PYG{+w}{        }\PYG{c+c1}{// Update positions on simulation tick (animation loop)}
+\PYG{+w}{        }\PYG{n+nx}{simulation}\PYG{p}{.}\PYG{n+nx}{on}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}tick\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{p}{()}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nx}{link}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}x1\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{source}\PYG{p}{.}\PYG{n+nx}{x}\PYG{p}{)}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}y1\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{source}\PYG{p}{.}\PYG{n+nx}{y}\PYG{p}{)}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}x2\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{target}\PYG{p}{.}\PYG{n+nx}{x}\PYG{p}{)}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}y2\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{target}\PYG{p}{.}\PYG{n+nx}{y}\PYG{p}{);}
+
+\PYG{+w}{            }\PYG{n+nx}{node}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}cx\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{x}\PYG{p}{)}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}cy\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{y}\PYG{p}{);}
+\PYG{+w}{            }
+\PYG{+w}{            }\PYG{n+nx}{label}
+\PYG{+w}{                }\PYG{p}{.}\PYG{n+nx}{attr}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}transform\PYGZdq{}}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{+w}{ }\PYG{p}{=\PYGZgt{}}\PYG{+w}{ }\PYG{l+s+sb}{`translate(}\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{x}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{, }\PYG{l+s+si}{\PYGZdl{}\PYGZob{}}\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{y}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+sb}{)`}\PYG{p}{);}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{});}
+
+\PYG{+w}{        }\PYG{c+c1}{// Drag event handlers}
+\PYG{+w}{        }\PYG{k+kd}{function}\PYG{+w}{ }\PYG{n+nx}{dragstarted}\PYG{p}{(}\PYG{n+nx}{event}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n+nx}{event}\PYG{p}{.}\PYG{n+nx}{active}\PYG{p}{)}\PYG{+w}{ }\PYG{n+nx}{simulation}\PYG{p}{.}\PYG{n+nx}{alphaTarget}\PYG{p}{(}\PYG{l+m+mf}{0.3}\PYG{p}{).}\PYG{n+nx}{restart}\PYG{p}{();}
+\PYG{+w}{            }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{fx}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{x}\PYG{p}{;}
+\PYG{+w}{            }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{fy}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{y}\PYG{p}{;}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{        }\PYG{k+kd}{function}\PYG{+w}{ }\PYG{n+nx}{dragged}\PYG{p}{(}\PYG{n+nx}{event}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{fx}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{event}\PYG{p}{.}\PYG{n+nx}{x}\PYG{p}{;}
+\PYG{+w}{            }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{fy}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{n+nx}{event}\PYG{p}{.}\PYG{n+nx}{y}\PYG{p}{;}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+
+\PYG{+w}{        }\PYG{k+kd}{function}\PYG{+w}{ }\PYG{n+nx}{dragended}\PYG{p}{(}\PYG{n+nx}{event}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nx}{d}\PYG{p}{)}\PYG{+w}{ }\PYG{p}{\PYGZob{}}
+\PYG{+w}{            }\PYG{k}{if}\PYG{+w}{ }\PYG{p}{(}\PYG{o}{!}\PYG{n+nx}{event}\PYG{p}{.}\PYG{n+nx}{active}\PYG{p}{)}\PYG{+w}{ }\PYG{n+nx}{simulation}\PYG{p}{.}\PYG{n+nx}{alphaTarget}\PYG{p}{(}\PYG{l+m+mf}{0}\PYG{p}{);}
+\PYG{+w}{            }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{fx}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k+kc}{null}\PYG{p}{;}
+\PYG{+w}{            }\PYG{n+nx}{d}\PYG{p}{.}\PYG{n+nx}{fy}\PYG{+w}{ }\PYG{o}{=}\PYG{+w}{ }\PYG{k+kc}{null}\PYG{p}{;}
+\PYG{+w}{        }\PYG{p}{\PYGZcb{}}
+\PYG{+w}{    }\PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{script}\PYG{p}{\PYGZgt{}}
+\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{body}\PYG{p}{\PYGZgt{}}
+\PYG{p}{\PYGZlt{}/}\PYG{n+nt}{html}\PYG{p}{\PYGZgt{}}
+\end{MintedVerbatim}

@@ -1,0 +1,76 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} ORR Cycle Execution Handler}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module serves as the central controller for the cognitive architecture,}
+\PYG{c+cm}{ * managing the Observe\PYGZhy{}Reorganize\PYGZhy{}Reflect (ORR) cycle. It orchestrates the}
+\PYG{c+cm}{ * interaction between the meta\PYGZhy{}interpreter (Observe), the reflective monitor}
+\PYG{c+cm}{ * (Reflect), and the reorganization engine (Reorganize).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The primary entry point is `run\PYGZus{}query/1`, which initiates the ORR cycle}
+\PYG{c+cm}{ * for a given goal.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Tilo Wiedera}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}computation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}engine}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}computation(+Goal:term, +Limit:integer) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The main entry point for the self\PYGZhy{}reorganizing system. It attempts}
+\PYG{c+c1}{\PYGZpc{}       to solve the given `Goal` within the specified `Limit` of}
+\PYG{c+c1}{\PYGZpc{}       computational steps.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       If the computation exceeds the resource limit, it triggers the}
+\PYG{c+c1}{\PYGZpc{}       reorganization process and then retries the goal.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The computational goal to be solved.}
+\PYG{c+c1}{\PYGZpc{}       @param Limit The maximum number of inference steps allowed.}
+\PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{catch}\PYG{p}{(}
+        \PYG{n+nf}{call\PYGZus{}meta\PYGZus{}interpreter}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+        \PYG{n+nv}{Error}\PYG{p}{,}
+        \PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nv}{Error}\PYG{p}{,} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      call\PYGZus{}meta\PYGZus{}interpreter(+Goal, +Limit, \PYGZhy{}Trace) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       A wrapper for the `meta\PYGZus{}interpreter:solve/4` predicate. It}
+\PYG{c+c1}{\PYGZpc{}       executes the goal and, upon success, reports that the computation}
+\PYG{c+c1}{\PYGZpc{}       is complete.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The goal to be solved.}
+\PYG{c+c1}{\PYGZpc{}       @param Limit The inference limit.}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The resulting execution trace.}
+\PYG{n+nf}{call\PYGZus{}meta\PYGZus{}interpreter}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{meta\PYGZus{}interpreter:}\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Computation successful.\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      handle\PYGZus{}perturbation(+Error, +Goal, +Trace, +Limit) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Catches errors from the meta\PYGZhy{}interpreter and initiates the}
+\PYG{c+c1}{\PYGZpc{}       reorganization process.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate specifically handles `perturbation(resource\PYGZus{}exhaustion)`.}
+\PYG{c+c1}{\PYGZpc{}       Upon catching this error, it logs the event, invokes the}
+\PYG{c+c1}{\PYGZpc{}       `reorganization\PYGZus{}engine`, and then recursively retries the original}
+\PYG{c+c1}{\PYGZpc{}       goal with the same limit.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Error The error term thrown by `catch/3`.}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The original goal that was being attempted.}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The execution trace produced before the error occurred.}
+\PYG{c+c1}{\PYGZpc{}       @param Limit The original resource limit.}
+\PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{),} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Resource exhaustion detected. Initiating reorganization...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{reorganize\PYGZus{}system}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Reorganization complete. Retrying goal...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{).}
+
+\PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nv}{Error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}An unhandled error occurred:\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{n+nv}{Error}\PYG{p}{),}
+    \PYG{l+s+sAtom}{fail}\PYG{p}{.}
+\end{MintedVerbatim}

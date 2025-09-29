@@ -1,0 +1,101 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Deterministic Pushdown Automaton for Counting}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a Deterministic Pushdown Automaton (DPDA) that}
+\PYG{c+cm}{ * simulates the cognitive process of counting from 0 up to a specified number.}
+\PYG{c+cm}{ * It models how units, tens, and hundreds are incremented and \PYGZdq{}carry over,\PYGZdq{}}
+\PYG{c+cm}{ * similar to an odometer.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The automaton\PYGZsq{}s configuration is represented by `pda(State, Stack)`. The}
+\PYG{c+cm}{ * stack is used to store the current count, with separate atoms for the}
+\PYG{c+cm}{ * units, tens, and hundreds places (e.g., `[\PYGZsq{}U5\PYGZsq{}, \PYGZsq{}T2\PYGZsq{}, \PYGZsq{}H1\PYGZsq{}, \PYGZsq{}\PYGZsh{}\PYGZsq{}]` for 125).}
+\PYG{c+cm}{ * The input to the automaton is a series of `tick` events, each causing the}
+\PYG{c+cm}{ * counter to increment by one.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Tilo Wiedera}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{counting2}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}counter}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}counter(+N:integer, \PYGZhy{}FinalValue:integer) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Runs the counting automaton for `N` steps and returns the final value.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate generates an input list of `N` `tick` atoms,}
+\PYG{c+c1}{\PYGZpc{}       initializes the DPDA, runs the simulation, and then converts the}
+\PYG{c+c1}{\PYGZpc{}       final stack configuration back into an integer result.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param N The number of times to \PYGZdq{}tick\PYGZdq{} the counter, effectively the}
+\PYG{c+c1}{\PYGZpc{}       number to count up to.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalValue The integer value represented by the automaton\PYGZsq{}s}
+\PYG{c+c1}{\PYGZpc{}       stack after `N` increments.}
+\PYG{n+nf}{run\PYGZus{}counter}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{FinalValue}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Generate the input sequence of N \PYGZsq{}tick\PYGZsq{} events.}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Input}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),}
+    \PYG{n+nf}{maplist}\PYG{p}{(}\PYG{l+s+sAtom}{=}\PYG{p}{(}\PYG{l+s+sAtom}{tick}\PYG{p}{),} \PYG{n+nv}{Input}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Initial DPDA configuration: start state with an empty stack marker.}
+    \PYG{n+nv}{InitialPDA} \PYG{o}{=} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}start}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{]),}
+
+    \PYG{c+c1}{\PYGZpc{} Run the DPDA simulation.}
+    \PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{InitialPDA}\PYG{p}{,} \PYG{n+nv}{Input}\PYG{p}{,} \PYG{n+nv}{FinalPDA}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Convert the final stack configuration to an integer value.}
+    \PYG{n+nv}{FinalPDA} \PYG{o}{=} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{),}
+    \PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{FinalStack}\PYG{p}{,} \PYG{n+nv}{FinalValue}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} run\PYGZus{}pda(+PDA, +Input, \PYGZhy{}FinalPDA)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} The main recursive loop that drives the automaton.}
+\PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{PDA}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{PDA}\PYG{p}{).}
+\PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{PDA}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Input}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{FinalPDA}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{PDA}\PYG{p}{,} \PYG{n+nv}{Input}\PYG{p}{,} \PYG{n+nv}{NextPDA}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nv}{NextPDA}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{FinalPDA}\PYG{p}{).}
+\PYG{n+nf}{run\PYGZus{}pda}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{State}\PYG{p}{,} \PYG{n+nv}{Stack}\PYG{p}{),} \PYG{p}{[],} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{FinalState}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{State}\PYG{p}{,} \PYG{n+nv}{Stack}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{FinalState}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{)),}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{n+nv}{FinalState}\PYG{p}{,} \PYG{n+nv}{FinalStack}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} ensure it\PYGZsq{}s a final epsilon transition}
+    \PYG{p}{!.}
+
+\PYG{c+c1}{\PYGZpc{} transition(+CurrentPDA, +Input, \PYGZhy{}NextPDA)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Defines the state transition rules for the counting automaton.}
+
+\PYG{c+c1}{\PYGZpc{} Epsilon transition from start to initialize the counter stack.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}start}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{])).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Unit Transitions \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{} If units are not 9, just increment the unit counter.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{U}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{tick}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NewU}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{U}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewU}\PYG{p}{).}
+\PYG{c+c1}{\PYGZpc{} If units are 9, transition to increment the tens place.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{tick}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}tens}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tens Transitions (Epsilon) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{} After incrementing units from 9, reset units to 0 and increment tens.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}tens}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{).}
+\PYG{c+c1}{\PYGZpc{} If tens are also 9, transition to increment the hundreds place.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}tens}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}hundreds}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Hundreds Transitions (Epsilon) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{} After incrementing tens from 9, reset units/tens and increment hundreds.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}hundreds}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}idle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewH}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{N} \PYG{o}{\PYGZlt{}} \PYG{l+m+mi}{9}\PYG{p}{,} \PYG{n+nv}{NewN} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{NewN}\PYG{p}{,} \PYG{n+nv}{NewH}\PYG{p}{).}
+\PYG{c+c1}{\PYGZpc{} If hundreds are also 9, we have overflowed; halt.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}inc\PYGZus{}hundreds}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}H9\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{]),} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nf}{pda}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}halt}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{])).}
+
+
+\PYG{c+c1}{\PYGZpc{} stack\PYGZus{}to\PYGZus{}int(+Stack, \PYGZhy{}Value)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Converts the final stack representation back into an integer.}
+\PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int}\PYG{p}{([}\PYG{l+s+sAtom}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{],} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int}\PYG{p}{([}\PYG{n+nv}{U}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{],} \PYG{n+nv}{Value}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{U\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{U}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{U\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{U\PYGZus{}val}\PYG{p}{),}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{T\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{T\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{T\PYGZus{}val}\PYG{p}{),}
+    \PYG{n+nf}{atom\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{H\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{H}\PYG{p}{),} \PYG{n+nf}{atom\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{H\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{H\PYGZus{}val}\PYG{p}{),}
+    \PYG{n+nv}{Value} \PYG{o}{is} \PYG{n+nv}{U\PYGZus{}val} \PYG{o}{+} \PYG{n+nv}{T\PYGZus{}val} \PYG{o}{*} \PYG{l+m+mi}{10} \PYG{o}{+} \PYG{n+nv}{H\PYGZus{}val} \PYG{o}{*} \PYG{l+m+mf}{100.}
+\end{MintedVerbatim}

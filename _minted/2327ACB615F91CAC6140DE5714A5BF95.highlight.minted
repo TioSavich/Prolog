@@ -1,0 +1,37 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Main Entry Point for Command\PYGZhy{}Line Execution}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module provides a simple, non\PYGZhy{}interactive entry point for running the}
+\PYG{c+cm}{ * cognitive modeling system from the command line. It is primarily used for}
+\PYG{c+cm}{ * testing and demonstration purposes.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * When executed, it invokes the ORR (Observe, Reorganize, Reflect) cycle}
+\PYG{c+cm}{ * with a predefined goal and prints the final result to the console.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Tilo Wiedera}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      main is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The main predicate for command\PYGZhy{}line execution.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       It runs a predefined query, `add(5, 5, X)`, using the `run\PYGZus{}computation/2`}
+\PYG{c+c1}{\PYGZpc{}       predicate from the `execution\PYGZus{}handler`. This triggers the full ORR}
+\PYG{c+c1}{\PYGZpc{}       cycle. After the cycle completes, it prints the final result for `X`}
+\PYG{c+c1}{\PYGZpc{}       and halts the Prolog system. The number 5 is represented using}
+\PYG{c+c1}{\PYGZpc{}       Peano arithmetic (`s(s(s(s(s(0)))))`).}
+\PYG{n+nf}{main} \PYG{o}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use a reasonable inference step limit so the ORR cycle can trigger}
+    \PYG{c+c1}{\PYGZpc{} reorganization if resource exhaustion occurs.}
+    \PYG{n+nv}{Limit} \PYG{o}{=} \PYG{l+m+mi}{30}\PYG{p}{,}
+    \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{))))),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{))))),} \PYG{n+nv}{X}\PYG{p}{),}
+    \PYG{l+s+sAtom}{execution\PYGZus{}handler:}\PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Final Result (may be unbound if not solved): \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{X}\PYG{p}{]),}
+    \PYG{l+s+sAtom}{halt}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} This directive makes it so that running the script from the command line}
+\PYG{c+c1}{\PYGZpc{} will automatically call the main/0 predicate.}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{initialization}\PYG{p}{(}\PYG{l+s+sAtom}{main}\PYG{p}{,} \PYG{l+s+sAtom}{main}\PYG{p}{).}
+\end{MintedVerbatim}

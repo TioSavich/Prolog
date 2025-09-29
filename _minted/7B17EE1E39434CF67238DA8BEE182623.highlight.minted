@@ -1,0 +1,100 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Reorganization and Cognitive Process Logger}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module provides a logging facility for the ORR (Observe, Reorganize,}
+\PYG{c+cm}{ * Reflect) cycle. It captures key events during the cognitive process,}
+\PYG{c+cm}{ * such as the start of a cycle, detection of disequilibrium, and the}
+\PYG{c+cm}{ * success or failure of reorganization attempts.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The log can be retrieved as a raw list of events or generated as a}
+\PYG{c+cm}{ * human\PYGZhy{}readable narrative report using a Definite Clause Grammar (DCG).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Log entries are stored as dynamic facts of the form:}
+\PYG{c+cm}{ * `log\PYGZus{}entry(Timestamp, Event)`.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Tilo Wiedera}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}log}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{log\PYGZus{}event}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{l+s+sAtom}{get\PYGZus{}log}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{l+s+sAtom}{clear\PYGZus{}log}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{l+s+sAtom}{generate\PYGZus{}report}\PYG{o}{/}\PYG{l+m+mi}{1}
+\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{l+s+sAtom}{dynamic} \PYG{l+s+sAtom}{log\PYGZus{}entry}\PYG{o}{/}\PYG{l+m+mf}{2.}
+
+\PYG{c+c1}{\PYGZpc{}!      log\PYGZus{}event(+Event:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Records a structured event in the log with a current timestamp.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Event The structured term representing the event to be logged}
+\PYG{c+c1}{\PYGZpc{}       (e.g., `disequilibrium(trigger\PYGZus{}term)`).}
+\PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nv}{Event}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}time}\PYG{p}{(}\PYG{n+nv}{Timestamp}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{log\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{Timestamp}\PYG{p}{,} \PYG{n+nv}{Event}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      get\PYGZus{}log(\PYGZhy{}Log:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Retrieves the entire log as a list of `log\PYGZus{}entry/2` facts.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Log A list of all `log\PYGZus{}entry(Timestamp, Event)` terms currently}
+\PYG{c+c1}{\PYGZpc{}       in the database.}
+\PYG{n+nf}{get\PYGZus{}log}\PYG{p}{(}\PYG{n+nv}{Log}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nf}{log\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{),} \PYG{n+nf}{log\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{),} \PYG{n+nv}{Log}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      clear\PYGZus{}log is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Clears all entries from the reorganization log by retracting all}
+\PYG{c+c1}{\PYGZpc{}       `log\PYGZus{}entry/2` facts. This is typically done before starting a new}
+\PYG{c+c1}{\PYGZpc{}       `run\PYGZus{}query/1`.}
+\PYG{n+nf}{clear\PYGZus{}log} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{log\PYGZus{}entry}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      generate\PYGZus{}report(\PYGZhy{}Report:string) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Translates the current log into a single, human\PYGZhy{}readable narrative string.}
+\PYG{c+c1}{\PYGZpc{}       It uses a DCG to convert the structured log events into descriptive sentences.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Report The generated narrative report as a string.}
+\PYG{n+nf}{generate\PYGZus{}report}\PYG{p}{(}\PYG{n+nv}{Report}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}log}\PYG{p}{(}\PYG{n+nv}{Log}\PYG{p}{),}
+    \PYG{n+nf}{phrase}\PYG{p}{(}\PYG{n+nf}{narrative}\PYG{p}{(}\PYG{n+nv}{Log}\PYG{p}{),} \PYG{n+nv}{Tokens}\PYG{p}{),}
+    \PYG{n+nf}{atomics\PYGZus{}to\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Tokens}\PYG{p}{,} \PYG{n+nv}{Report}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} DCG for Narrative Generation \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{} narrative//1 processes the list of log entries.}
+\PYG{n+nf}{narrative}\PYG{p}{([])} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}} \PYG{p}{[].}
+\PYG{n+nf}{narrative}\PYG{p}{([}\PYG{n+nf}{log\PYGZus{}entry}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Event}\PYG{p}{)|}\PYG{n+nv}{Rest}\PYG{p}{])} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{n+nv}{Event}\PYG{p}{),}
+    \PYG{n+nf}{narrative}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} event\PYGZus{}narrative//1 translates a single event term into a string component.}
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{n+nf}{orr\PYGZus{}cycle\PYGZus{}start}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{))} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{} System started observing goal: \PYGZdq{}}\PYG{p}{,} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{n+nf}{disequilibrium}\PYG{p}{(}\PYG{n+nv}{Trigger}\PYG{p}{))} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{} Reflection detected disequilibrium. Trigger: \PYGZdq{}}\PYG{p}{,} \PYG{n+nv}{Trigger}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{n+nf}{reorganization\PYGZus{}start}\PYG{p}{(}\PYG{n+nv}{Signature}\PYG{p}{))} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{} Reorganization started, targeting predicate: \PYGZdq{}}\PYG{p}{,} \PYG{n+nv}{Signature}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{n+nf}{retracted}\PYG{p}{(}\PYG{n+nv}{Clause}\PYG{p}{))} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}  \PYGZhy{} The old clause was retracted: \PYGZdq{}}\PYG{p}{,} \PYG{n+nv}{Clause}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{n+nf}{asserted}\PYG{p}{(}\PYG{n+nv}{Clause}\PYG{p}{))} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}  \PYGZhy{} A new clause was asserted: \PYGZdq{}}\PYG{p}{,} \PYG{n+nv}{Clause}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}success}\PYG{p}{)} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{} Reorganization was successful. System is retrying the goal to seek a new equilibrium.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}failure}\PYG{p}{)} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{} Reorganization failed. The system could not find a way to accommodate the issue.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{l+s+sAtom}{equilibrium}\PYG{p}{)} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{} Equilibrium reached. The goal succeeded and was found to be coherent.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+
+\PYG{n+nf}{event\PYGZus{}narrative}\PYG{p}{(}\PYG{n+nv}{Unknown}\PYG{p}{)} \PYG{p}{\PYGZhy{}\PYGZhy{}\PYGZgt{}}
+    \PYG{p}{[}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{} An unknown event was logged: \PYGZdq{}}\PYG{p}{,} \PYG{n+nv}{Unknown}\PYG{p}{,} \PYG{l+s+s2}{\PYGZdq{}.\PYGZbs{}n\PYGZdq{}}\PYG{p}{].}
+\end{MintedVerbatim}

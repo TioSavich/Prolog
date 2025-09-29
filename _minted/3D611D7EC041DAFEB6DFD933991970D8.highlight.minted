@@ -1,0 +1,133 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Interactive Command\PYGZhy{}Line UI for the More Machine Learner}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module provides a text\PYGZhy{}based, interactive user interface for the}
+\PYG{c+cm}{ * \PYGZdq{}More Machine Learner\PYGZdq{} system. It allows a user to:}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * \PYGZhy{} Trigger the learning of new addition strategies from examples.}
+\PYG{c+cm}{ * \PYGZhy{} Trigger a critique of existing rules using challenging subtraction problems.}
+\PYG{c+cm}{ * \PYGZhy{} View the strategies that have been learned during the session.}
+\PYG{c+cm}{ * \PYGZhy{} Load and save learned knowledge from a file (`learned\PYGZus{}knowledge.pl`).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The main entry point is `start/0`, which initializes the system and}
+\PYG{c+cm}{ * displays the main menu.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Tilo Wiedera}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{interactive\PYGZus{}ui}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{start}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Main Entry Point \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      start is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The main entry point for the interactive user interface.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate displays a welcome message, asks the user if they want}
+\PYG{c+c1}{\PYGZpc{}       to load previously saved knowledge, and then enters the main menu loop}
+\PYG{c+c1}{\PYGZpc{}       where the user can select different actions.}
+\PYG{n+nf}{start} \PYG{o}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{welcome\PYGZus{}message}\PYG{p}{,}
+    \PYG{l+s+sAtom}{ask\PYGZus{}to\PYGZus{}load\PYGZus{}knowledge}\PYG{p}{,}
+    \PYG{l+s+sAtom}{main\PYGZus{}menu}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Interactive UI Predicates \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{n+nf}{welcome\PYGZus{}message} \PYG{o}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{nl}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}====================================================\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}          Welcome to the More Machine Learner       \PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}====================================================\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}All I can do is count, but I can learn from what you show me.\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{nl}\PYG{p}{.}
+
+\PYG{n+nf}{ask\PYGZus{}to\PYGZus{}load\PYGZus{}knowledge} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{write}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Do you want to load previously learned strategies? (y/n) \PYGZgt{} \PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{read\PYGZus{}line\PYGZus{}to\PYGZus{}string}\PYG{p}{(}\PYG{l+s+sAtom}{user\PYGZus{}input}\PYG{p}{,} \PYG{n+nv}{Response}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{p}{(}\PYG{n+nv}{Response} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}y\PYGZdq{}} \PYG{p}{;} \PYG{n+nv}{Response} \PYG{o}{=} \PYG{l+s+s2}{\PYGZdq{}Y\PYGZdq{}}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{p}{(}   \PYG{n+nf}{exists\PYGZus{}file}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}learned\PYGZus{}knowledge.pl\PYGZsq{}}\PYG{p}{)}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Loading previously learned knowledge...\PYGZsq{}}\PYG{p}{),}
+            \PYG{n+nf}{consult}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}learned\PYGZus{}knowledge.pl\PYGZsq{}}\PYG{p}{)}
+        \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}No saved knowledge file found.\PYGZsq{}}\PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Starting with a clean slate.\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{main\PYGZus{}menu} \PYG{o}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{nl}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Main Menu \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}1. Learn a new addition strategy (e.g., from 8+5=13)\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}2. Critique a normative rule (e.g., from 3\PYGZhy{}5=\PYGZhy{}2)\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}3. Show currently learned strategies\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}4. Save learned strategies\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}5. Exit\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{write}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZgt{} \PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{read\PYGZus{}line\PYGZus{}to\PYGZus{}string}\PYG{p}{(}\PYG{l+s+sAtom}{user\PYGZus{}input}\PYG{p}{,} \PYG{n+nv}{Choice}\PYG{p}{),}
+    \PYG{n+nf}{handle\PYGZus{}menu\PYGZus{}choice}\PYG{p}{(}\PYG{n+nv}{Choice}\PYG{p}{).}
+
+\PYG{n+nf}{handle\PYGZus{}menu\PYGZus{}choice}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}1\PYGZdq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!,} \PYG{l+s+sAtom}{run\PYGZus{}learning\PYGZus{}interaction}\PYG{p}{,} \PYG{l+s+sAtom}{main\PYGZus{}menu}\PYG{p}{.}
+\PYG{n+nf}{handle\PYGZus{}menu\PYGZus{}choice}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}2\PYGZdq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!,} \PYG{l+s+sAtom}{run\PYGZus{}critique\PYGZus{}interaction}\PYG{p}{,} \PYG{l+s+sAtom}{main\PYGZus{}menu}\PYG{p}{.}
+\PYG{n+nf}{handle\PYGZus{}menu\PYGZus{}choice}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}3\PYGZdq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!,} \PYG{l+s+sAtom}{show\PYGZus{}learned\PYGZus{}strategies}\PYG{p}{,} \PYG{l+s+sAtom}{main\PYGZus{}menu}\PYG{p}{.}
+\PYG{n+nf}{handle\PYGZus{}menu\PYGZus{}choice}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}4\PYGZdq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!,} \PYG{l+s+sAtom}{save\PYGZus{}knowledge}\PYG{p}{,} \PYG{l+s+sAtom}{main\PYGZus{}menu}\PYG{p}{.}
+\PYG{n+nf}{handle\PYGZus{}menu\PYGZus{}choice}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}5\PYGZdq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!,} \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Goodbye!\PYGZsq{}}\PYG{p}{),} \PYG{l+s+sAtom}{nl}\PYG{p}{.}
+\PYG{n+nf}{handle\PYGZus{}menu\PYGZus{}choice}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Invalid choice, please try again.\PYGZsq{}}\PYG{p}{),} \PYG{l+s+sAtom}{main\PYGZus{}menu}\PYG{p}{.}
+
+\PYG{n+nf}{run\PYGZus{}learning\PYGZus{}interaction} \PYG{o}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{nl}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Learning a New Strategy \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Please provide a basic addition problem and its result.\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{write}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Example: 8+5=13\PYGZsq{}}\PYG{p}{),} \PYG{l+s+sAtom}{nl}\PYG{p}{,}
+    \PYG{n+nf}{write}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Problem \PYGZgt{} \PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{read\PYGZus{}line\PYGZus{}to\PYGZus{}string}\PYG{p}{(}\PYG{l+s+sAtom}{user\PYGZus{}input}\PYG{p}{,} \PYG{n+nv}{ProblemString}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{parse\PYGZus{}problem}\PYG{p}{(}\PYG{n+nv}{ProblemString}\PYG{p}{,} \PYG{l+s+sAtom}{+}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{bootstrap\PYGZus{}from\PYGZus{}observation}\PYG{p}{(}\PYG{l+s+sAtom}{+}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Invalid problem format. Please use the format \PYGZdq{}A+B=C\PYGZdq{}.\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{run\PYGZus{}critique\PYGZus{}interaction} \PYG{o}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{nl}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Critiquing a Norm \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Please provide a challenging subtraction problem.\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{write}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Example: 3\PYGZhy{}5=\PYGZhy{}2\PYGZsq{}}\PYG{p}{),} \PYG{l+s+sAtom}{nl}\PYG{p}{,}
+    \PYG{n+nf}{write}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Problem \PYGZgt{} \PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{read\PYGZus{}line\PYGZus{}to\PYGZus{}string}\PYG{p}{(}\PYG{l+s+sAtom}{user\PYGZus{}input}\PYG{p}{,} \PYG{n+nv}{ProblemString}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{parse\PYGZus{}problem}\PYG{p}{(}\PYG{n+nv}{ProblemString}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{critique\PYGZus{}and\PYGZus{}bootstrap}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{))}
+    \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Invalid problem format. Please use the format \PYGZdq{}A\PYGZhy{}B=C\PYGZdq{}.\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{show\PYGZus{}learned\PYGZus{}strategies} \PYG{o}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{nl}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Learned Strategies \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{current\PYGZus{}predicate}\PYG{p}{(}\PYG{l+s+sAtom}{learned\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{listing}\PYG{p}{(}\PYG{l+s+sAtom}{learned\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}No strategies have been learned in this session.\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{l+s+sAtom}{nl}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Parsing Helper \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nf}{parse\PYGZus{}problem}\PYG{p}{(}\PYG{n+nv}{String}\PYG{p}{,} \PYG{n+nv}{Term}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{normalize\PYGZus{}space}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{CleanString}\PYG{p}{),} \PYG{n+nv}{String}\PYG{p}{),}
+    \PYG{n+nf}{atomic\PYGZus{}list\PYGZus{}concat}\PYG{p}{(}\PYG{n+nv}{Parts}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}=\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{CleanString}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nv}{Parts} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{Problem}\PYG{p}{,} \PYG{n+nv}{ResultStr}\PYG{p}{]}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{normalize\PYGZus{}space}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{TrimmedResult}\PYG{p}{),} \PYG{n+nv}{ResultStr}\PYG{p}{),}
+        \PYG{n+nf}{number\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{TrimmedResult}\PYG{p}{),}
+        \PYG{p}{(}   \PYG{n+nf}{atomic\PYGZus{}list\PYGZus{}concat}\PYG{p}{([}\PYG{n+nv}{A\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}str}\PYG{p}{],} \PYG{l+s+sAtom}{\PYGZsq{}+\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Problem}\PYG{p}{)}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{normalize\PYGZus{}space}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{TrimmedA}\PYG{p}{),} \PYG{n+nv}{A\PYGZus{}str}\PYG{p}{),}
+            \PYG{n+nf}{normalize\PYGZus{}space}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{TrimmedB}\PYG{p}{),} \PYG{n+nv}{B\PYGZus{}str}\PYG{p}{),}
+            \PYG{n+nf}{number\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{TrimmedA}\PYG{p}{),}
+            \PYG{n+nf}{number\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{TrimmedB}\PYG{p}{),}
+            \PYG{n+nv}{Term} \PYG{o}{=} \PYG{l+s+sAtom}{+}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{)}
+        \PYG{p}{;}   \PYG{n+nf}{atomic\PYGZus{}list\PYGZus{}concat}\PYG{p}{([}\PYG{n+nv}{A\PYGZus{}str}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}str}\PYG{p}{],} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Problem}\PYG{p}{)}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{normalize\PYGZus{}space}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{TrimmedA}\PYG{p}{),} \PYG{n+nv}{A\PYGZus{}str}\PYG{p}{),}
+            \PYG{n+nf}{normalize\PYGZus{}space}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{TrimmedB}\PYG{p}{),} \PYG{n+nv}{B\PYGZus{}str}\PYG{p}{),}
+            \PYG{n+nf}{number\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{TrimmedA}\PYG{p}{),}
+            \PYG{n+nf}{number\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{TrimmedB}\PYG{p}{),}
+            \PYG{n+nv}{Term} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,}\PYG{n+nv}{B}\PYG{p}{)}
+        \PYG{p}{;}   \PYG{l+s+sAtom}{fail}
+        \PYG{p}{)}
+    \PYG{p}{;}   \PYG{l+s+sAtom}{fail}
+    \PYG{p}{).}
+\end{MintedVerbatim}

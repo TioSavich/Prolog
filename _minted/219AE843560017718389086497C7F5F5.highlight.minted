@@ -1,0 +1,205 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Unit Tests for Incompatibility Semantics}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module contains the unit tests for the `incompatibility\PYGZus{}semantics`}
+\PYG{c+cm}{ * module. It uses the `plunit` testing framework to verify the correctness}
+\PYG{c+cm}{ * of the core logic across various domains.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The tests are organized into sections:}
+\PYG{c+cm}{ * 1.  **Core Logic**: Basic tests for identity, incoherence, and negation.}
+\PYG{c+cm}{ * 2.  **Arithmetic**: Tests for commutativity and domain\PYGZhy{}specific constraints (e.g., subtraction in natural numbers).}
+\PYG{c+cm}{ * 3.  **Embodied Modal Logic**: Tests for the EML state transition axioms.}
+\PYG{c+cm}{ * 4.  **Quadrilateral Hierarchy**: Tests for geometric entailment and incompatibility.}
+\PYG{c+cm}{ * 5.  **Number Theory**: Tests for Euclid\PYGZsq{}s proof of the infinitude of primes.}
+\PYG{c+cm}{ * 6.  **Fractions**: Tests for arithmetic and object collection over rational numbers.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * To run these tests, execute `run\PYGZus{}tests(unified\PYGZus{}synthesis).` from the}
+\PYG{c+cm}{ * SWI\PYGZhy{}Prolog console after loading this file.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Tilo Wiedera}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+\PYG{c+c1}{\PYGZpc{} Load the module under test. Explicitly qualify imports to avoid ambiguity in tests.}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{incoherent}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{obj\PYGZus{}coll}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}
+\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{plunit}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Ensure operators are visible for the test definitions.}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{l+s+sAtom}{fx}\PYG{p}{,} \PYG{l+s+sAtom}{neg}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{l+s+sAtom}{fx}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{l+s+sAtom}{fx}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}nec}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{l+s+sAtom}{fx}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{l+s+sAtom}{fx}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}poss}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{1050}\PYG{p}{,} \PYG{l+s+sAtom}{xfy}\PYG{p}{,} \PYG{l+s+sAtom}{=\PYGZgt{}}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{550}\PYG{p}{,} \PYG{l+s+sAtom}{xfy}\PYG{p}{,} \PYG{l+s+sAtom}{rdiv}\PYG{p}{).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{begin\PYGZus{}tests}\PYG{p}{(}\PYG{l+s+sAtom}{unified\PYGZus{}synthesis}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Part 1: Core Logic and Domains \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{identity\PYGZus{}subjective}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{)])).}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{incoherence\PYGZus{}subjective}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{negation\PYGZus{}handling\PYGZus{}subjective\PYGZus{}lem}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{))])).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Part 2: Arithmetic Coexistence and Fixes \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{arithmetic\PYGZus{}commutativity\PYGZus{}normative}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{)))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n\PYGZus{}persistence}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{))),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{p}\PYG{p}{)])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}z}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{z}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{)))]))).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Part 3: Embodied Modal Logic (EML) \PYGZhy{} UPDATED \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{eml\PYGZus{}dynamic\PYGZus{}u\PYGZus{}to\PYGZus{}a}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{u}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{a}\PYG{p}{)])).}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{eml\PYGZus{}dynamic\PYGZus{}full\PYGZus{}cycle}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{lg}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{a}\PYG{p}{)])).}
+
+\PYG{c+c1}{\PYGZpc{} New Tests for Tension and Compressive Possibility}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{eml\PYGZus{}tension\PYGZus{}expansive\PYGZus{}poss}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Commitment 3: Possibility of Release}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{a}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{exp\PYGZus{}poss} \PYG{l+s+sAtom}{lg}\PYG{p}{)])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{eml\PYGZus{}tension\PYGZus{}compressive\PYGZus{}poss}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Commitment 3: Possibility of Fixation (Temptation)}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{a}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{comp\PYGZus{}poss} \PYG{l+s+sAtom}{t}\PYG{p}{)])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{eml\PYGZus{}tension\PYGZus{}conjunction}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Verify that both possibilities are entailed by Awareness (using conjunction reduction)}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{a}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{conj}\PYG{p}{(}\PYG{l+s+sAtom}{exp\PYGZus{}poss} \PYG{l+s+sAtom}{lg}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}poss} \PYG{l+s+sAtom}{t}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{eml\PYGZus{}fixation\PYGZus{}consequence}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Commitment 4a: Fixation necessarily leads to a contraction that collapses unity.}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{t}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{l+s+sAtom}{u}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{hegel\PYGZus{}loop\PYGZus{}prevention}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{t\PYGZus{}b}\PYG{p}{)]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)]))).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for New Feature: Quadrilateral Hierarchy (Chapter 2) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}incompatibility\PYGZus{}square\PYGZus{}r1}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{square}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{r1}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}compatibility\PYGZus{}trapezoid\PYGZus{}r1}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{trapezoid}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{r1}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))]))).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}incompatibility\PYGZus{}persistence}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{square}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{r1}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{other}\PYG{p}{)])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}entailment\PYGZus{}square\PYGZus{}rectangle}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{square}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{rectangle}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}entailment\PYGZus{}rectangle\PYGZus{}square\PYGZus{}fail}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{rectangle}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{square}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))]))).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}entailment\PYGZus{}rhombus\PYGZus{}kite}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{rhombus}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{kite}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}entailment\PYGZus{}transitive}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{square}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{parallelogram}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}projection\PYGZus{}contrapositive}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{rectangle}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{square}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{quad\PYGZus{}projection\PYGZus{}inversion\PYGZus{}fail}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{square}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{rectangle}\PYG{p}{(}\PYG{l+s+sAtom}{x}\PYG{p}{)))]))).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Number Theory (Euclid\PYGZsq{}s Proof) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{} Test Grounding Helpers}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}grounding\PYGZus{}prime}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{))])),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}grounding\PYGZus{}composite}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{composite}\PYG{p}{(}\PYG{l+m+mi}{6}\PYG{p}{))])),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{composite}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{))])).}
+
+\PYG{c+c1}{\PYGZpc{} Test Material Inferences (M4 and M5)}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}material\PYGZus{}inference\PYGZus{}m5}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} L=[2,3], Product(L)+1 = 7. P=7.}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{divides}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{member}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{])))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}material\PYGZus{}inference\PYGZus{}m4}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{member}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{])))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{([}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{])))]} \PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Test Forward Chaining (Combining M5 and M4)}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}forward\PYGZus{}chaining}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} L=[2,3], N=7, P=7.}
+    \PYG{n+nv}{Premises} \PYG{o}{=} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{divides}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{([}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{]))],}
+    \PYG{n+nv}{Conclusion} \PYG{o}{=} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{neg}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{([}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{])))],}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{(}\PYG{n+nv}{Premises} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{n+nv}{Conclusion}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Test Case 1 (N is Prime)}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}case\PYGZus{}1\PYGZus{}incoherence}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} L=[2,3], N=7.}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{([}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{]))])).}
+
+\PYG{c+c1}{\PYGZpc{} Test Case 2 (N is Composite)}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}case\PYGZus{}2\PYGZus{}incoherence}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} L=[2,3,5,7,11,13]. N=30031 (Composite: 59*509).}
+    \PYG{n+nv}{L} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,}\PYG{l+m+mi}{3}\PYG{p}{,}\PYG{l+m+mi}{5}\PYG{p}{,}\PYG{l+m+mi}{7}\PYG{p}{,}\PYG{l+m+mi}{11}\PYG{p}{,}\PYG{l+m+mi}{13}\PYG{p}{],}
+    \PYG{n+nv}{N} \PYG{o}{=} \PYG{l+m+mi}{30031}\PYG{p}{,}
+    \PYG{n+nv}{Premises} \PYG{o}{=} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{composite}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{(}\PYG{n+nv}{L}\PYG{p}{))],}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{(}\PYG{n+nv}{Premises}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Test The Final Theorem (Euclid\PYGZsq{}s Theorem)}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}theorem\PYGZus{}infinitude\PYGZus{}of\PYGZus{}primes}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{L} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{11}\PYG{p}{],}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{(}\PYG{n+nv}{L}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{euclid\PYGZus{}theorem\PYGZus{}empty\PYGZus{}list}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{([]))])).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Fractions (Jason.pl integration) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}obj\PYGZus{}coll\PYGZus{}q}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{)),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{0}\PYG{p}{)).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}obj\PYGZus{}coll\PYGZus{}n}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{)),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}normalization}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{normalize}\PYG{p}{(}\PYG{l+m+mi}{4} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{8}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{)),}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{normalize}\PYG{p}{(}\PYG{l+m+mi}{10} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{)).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}addition\PYGZus{}grounding}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 1/2 + 1/3 = 5/6}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{5} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{6}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}addition\PYGZus{}mixed}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 2 + 1/4 = 9/4}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{9} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{4}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}subtraction\PYGZus{}grounding}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 1/2 \PYGZhy{} 1/3 = 1/6}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{6}\PYG{p}{))])).}
+
+\PYG{c+c1}{\PYGZpc{} Test subtraction constraints in N with fractions}
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 1/3 \PYGZhy{} 1/2 = \PYGZhy{}1/6. Incoherent in N.}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{incoherent}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nf}{minus}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}iteration\PYGZus{}grounding}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} (1/3) * 4 = 4/3}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{iterate}\PYG{p}{(}\PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{4} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}partition\PYGZus{}grounding}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} (4/3) / 4 = 1/3 (Normalized from 4/12)}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{partition}\PYG{p}{(}\PYG{l+m+mi}{4} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{3}\PYG{p}{))])).}
+
+\PYG{n+nf}{test}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}partition\PYGZus{}integer}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{setup}\PYG{p}{(}\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{))])} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 5 / 2 = 5/2}
+    \PYG{n+nf}{assertion}\PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{partition}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{5} \PYG{l+s+sAtom}{rdiv} \PYG{l+m+mi}{2}\PYG{p}{))])).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{end\PYGZus{}tests}\PYG{p}{(}\PYG{l+s+sAtom}{unified\PYGZus{}synthesis}\PYG{p}{).}
+\end{MintedVerbatim}
