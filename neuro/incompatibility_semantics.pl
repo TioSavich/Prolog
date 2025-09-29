@@ -1,6 +1,6 @@
 % Filename: incompatibility_semantics.pl (Neuro-Symbolic Integration)
 :- module(incompatibility_semantics,
-          [ proves/1, obj_coll/1, incoherent/1, set_domain/1, current_domain/1
+          [ proves/1, is_recollection/2, incoherent/1, set_domain/1, current_domain/1 % obj_coll/1 is deprecated
           , product_of_list/2 % Exported for the learner module
           % Updated exports
           , s/1, o/1, n/1, comp_nec/1, exp_nec/1, exp_poss/1, comp_poss/1, neg/1
@@ -14,6 +14,8 @@
           , rdiv/2, iterate/3, partition/3, normalize/2
           ]).
 % Declare predicates that are defined across different sections.
+:- use_module(hermeneutic_calculator). % Added for is_recollection/2
+
 :- discontiguous proves_impl/2.
 :- discontiguous is_incoherent/1. % Non-recursive check
 
@@ -63,12 +65,29 @@ current_domain(n).
 set_domain(D) :-
     ( member(D, [n, z, q]) -> retractall(current_domain(_)), assertz(current_domain(D)) ; true).
 
-obj_coll(N) :- current_domain(n), !, integer(N), N >= 0.
-obj_coll(N) :- current_domain(z), !, integer(N).
-obj_coll(X) :- current_domain(q), !,
-    ( integer(X)
-    ; (X = N rdiv D, integer(N), integer(D), D > 0)
-    ).
+% The new core ontological predicate. It succeeds if `Term` is a
+% validly constructed number, where `History` is the execution
+% trace of the calculation that constructed it. This replaces the
+% static `obj_coll/1` check with a dynamic, process-based validation.
+is_recollection(0, [axiom(zero)]).
+is_recollection(N, History) :-
+    integer(N),
+    N > 0,
+    Prev is N - 1,
+    is_recollection(Prev, _), % Foundational check on the predecessor
+    hermeneutic_calculator:calculate(Prev, +, 1, _Strategy, N, History).
+is_recollection(N, History) :-
+    integer(N),
+    N < 0,
+    is_recollection(0, _), % Grounded in the axiom of zero
+    Val is abs(N),
+    hermeneutic_calculator:calculate(0, -, Val, _Strategy, N, History).
+is_recollection(N rdiv D, [history(rational, from(N, D))]) :-
+    % Denominator must be a positive integer. We check its recollection status.
+    is_recollection(D, _),
+    integer(D), D > 0,
+    % Numerator can be any recollected number.
+    is_recollection(N, _).
 
 % --- Helpers for Rational Arithmetic ---
 gcd(A, 0, A) :- A \= 0, !.
@@ -116,7 +135,7 @@ excluded_predicates(AllPreds) :-
     fraction_predicates(F),
     append(G, NT, Temp),
     append(Temp, F, DomainPreds),
-    append([neg, conj, nec, comp_nec, exp_nec, exp_poss, comp_poss, obj_coll], DomainPreds, AllPreds).
+    append([neg, conj, nec, comp_nec, exp_nec, exp_poss, comp_poss, is_recollection], DomainPreds, AllPreds).
 
 % --- Helpers for Number Theory (Grounded) ---
 
@@ -163,8 +182,9 @@ is_incoherent(X) :-
 
 % Arithmetic Incompatibility
 is_incoherent(X) :-
-    member(n(obj_coll(minus(A,B,_))), X),
+    member(n(minus(A,B,_)), X),
     current_domain(n),
+    is_recollection(A, _), is_recollection(B, _),
     normalize(A, NA), normalize(B, NB),
     NA < NB, !.
 
@@ -198,21 +218,21 @@ proves_impl((Premises => _), _) :-
 
 % --- Arithmetic Grounding ---
 proves_impl(_ => [o(eq(A,B))], _) :-
-    obj_coll(A), obj_coll(B),
+    is_recollection(A, _), is_recollection(B, _),
     normalize(A, NA), normalize(B, NB),
     NA == NB.
 
 proves_impl(_ => [o(plus(A,B,C))], _) :-
-    obj_coll(A), obj_coll(B),
+    is_recollection(A, _), is_recollection(B, _),
     arith_op(A, B, +, C),
-    obj_coll(C).
+    is_recollection(C, _).
 
 proves_impl(_ => [o(minus(A,B,C))], _) :-
-    current_domain(D), obj_coll(A), obj_coll(B),
+    current_domain(D), is_recollection(A, _), is_recollection(B, _),
     arith_op(A, B, -, C),
     normalize(C, NC),
     ((D=n, NC >= 0) ; member(D, [z, q])),
-    obj_coll(C).
+    is_recollection(C, _).
 
 % --- Arithmetic Material Inferences ---
 proves_impl([n(plus(A,B,C))] => [n(plus(B,A,C))], _).
@@ -229,14 +249,14 @@ proves_impl([s(t_n)] => [s(comp_nec t_b)], _).
 
 % --- Fraction Grounding ---
 proves_impl(([] => [o(iterate(U, M, R))]), _) :-
-    obj_coll(U), integer(M), M >= 0,
+    is_recollection(U, _), integer(M), M >= 0,
     normalize(U, NU),
     (integer(NU) -> N1=NU, D1=1 ; NU = N1 rdiv D1),
     N_res is N1 * M,
     normalize(N_res rdiv D1, R).
 
 proves_impl(([] => [o(partition(W, N, U))]), _) :-
-    obj_coll(W), integer(N), N > 0,
+    is_recollection(W, _), integer(N), N > 0,
     normalize(W, NW),
     (integer(NW) -> N1=NW, D1=1 ; NW = N1 rdiv D1),
     D_res is D1 * N,
