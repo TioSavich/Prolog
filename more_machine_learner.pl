@@ -24,10 +24,10 @@
  */
 :- module(more_machine_learner,
           [ critique_and_bootstrap/1,
-            explore/1,
             run_learned_strategy/5,
             solve/4,
-            save_knowledge/0
+            save_knowledge/0,
+            reflect_and_learn/1
           ]).
 
 % Use the semantics engine for validation
@@ -96,58 +96,7 @@ save_knowledge :-
     ).
 
 % =================================================================
-% Part 1: The Generative-Reflective Loop (Exploration)
-% =================================================================
-
-%!      explore(+Domain:atom) is det.
-%
-%       Initiates a session of autonomous exploration and learning for a
-%       given domain.
-%
-%       It repeatedly generates random problems, solves them using the current
-%       best strategy, and then reflects on the solution trace to discover
-%       and assert new, more efficient strategies.
-%
-%       @param Domain The domain to explore (currently only `addition` is supported).
-explore(addition) :-
-    writeln('====================================================='),
-    writeln('--- Autonomous Exploration Initiated: Addition (Protein Folding) ---'),
-    current_domain(D),
-    format('Current Semantic Domain: ~w~n', [D]),
-    (member(D, [n, z, q]) ->
-        explore_addition_loop(50)
-    ;
-        writeln('Exploration requires domain (n, z, or q).')
-    ).
-
-% explore_addition_loop(+N)
-% The main loop for the exploration process.
-explore_addition_loop(0) :-
-    writeln('\nExploration limit reached. Saving knowledge base...'),
-    save_knowledge,
-    writeln('Knowledge base saved.'),
-    writeln('====================================================='), !.
-explore_addition_loop(I) :-
-    generate_addition_problem(A, B),
-    normalize(A, AN), normalize(B, BN),
-    format('\n[Cycle ~w] Exploring Problem: ~w + ~w~n', [I, AN, BN]),
-    (   discover_strategy(A, B, StrategyName)
-    ->  format('-> Strategy Discovery Processed: ~w~n', [StrategyName])
-    ;   true
-    ),
-    NextI is I - 1,
-    explore_addition_loop(NextI).
-
-% Problem Generation (Heuristic)
-generate_addition_problem(A, B) :-
-    random_between(3, 12, A),
-    (   random(R), R < 0.3 % 30% chance
-    ->  B = A
-    ;   random_between(3, 15, B)
-    ).
-
-% =================================================================
-% Part 2: The Unified Solver (Strategy Hierarchy)
+% Part 1: The Unified Solver (Strategy Hierarchy)
 % =================================================================
 
 %!      solve(+A, +B, -Result, -Trace) is semidet.
@@ -171,25 +120,37 @@ solve(A, B, Result, Trace) :-
     ).
 
 % =================================================================
-% Part 3: Strategy Discovery (The Core Learner)
+% Part 2: Reflection and Learning
 % =================================================================
 
-% discover_strategy(+A, +B, -StrategyName)
+%!      reflect_and_learn(+Result:dict) is semidet.
 %
-% The core of the learning process. It solves a problem, then analyzes the
-% trace for patterns that suggest a more efficient strategy could be created.
-discover_strategy(A, B, StrategyName) :-
-    solve(A, B, Result, Trace),
-    count_trace_steps(Trace, TraceLength),
-    format('  Solution found via [~w]: ~w. Steps: ~w~n', [Trace.strategy, Result, TraceLength]),
-    (   detect_cob_pattern(Trace, _), StrategyName = cob,
-        construct_and_validate_cob(A, B)
-    ;   detect_rmb_pattern(Trace, RMB_Data), StrategyName = rmb,
-        construct_and_validate_rmb(A, B, RMB_Data)
-    ;   detect_doubles_pattern(Trace, _), StrategyName = doubles,
-        construct_and_validate_doubles(A, B)
-    ;   fail
+%       The core reflective learning trigger. It analyzes a computation's
+%       result, which includes the goal and execution trace, to find
+%       opportunities for creating more efficient strategies.
+%
+%       @param Result A dict containing at least `goal` and `trace`.
+reflect_and_learn(Result) :-
+    Goal = Result.goal,
+    Trace = Result.trace,
+    % We only learn from addition, and only if we have a trace.
+    (   nonvar(Trace), Goal = add(A, B, _)
+    ->  (   writeln('    (Reflecting on addition trace...)'),
+            (   detect_cob_pattern(Trace, _),
+                construct_and_validate_cob(A, B)
+            ;   detect_rmb_pattern(Trace, RMB_Data),
+                construct_and_validate_rmb(A, B, RMB_Data)
+            ;   detect_doubles_pattern(Trace, _),
+                construct_and_validate_doubles(A, B)
+            ;   true % Succeed even if no new strategy is found
+            )
+        )
+    ;   true % Succeed if not an addition goal or no trace
     ).
+
+% =================================================================
+% Part 3: Foundational Abilities & Trace Analysis
+% =================================================================
 
 % --- 3.1 Foundational Ability: Counting ---
 

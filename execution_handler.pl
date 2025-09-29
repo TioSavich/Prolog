@@ -16,6 +16,7 @@
 :- use_module(meta_interpreter).
 :- use_module(reorganization_engine).
 :- use_module(object_level).
+:- use_module(more_machine_learner, [reflect_and_learn/1]).
 
 %!      run_computation(+Goal:term, +Limit:integer) is semidet.
 %
@@ -46,7 +47,36 @@ run_computation(Goal, Limit) :-
 %       @param Trace The resulting execution trace.
 call_meta_interpreter(Goal, Limit, Trace) :-
     meta_interpreter:solve(Goal, Limit, _, Trace),
-    writeln('Computation successful.').
+    writeln('Computation successful.'),
+    reflect_on_success(Goal, Trace).
+
+%!      normalize_trace(+Trace, -NormalizedTrace) is det.
+%
+%       Converts different trace formats into a unified dictionary format
+%       for the learner. It specifically handles the `arithmetic_trace/3`
+%       term, converting it to a `trace{}` dict.
+% Case 1: The trace is a list containing a single arithmetic_trace term.
+normalize_trace([arithmetic_trace(Strategy, _, Steps)], NormalizedTrace) :-
+    !,
+    NormalizedTrace = trace{strategy:Strategy, steps:Steps}.
+% Case 2: The trace is a bare arithmetic_trace term.
+normalize_trace(arithmetic_trace(Strategy, _, Steps), NormalizedTrace) :-
+    !,
+    NormalizedTrace = trace{strategy:Strategy, steps:Steps}.
+% Case 3: Pass through any other format (already normalized dicts, etc.)
+normalize_trace(Trace, Trace).
+
+%!      reflect_on_success(+Goal, +Trace) is det.
+%
+%       After a successful computation, this predicate triggers the
+%       reflective learning process. It passes the goal and the resulting
+%       trace to the learning module to check for potential optimizations.
+reflect_on_success(Goal, Trace) :-
+    writeln('--- Proactive Reflection Cycle Initiated (Success) ---'),
+    normalize_trace(Trace, NormalizedTrace),
+    Result = _{goal:Goal, trace:NormalizedTrace},
+    reflect_and_learn(Result),
+    writeln('--- Reflection Cycle Complete ---').
 
 %!      handle_perturbation(+Error, +Goal, +Trace, +Limit) is semidet.
 %
@@ -64,6 +94,12 @@ call_meta_interpreter(Goal, Limit, Trace) :-
 %       @param Limit The original resource limit.
 handle_perturbation(perturbation(resource_exhaustion), Goal, Trace, Limit) :-
     writeln('Resource exhaustion detected. Initiating reorganization...'),
+    % First, attempt to learn from the failure trace
+    writeln('--- Reflective Cycle Initiated (Failure) ---'),
+    normalize_trace(Trace, NormalizedTrace),
+    Result = _{goal:Goal, trace:NormalizedTrace},
+    reflect_and_learn(Result),
+    % Then, proceed with the original reorganization logic
     reorganize_system(Goal, Trace),
     writeln('Reorganization complete. Retrying goal...'),
     run_computation(Goal, Limit).
