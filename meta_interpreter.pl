@@ -137,20 +137,20 @@ solve(Goal, Ctx, Ctx, I_In, I_Out, [call(Goal)]) :-
     I_Out is I_In - Cost,
     call(Goal).
 
-% Arithmetic predicates: Use context-dependent cost. Context is unchanged.
-solve(Goal, Ctx, Ctx, I_In, I_Out, [arithmetic_trace(Strategy, Result, History)]) :-
-    is_arithmetic_goal(Goal, Op),
-    !,
-    get_inference_cost(Ctx, Cost),
-    check_viability(I_In, Cost),
-    I_Out is I_In - Cost,
-    Goal =.. [_, Peano1, Peano2, PeanoResult],
-    peano_to_int(Peano1, N1),
-    peano_to_int(Peano2, N2),
-    list_strategies(Op, Strategies),
-    ( is_list(Strategies), Strategies = [Strategy|_] -> true ; throw(error(no_strategy_found(Op), _)) ),
-    calculate(N1, Op, N2, Strategy, Result, History),
-    int_to_peano(Result, PeanoResult).
+% DISABLED: Arithmetic handler (forces arithmetic through object-level predicates for crisis testing)
+% solve(Goal, Ctx, Ctx, I_In, I_Out, [arithmetic_trace(Strategy, Result, History)]) :-
+%     is_arithmetic_goal(Goal, Op),
+%     !,
+%     get_inference_cost(Ctx, Cost),
+%     check_viability(I_In, Cost),
+%     I_Out is I_In - Cost,
+%     Goal =.. [_, Peano1, Peano2, PeanoResult],
+%     peano_to_int(Peano1, N1),
+%     peano_to_int(Peano2, N2),
+%     list_strategies(Op, Strategies),
+%     ( is_list(Strategies), Strategies = [Strategy|_] -> true ; throw(error(no_strategy_found(Op), _)) ),
+%     calculate(N1, Op, N2, Strategy, Result, History),
+%     int_to_peano(Result, PeanoResult).
 
 % Object-level predicates: Use context-dependent cost. Context flows through sub-proof.
 solve(Goal, CtxIn, CtxOut, I_In, I_Out, [clause(object_level:(Goal:-Body)), trace(Body, BodyTrace)]) :-

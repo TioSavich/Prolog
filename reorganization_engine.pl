@@ -17,7 +17,7 @@
  * 
  * 
  */
-:- module(reorganization_engine, [accommodate/1, handle_normative_crisis/2, handle_incoherence/1]).
+:- module(reorganization_engine, [accommodate/1, handle_normative_crisis/2, handle_incoherence/1, reorganize_system/2]).
 
 :- use_module(object_level).
 :- use_module(reflective_monitor).

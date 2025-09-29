@@ -19,30 +19,40 @@ This is modeled in the repository through several key components:
 - **Student Strategy Models**: The CGI aspect is modeled through a library of student problem-solving strategies (`sar_*.pl` for addition/subtraction and `smr_*.pl` for multiplication/division), which simulate how students with different conceptual understandings might approach a problem.
 - **Learning Cycle**: The Piagetian process of learning through disequilibrium is modeled by the **Observe-Reorganize-Reflect (ORR)** cycle, which can detect failures in its own knowledge and attempt to repair itself.
 - **FSM Engine Architecture**: All student strategy models are unified under a common Finite State Machine engine that provides consistent execution, modal logic integration, and cognitive cost tracking.
+- **Grounded Fractional Arithmetic**: A comprehensive system implementing Jason's partitive fractional schemes using nested unit representation instead of rational numbers, providing embodied cognitive modeling of fractional reasoning.
 
 ## 3. System Architecture
 
 The system is composed of several distinct parts that work together, unified by a common FSM engine architecture.
 
-### 3.1. FSM Engine Architecture (New Core Framework)
+### 3.1. FSM Engine Architecture (Core Framework)
 A unified finite state machine engine that standardizes all student strategy execution:
 - **`fsm_engine.pl`**: The core FSM execution engine that provides consistent state transition handling, modal logic integration, and cognitive cost tracking across all student strategies.
 - **`grounded_arithmetic.pl`**: The foundational grounded arithmetic system that eliminates dependency on arithmetic backstops by providing embodied mathematical operations with cognitive cost tracking.
 - **`grounded_utils.pl`**: Utility functions supporting the grounded arithmetic foundation.
 
-### 3.2. The ORR Cycle (Cognitive Core)
+### 3.2. Grounded Fractional Arithmetic System (New Addition)
+A comprehensive framework implementing Jason's partitive fractional schemes with embodied cognition:
+- **`composition_engine.pl`**: Implements embodied grouping operations for unit composition with cognitive cost tracking.
+- **`fraction_semantics.pl`**: Defines equivalence rules for fractional reasoning including grouping (D copies of 1/D equals 1) and composition (nested fractions).
+- **`grounded_ens_operations.pl`**: Core Equal-N-Sharing (ENS) operations that create nested unit structures through structural partitioning.
+- **`normalization.pl`**: Iterative normalization engine that applies equivalence rules until quantities are fully simplified.
+- **`jason.pl`**: Completely refactored implementation of partitive fractional schemes using nested unit representation instead of rational numbers.
+- **`test_fractional_arithmetic.pl`**: Comprehensive test suite for the grounded fractional arithmetic system.
+
+### 3.3. The ORR Cycle (Cognitive Core)
 This is the heart of the system's learning capability, inspired by Piagetian mechanisms.
 - **`execution_handler.pl`**: The main driver that orchestrates the ORR cycle.
 - **`meta_interpreter.pl`**: The **Observe** phase. It runs a given goal while producing a detailed execution trace, making the system's reasoning process observable to itself.
 - **`reflective_monitor.pl`**: The **Reflect** phase. It analyzes the trace from the meta-interpreter to detect signs of "disequilibrium" (e.g., goal failures, contradictions).
 - **`reorganization_engine.pl`**: The **Reorganize** phase. Triggered by disequilibrium, it attempts to modify the system's own knowledge base to resolve the conflict.
 
-### 3.3. Knowledge Base
+### 3.4. Knowledge Base
 - **`object_level.pl`**: Contains the system's foundational, and potentially flawed, knowledge (e.g., an inefficient rule for addition). This is the knowledge that the ORR cycle operates on and modifies.
 - **`incompatibility_semantics.pl`**: Defines the core logical and mathematical rules of the "world," including what concepts are incompatible with each other, and provides modal logic operators (s/1, comp_nec/1, exp_poss/1).
 - **`learned_knowledge.pl`**: An auto-generated file where new, more efficient strategies discovered by the `more_machine_learner.pl` module are stored.
 
-### 3.4. API Server
+### 3.5. API Server
 - **`working_server.pl`**: The production-ready server for powering the web-based GUI. It contains stable, optimized analysis logic and is used by the startup script.
 
 ## 4. FSM Engine Architecture (Major Innovation)
@@ -124,6 +134,14 @@ curl -X POST -H "Content-Type: application/json" \
   - `fsm_engine.pl`: Core finite state machine execution engine providing unified strategy execution.
   - `grounded_arithmetic.pl`: Foundational grounded arithmetic system with cognitive cost tracking.
   - `grounded_utils.pl`: Utility functions supporting grounded arithmetic operations.
+
+- **Grounded Fractional Arithmetic System**:
+  - `composition_engine.pl`: Embodied grouping operations for fractional unit composition.
+  - `fraction_semantics.pl`: Equivalence rules for fractional reasoning (grouping and composition).
+  - `grounded_ens_operations.pl`: Core Equal-N-Sharing operations creating nested unit structures.
+  - `normalization.pl`: Iterative normalization engine applying equivalence rules.
+  - `jason.pl`: Refactored partitive fractional schemes using nested unit representation.
+  - `test_fractional_arithmetic.pl`: Comprehensive test suite for fractional arithmetic.
 
 - **API Server**:
   - `working_server.pl`: Production server that powers the web GUI with stable, optimized logic.

@@ -28,7 +28,7 @@
 %
 %       This predicate is dynamic, so it can be changed at runtime if needed.
 :- dynamic max_inferences/1.
-max_inferences(15).
+max_inferences(1).
 
 %!      max_retries(?Limit:integer) is nondet.
 %

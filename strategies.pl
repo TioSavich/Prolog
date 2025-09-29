@@ -1,40 +1,25 @@
 /** <module> Standardized Strategy Loader
  *
- * This module serves as a centralized loader for all defined student
- * reasoning strategies. It imports all `sar_*.pl` (Student Addition/Subtraction
- * Reasoning) and `smr_*.pl` (Student Multiplication/Division Reasoning)
- * modules.
+ * This module serves as a documentation index for all defined student
+ * reasoning strategies. It no longer imports modules to avoid namespace
+ * conflicts between FSM strategy predicates.
  *
- * By centralizing the loading process, we ensure that the full library of
- * strategies is available to the reorganization engine for analysis,
- * synthesis, and validation.
+ * Individual modules should be loaded directly when needed using
+ * module-qualified calls like: sar_add_chunking:run_chunking/4
+ *
+ * Available strategies:
+ * - Addition: sar_add_chunking, sar_add_cobo, sar_add_rmb, sar_add_rounding
+ * - Subtraction: sar_sub_cbbo_take_away, sar_sub_chunking_a/b/c, 
+ *                sar_sub_cobo_missing_addend, sar_sub_decomposition,
+ *                sar_sub_rounding, sar_sub_sliding
+ * - Multiplication: smr_mult_c2c, smr_mult_cbo, smr_mult_commutative_reasoning,
+ *                   smr_mult_dr
+ * - Division: smr_div_cbo, smr_div_dealing_by_ones, smr_div_idp, smr_div_ucr
  *
  * @author Jules
- * 
  */
 
 :- module(strategies, []).
 
-% Addition and Subtraction Strategies
-:- use_module(sar_add_chunking).
-:- use_module(sar_add_cobo).
-:- use_module(sar_add_rmb).
-:- use_module(sar_add_rounding).
-:- use_module(sar_sub_cbbo_take_away).
-:- use_module(sar_sub_chunking_a).
-:- use_module(sar_sub_chunking_b).
-:- use_module(sar_sub_chunking_c).
-:- use_module(sar_sub_cobo_missing_addend).
-:- use_module(sar_sub_decomposition).
-:- use_module(sar_sub_rounding).
-:- use_module(sar_sub_sliding).
-
-% Multiplication and Division Strategies
-:- use_module(smr_div_cbo).
-:- use_module(smr_div_dealing_by_ones).
-:- use_module(smr_div_idp).
-:- use_module(smr_div_ucr).
-:- use_module(smr_mult_c2c).
-:- use_module(smr_mult_cbo).
-:- use_module(smr_mult_commutative_reasoning).
-:- use_module(smr_mult_dr).
+% This module intentionally exports nothing and imports nothing
+% to avoid namespace conflicts between strategy modules.

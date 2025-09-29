@@ -13,6 +13,8 @@
 \section*{Executive Summary}
 This codebase represents a major architectural advancement in cognitive modeling, featuring a unified Finite State Machine (FSM) engine that standardizes the execution of 17+ student mathematical reasoning strategies. The FSM engine provides modal logic integration, cognitive cost tracking, and grounded arithmetic foundation, eliminating dependency on arithmetic backstops while reducing code duplication by approximately 70\%.
 
+\textbf{New Addition:} The system now includes a comprehensive grounded fractional arithmetic framework that implements Jason's partitive fractional schemes using nested unit representation. This replaces rational-number-based fractional operations with an embodied cognitive model that captures the complete history of partitioning operations through structural representation.
+
 \tableofcontents
 \newpage
 
@@ -24,6 +26,21 @@ This codebase represents a major architectural advancement in cognitive modeling
 \inputminted{prolog}{grounded_arithmetic.pl}
 \subsection{grounded\_utils.pl}
 \inputminted{prolog}{grounded_utils.pl}
+
+% ---------------------- Grounded Fractional Arithmetic ----------------------
+\section{Grounded Fractional Arithmetic System}
+\subsection{composition\_engine.pl}
+\inputminted{prolog}{composition_engine.pl}
+\subsection{fraction\_semantics.pl}
+\inputminted{prolog}{fraction_semantics.pl}
+\subsection{grounded\_ens\_operations.pl}
+\inputminted{prolog}{grounded_ens_operations.pl}
+\subsection{normalization.pl}
+\inputminted{prolog}{normalization.pl}
+\subsection{jason.pl}
+\inputminted{prolog}{jason.pl}
+\subsection{test\_fractional\_arithmetic.pl}
+\inputminted{prolog}{test_fractional_arithmetic.pl}
 
 % ---------------------- Prolog source (root)
 \section{Prolog source (root)}
@@ -160,8 +177,7 @@ This codebase represents a major architectural advancement in cognitive modeling
 
 % ---------------------- Fraction / arithmetic helpers ----------------------
 \section{Fraction and arithmetic helpers}
-\subsection{jason.pl}
-\inputminted{prolog}{jason.pl}
+% Note: jason.pl moved to Grounded Fractional Arithmetic System section
 
 % ---------------------- Other notable files ----------------------
 \section{Other notable files}
