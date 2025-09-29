@@ -1,17 +1,17 @@
-/** <module> Tracing Meta-Interpreter for Observation
+/** <module> Embodied Tracing Meta-Interpreter
  *
  * This module provides the core "Observe" capability of the ORR cycle.
- * It contains a meta-interpreter, `solve/4`, which executes goals defined
- * in the `object_level` module.
+ * It contains a stateful meta-interpreter, `solve/4`, which executes goals
+ * defined in the `object_level` module.
  *
- * Instead of just succeeding or failing, this meta-interpreter produces a
- * detailed `Trace` of the execution path. This trace includes which clauses
- * were used, which built-in predicates were called, and where failures
- * occurred. The trace is the primary data source for the `reflective_monitor`.
+ * This version is "embodied": it maintains a `ModalContext` (e.g., neutral,
+ * compressive, expansive) that alters its reasoning behavior. For example,
+ * in a `compressive` context, the cost of inferences increases, simulating
+ * cognitive tension and narrowing the search. This context is switched when
+ * the interpreter encounters modal operators defined in `incompatibility_semantics`.
  *
- * The interpreter also includes a simple resource constraint (a maximum
- * number of inferences) to prevent infinite loops, throwing a `perturbation`
- * exception if the limit is exceeded.
+ * It produces a detailed `Trace` of the execution, which is the primary
+ * data source for the `reflective_monitor`.
  *
  * @author Tilo Wiedera
  * @license MIT
@@ -19,8 +19,29 @@
 :- module(meta_interpreter, [solve/4]).
 :- use_module(object_level). % Ensure we can access the object-level code
 :- use_module(hermeneutic_calculator). % For strategic choice
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, comp_poss/1, exp_nec/1, exp_poss/1]). % For modal operators
 
 % Note: is_list/1 is a built-in, no need to import from library(lists).
+
+% --- Embodied Cognition Helpers ---
+
+%!      is_modal_operator(?Goal, ?ModalContext) is semidet.
+%
+%       Identifies an embodied modal operator and maps it to a context.
+is_modal_operator(comp_nec(_), compressive).
+is_modal_operator(comp_poss(_), compressive).
+is_modal_operator(exp_nec(_), expansive).
+is_modal_operator(exp_poss(_), expansive).
+
+%!      get_inference_cost(+ModalContext, -Cost) is det.
+%
+%       Determines the inference cost based on the current modal context.
+%       - `compressive`: Cost is 2 (cognitive narrowing).
+%       - `neutral`, `expansive`: Cost is 1.
+get_inference_cost(compressive, 2).
+get_inference_cost(expansive, 1).
+get_inference_cost(neutral, 1).
+
 
 % --- Arithmetic Goal Handling ---
 
@@ -55,48 +76,59 @@ int_to_peano(I, s(P)) :-
 
 %!      solve(+Goal, +InferencesIn, -InferencesOut, -Trace) is nondet.
 %
-%       Executes a given `Goal` and produces a `Trace` of the execution.
-%       This is the core predicate of the meta-interpreter. It handles
-%       different types of goals (conjunctions, built-ins, object-level
-%       clauses) and tracks the number of inferences to prevent run-away
-%       execution.
+%       Public wrapper for the stateful meta-interpreter.
+%       Initializes the `ModalContext` to `neutral` and calls the
+%       internal `solve/6` predicate.
+solve(Goal, I_In, I_Out, Trace) :-
+    solve(Goal, neutral, _, I_In, I_Out, Trace).
+
+
+%!      solve(+Goal, +CtxIn, -CtxOut, +I_In, -I_Out, -Trace) is nondet.
 %
-%       The `Trace` is a list of events, which can be:
-%       - `trace(Goal, SubTrace)`: For a subgoal.
-%       - `call(Goal)`: For a successful call to a built-in predicate.
-%       - `clause(Clause)`: For the successful application of an object-level clause.
-%       - `fail(Goal)`: When a goal fails (no matching clauses).
+%       The core stateful, embodied meta-interpreter.
 %
 %       @param Goal The goal to be solved.
-%       @param InferencesIn The initial number of available inference steps.
-%       @param InferencesOut The remaining number of inference steps.
+%       @param CtxIn The current `ModalContext`.
+%       @param CtxOut The `ModalContext` after the goal is solved.
+%       @param I_In The initial number of available inference steps.
+%       @param I_Out The remaining number of inference steps.
 %       @param Trace A list representing the execution trace.
-%       @error perturbation(resource_exhaustion) if the inference counter drops to zero.
+%       @error perturbation(resource_exhaustion) if inference counter drops to zero.
 
-% Base case: `true` always succeeds with an empty trace.
-solve(true, I, I, []) :- !.
+% Base case: `true` always succeeds. Context is unchanged.
+solve(true, Ctx, Ctx, I, I, []) :- !.
 
-% Conjunction: Solve `A` then `B`. The trace is a combination of the two sub-traces.
-solve((A, B), I_In, I_Out, [trace(A, A_Trace), trace(B, B_Trace)]) :-
+% Modal Operator: Detect a modal operator, switch context for the sub-proof,
+% and restore it upon completion.
+solve(s(ModalGoal), CtxIn, CtxIn, I_In, I_Out, [modal_trace(ModalGoal, Ctx, SubTrace)]) :-
+    is_modal_operator(ModalGoal, Ctx),
     !,
-    solve(A, I_In, I_Mid, A_Trace),
-    solve(B, I_Mid, I_Out, B_Trace).
+    ModalGoal =.. [_, InnerGoal],
+    % The context is switched for the InnerGoal, but restored to CtxIn afterward.
+    solve(InnerGoal, Ctx, _, I_In, I_Out, SubTrace).
 
-% System predicates: Check resources, execute the built-in, and record the call in the trace.
-solve(Goal, I_In, I_Out, [call(Goal)]) :-
+% Conjunction: Solve `A` then `B`. The context flows from `A` to `B`.
+solve((A, B), CtxIn, CtxOut, I_In, I_Out, [trace(A, A_Trace), trace(B, B_Trace)]) :-
+    !,
+    solve(A, CtxIn, CtxMid, I_In, I_Mid, A_Trace),
+    solve(B, CtxMid, CtxOut, I_Mid, I_Out, B_Trace).
+
+% System predicates: Use context-dependent cost. Context is unchanged.
+solve(Goal, Ctx, Ctx, I_In, I_Out, [call(Goal)]) :-
     predicate_property(Goal, built_in),
     !,
-    check_viability(I_In),
-    I_Out is I_In - 1,
+    get_inference_cost(Ctx, Cost),
+    check_viability(I_In, Cost),
+    I_Out is I_In - Cost,
     call(Goal).
 
-% Arithmetic predicates: Intercept arithmetic goals, choose a strategy,
-% execute it via the hermeneutic calculator, and trace the process.
-solve(Goal, I_In, I_Out, [arithmetic_trace(Strategy, Result, History)]) :-
+% Arithmetic predicates: Use context-dependent cost. Context is unchanged.
+solve(Goal, Ctx, Ctx, I_In, I_Out, [arithmetic_trace(Strategy, Result, History)]) :-
     is_arithmetic_goal(Goal, Op),
     !,
-    check_viability(I_In),
-    I_Out is I_In - 1,
+    get_inference_cost(Ctx, Cost),
+    check_viability(I_In, Cost),
+    I_Out is I_In - Cost,
     Goal =.. [_, Peano1, Peano2, PeanoResult],
     peano_to_int(Peano1, N1),
     peano_to_int(Peano2, N2),
@@ -105,28 +137,28 @@ solve(Goal, I_In, I_Out, [arithmetic_trace(Strategy, Result, History)]) :-
     calculate(N1, Op, N2, Strategy, Result, History),
     int_to_peano(Result, PeanoResult).
 
-% Object-level predicates: Find a matching clause in the `object_level` module,
-% record its use, and recursively solve its body. This is the core of observation.
-solve(Goal, I_In, I_Out, [clause(object_level:(Goal:-Body)), trace(Body, BodyTrace)]) :-
-    check_viability(I_In),
-    I_Mid is I_In - 1,
+% Object-level predicates: Use context-dependent cost. Context flows through sub-proof.
+solve(Goal, CtxIn, CtxOut, I_In, I_Out, [clause(object_level:(Goal:-Body)), trace(Body, BodyTrace)]) :-
+    get_inference_cost(CtxIn, Cost),
+    check_viability(I_In, Cost),
+    I_Mid is I_In - Cost,
     clause(object_level:Goal, Body),
-    solve(Body, I_Mid, I_Out, BodyTrace).
+    solve(Body, CtxIn, CtxOut, I_Mid, I_Out, BodyTrace).
 
 % Failure case: If a goal is not a built-in and has no matching clauses,
-% record the failure in the trace. This makes backtracking an observable event.
-solve(Goal, I, I, [fail(Goal)]) :-
+% record the failure. Context is unchanged.
+solve(Goal, Ctx, Ctx, I, I, [fail(Goal)]) :-
     \+ predicate_property(Goal, built_in),
+    \+ (Goal = s(_), functor(Goal, s, 1)), % Don't fail on modal operators here
     \+ clause(object_level:Goal, _), !.
 
 
 % --- Viability Check ---
 
-% check_viability(+Inferences)
+% check_viability(+Inferences, +Cost)
 %
-% Succeeds if the inference counter is positive. Throws a `perturbation`
-% exception otherwise, which is caught by the execution handler.
-check_viability(I) :- I > 0, !.
-check_viability(_) :-
+% Succeeds if the inference counter is sufficient for the next step's cost.
+check_viability(I, Cost) :- I >= Cost, !.
+check_viability(_, _) :-
     % Constraint violated: PERTURBATION DETECTED
     throw(perturbation(resource_exhaustion)).
