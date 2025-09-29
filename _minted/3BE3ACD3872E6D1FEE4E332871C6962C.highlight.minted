@@ -20,7 +20,7 @@
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{solve}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).} \PYG{c+c1}{\PYGZpc{} Ensure we can access the object\PYGZhy{}level code}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{hermeneutic\PYGZus{}calculator}\PYG{p}{).} \PYG{c+c1}{\PYGZpc{} For strategic choice}
-\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).} \PYG{c+c1}{\PYGZpc{} For modal operators}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}comp\PYGZus{}nec\PYGZsq{}}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}comp\PYGZus{}poss\PYGZsq{}}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}exp\PYGZus{}nec\PYGZsq{}}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}exp\PYGZus{}poss\PYGZsq{}}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).} \PYG{c+c1}{\PYGZpc{} For modal operators}
 
 \PYG{c+c1}{\PYGZpc{} Note: is\PYGZus{}list/1 is a built\PYGZhy{}in, no need to import from library(lists).}
 

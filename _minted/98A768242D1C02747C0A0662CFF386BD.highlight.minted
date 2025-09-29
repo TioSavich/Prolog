@@ -15,7 +15,6 @@
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}computation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
 
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter}\PYG{p}{).}
-\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}engine}\PYG{p}{).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
 \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
 
@@ -100,8 +99,6 @@
     \PYG{n+nf}{normalize\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{NormalizedTrace}\PYG{p}{),}
     \PYG{n+nv}{Result} \PYG{o}{=} \PYG{k}{\PYGZus{}}\PYG{p}{\PYGZob{}}\PYG{n+nn}{goal}\PYG{p}{:}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nn}{trace}\PYG{p}{:}\PYG{n+nv}{NormalizedTrace}\PYG{p}{\PYGZcb{},}
     \PYG{n+nf}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{),}
-    \PYG{c+c1}{\PYGZpc{} Then, proceed with the original reorganization logic}
-    \PYG{n+nf}{reorganize\PYGZus{}system}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
     \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Reorganization complete. Retrying goal...\PYGZsq{}}\PYG{p}{),}
     \PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{).}
 

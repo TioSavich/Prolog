@@ -1,0 +1,9 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZpc{} Automatically generated knowledge base V2.}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{550}\PYG{p}{,} \PYG{l+s+sAtom}{xfy}\PYG{p}{,} \PYG{l+s+sAtom}{rdiv}\PYG{p}{).}
+\PYG{n+nf}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{l+s+sAtom}{goal}\PYG{p}{\PYGZob{}}\PYG{n+nn}{context}\PYG{p}{:[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{))],} \PYG{n+nn}{vars}\PYG{p}{:[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]\PYGZcb{},} \PYG{n+nf}{introduce}\PYG{p}{(}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{euclid\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{))))} \PYG{p}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics:}\PYG{n+nf}{product\PYGZus{}of\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),}
+    \PYG{n+nv}{B} \PYG{o}{is} \PYG{n+nv}{C}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nv}{B}\PYG{o}{\PYGZgt{}}\PYG{l+m+mf}{1.}
+\PYG{n+nf}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{l+s+sAtom}{goal}\PYG{p}{\PYGZob{}}\PYG{n+nn}{context}\PYG{p}{:[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{euclid\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{))],} \PYG{n+nn}{vars}\PYG{p}{:[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]\PYGZcb{},} \PYG{n+nf}{case\PYGZus{}split}\PYG{p}{(}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{composite}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{)))).}
+\end{MintedVerbatim}

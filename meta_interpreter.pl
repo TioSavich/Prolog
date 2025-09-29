@@ -19,7 +19,7 @@
 :- module(meta_interpreter, [solve/4]).
 :- use_module(object_level). % Ensure we can access the object-level code
 :- use_module(hermeneutic_calculator). % For strategic choice
-:- use_module(incompatibility_semantics, [s/1, comp_nec/1, comp_poss/1, exp_nec/1, exp_poss/1]). % For modal operators
+:- use_module(incompatibility_semantics, [s/1, 'comp_nec'/1, 'comp_poss'/1, 'exp_nec'/1, 'exp_poss'/1]). % For modal operators
 
 % Note: is_list/1 is a built-in, no need to import from library(lists).
 

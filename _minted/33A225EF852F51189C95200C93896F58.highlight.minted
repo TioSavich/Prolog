@@ -1,0 +1,155 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZpc{} Filename: neuro\PYGZus{}symbolic\PYGZus{}bridge.pl (The Neuro\PYGZhy{}Symbolic Bridge V4)}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{neuro\PYGZus{}symbolic\PYGZus{}bridge}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{suggest\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{c+c1}{\PYGZpc{} Export for the prover hook}
+            \PYG{l+s+sAtom}{learn\PYGZus{}euclid\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{0} \PYG{c+c1}{\PYGZpc{} Export for triggering simulated learning}
+          \PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Use the semantics engine}
+\PYG{c+c1}{\PYGZpc{} Import product\PYGZus{}of\PYGZus{}list/2, needed for defining the Euclid construction strategy.}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}../incompatibility\PYGZus{}semantics.pl\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{current\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{is\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{product\PYGZus{}of\PYGZus{}list}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{random}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Ensure operators are visible}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{1050}\PYG{p}{,} \PYG{l+s+sAtom}{xfy}\PYG{p}{,} \PYG{l+s+sAtom}{=\PYGZgt{}}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{l+s+sAtom}{fx}\PYG{p}{,} \PYG{l+s+sAtom}{neg}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{550}\PYG{p}{,} \PYG{l+s+sAtom}{xfy}\PYG{p}{,} \PYG{l+s+sAtom}{rdiv}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Dynamic predicates for learned strategies.}
+\PYG{p}{:\PYGZhy{}} \PYG{l+s+sAtom}{dynamic} \PYG{l+s+sAtom}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mf}{2.} \PYG{c+c1}{\PYGZpc{} Proof strategies (The \PYGZdq{}Intuition\PYGZdq{} Database)}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 0: Initialization and Persistence}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{n+nf}{knowledge\PYGZus{}file}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}learned\PYGZus{}knowledge\PYGZus{}v2.pl\PYGZsq{}}\PYG{p}{).}
+\PYG{c+c1}{\PYGZpc{}:\PYGZhy{} initialization(load\PYGZus{}knowledge, now).}
+
+\PYG{n+nf}{load\PYGZus{}knowledge} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{knowledge\PYGZus{}file}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{exists\PYGZus{}file}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{consult}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZti{}N[Bridge Init] Loaded persistent knowledge.\PYGZti{}n\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZti{}N[Bridge Init] Knowledge file not found. Starting fresh.\PYGZti{}n\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Ensure initialization runs after the predicate is defined}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{initialization}\PYG{p}{(}\PYG{l+s+sAtom}{load\PYGZus{}knowledge}\PYG{p}{,} \PYG{l+s+sAtom}{now}\PYG{p}{).}
+
+\PYG{n+nf}{save\PYGZus{}knowledge} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{knowledge\PYGZus{}file}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{),}
+    \PYG{n+nf}{setup\PYGZus{}call\PYGZus{}cleanup}\PYG{p}{(}
+        \PYG{n+nf}{open}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{,} \PYG{l+s+sAtom}{write}\PYG{p}{,} \PYG{n+nv}{Stream}\PYG{p}{),}
+        \PYG{p}{(}
+            \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZpc{} Automatically generated knowledge base V2.\PYGZsq{}}\PYG{p}{),}
+            \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}:\PYGZhy{} op(550, xfy, rdiv).\PYGZsq{}}\PYG{p}{),}
+            \PYG{c+c1}{\PYGZpc{} Save Proof Strategies}
+            \PYG{n+nf}{forall}\PYG{p}{(}\PYG{n+nf}{clause}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{GoalPattern}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{),} \PYG{n+nv}{Body}\PYG{p}{),}
+                   \PYG{n+nf}{portray\PYGZus{}clause}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{GoalPattern}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{)))}
+        \PYG{p}{),}
+        \PYG{n+nf}{close}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{)}
+    \PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 5: Neuro\PYGZhy{}Symbolic Proof Strategy Integration (The \PYGZdq{}Muse\PYGZdq{})}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{} suggest\PYGZus{}strategy(+Premises, +Conclusions, \PYGZhy{}Strategy)}
+\PYG{c+c1}{\PYGZpc{} This is the hook called by the prover when it is stuck (PRIORITY 5).}
+\PYG{n+nf}{suggest\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{Premises}\PYG{p}{,} \PYG{n+nv}{Conclusions}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 1. Identify the Goal Pattern (Optional, useful for goal\PYGZhy{}directed strategies)}
+    \PYG{p}{(}   \PYG{n+nv}{Conclusions} \PYG{o}{=} \PYG{p}{[]} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{incoherent}\PYG{p}{(}\PYG{n+nv}{Premises}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{C}\PYG{p}{,} \PYG{n+nv}{Conclusions}\PYG{p}{),} \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{proves}\PYG{p}{(}\PYG{n+nv}{Premises} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nv}{C}\PYG{p}{])}
+    \PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} 2. Consult Learned Strategies (The \PYGZdq{}Intuition Database\PYGZdq{})}
+    \PYG{c+c1}{\PYGZpc{} Use findall and then select to allow backtracking through different suggestions if the first fails.}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nf}{consult\PYGZus{}learned\PYGZus{}proof\PYGZus{}strategies}\PYG{p}{(}\PYG{n+nv}{Premises}\PYG{p}{,} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{n+nv}{Strategies}\PYG{p}{),}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{Strategies}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} consult\PYGZus{}learned\PYGZus{}proof\PYGZus{}strategies(+Premises, +Goal, \PYGZhy{}Strategy)}
+\PYG{n+nf}{consult\PYGZus{}learned\PYGZus{}proof\PYGZus{}strategies}\PYG{p}{(}\PYG{n+nv}{Premises}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Iterate through learned strategies. The associated Body is executed here by clause/2 and call/1.}
+    \PYG{n+nf}{clause}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{GoalPattern}\PYG{p}{,} \PYG{n+nv}{StrategyTemplate}\PYG{p}{),} \PYG{n+nv}{Body}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Check if the current premises match the required context for the strategy.}
+    \PYG{c+c1}{\PYGZpc{} This binds variables in GoalPattern (like L) to the actual values in the proof state.}
+    \PYG{n+nf}{match\PYGZus{}context}\PYG{p}{(}\PYG{n+nv}{GoalPattern}\PYG{p}{.}\PYG{l+s+sAtom}{context}\PYG{p}{,} \PYG{n+nv}{Premises}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Execute the body (e.g., to calculate constructions like N=P+1).}
+    \PYG{c+c1}{\PYGZpc{} This binds variables used in the calculation (like N).}
+    \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Body}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Instantiate the strategy template with the bound variables.}
+    \PYG{n+nf}{instantiate\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{StrategyTemplate}\PYG{p}{,} \PYG{n+nv}{GoalPattern}\PYG{p}{.}\PYG{l+s+sAtom}{vars}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper to check context and bind variables}
+\PYG{n+nf}{match\PYGZus{}context}\PYG{p}{([],} \PYG{k}{\PYGZus{}}\PYG{p}{).}
+\PYG{n+nf}{match\PYGZus{}context}\PYG{p}{([}\PYG{n+nv}{P}\PYG{p}{|}\PYG{n+nv}{Ps}\PYG{p}{],} \PYG{n+nv}{Premises}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use member/2 for unification, binding variables in P (like L in n(is\PYGZus{}complete(L)))}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{P}\PYG{p}{,} \PYG{n+nv}{Premises}\PYG{p}{),}
+    \PYG{n+nf}{match\PYGZus{}context}\PYG{p}{(}\PYG{n+nv}{Ps}\PYG{p}{,} \PYG{n+nv}{Premises}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper to instantiate the strategy}
+\PYG{n+nf}{instantiate\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{Template}\PYG{p}{,} \PYG{n+nv}{Vars}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Ensures variables bound during match\PYGZus{}context and the body execution are propagated.}
+    \PYG{n+nf}{copy\PYGZus{}term}\PYG{p}{((}\PYG{n+nv}{Template}\PYG{p}{,} \PYG{n+nv}{Vars}\PYG{p}{),} \PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 6: The Learning/Reflection Process (The \PYGZdq{}Critique\PYGZdq{})}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{} This section simulates the \PYGZdq{}neural\PYGZdq{} process of analyzing a domain and discovering a strategy.}
+
+\PYG{n+nf}{learn\PYGZus{}euclid\PYGZus{}strategy} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZbs{}n\PYGZhy{}\PYGZhy{}\PYGZhy{} Neuro\PYGZhy{}Symbolic Reflection Initiated: Euclid Domain (The \PYGZdq{}Muse\PYGZdq{}) \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} 1. Analyze the Domain (Simulated Intuition)}
+    \PYG{c+c1}{\PYGZpc{} The \PYGZdq{}Muse\PYGZdq{} recognizes that to disprove completeness, one needs a construction and subsequent analysis.}
+
+    \PYG{c+c1}{\PYGZpc{} 2. Formulate the Strategy}
+
+    \PYG{c+c1}{\PYGZpc{} Strategy 1: Euclid Construction}
+    \PYG{c+c1}{\PYGZpc{} \PYGZdq{}When assuming is\PYGZus{}complete(L), construct the Euclid number N.\PYGZdq{}}
+    \PYG{n+nv}{Pattern1} \PYG{o}{=} \PYG{l+s+sAtom}{goal}\PYG{p}{\PYGZob{}}
+        \PYG{n+nn}{context}\PYG{p}{:} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{is\PYGZus{}complete}\PYG{p}{(}\PYG{n+nv}{L}\PYG{p}{))],}
+        \PYG{n+nn}{vars}\PYG{p}{:} \PYG{p}{[}\PYG{n+nv}{L}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{]} \PYG{c+c1}{\PYGZpc{} Variables involved (L and N are unbound here)}
+    \PYG{p}{\PYGZcb{},}
+    \PYG{c+c1}{\PYGZpc{} Action: Introduce the constructed number concept}
+    \PYG{n+nv}{StrategyTemplate1} \PYG{o}{=} \PYG{n+nf}{introduce}\PYG{p}{(}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{euclid\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{L}\PYG{p}{))),} 
+    \PYG{c+c1}{\PYGZpc{} Preconditions/Calculations: How to instantiate N based on L.}
+    \PYG{n+nv}{Body1} \PYG{o}{=} \PYG{p}{(}
+        \PYG{c+c1}{\PYGZpc{} We must qualify the call as product\PYGZus{}of\PYGZus{}list resides in the other module.}
+        \PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics:}\PYG{n+nf}{product\PYGZus{}of\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{L}\PYG{p}{,} \PYG{n+nv}{P}\PYG{p}{),}
+        \PYG{n+nv}{N} \PYG{o}{is} \PYG{n+nv}{P} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+        \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1} \PYG{c+c1}{\PYGZpc{} Prerequisite for prime analysis}
+    \PYG{p}{),}
+    \PYG{n+nf}{assert\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{Pattern1}\PYG{p}{,} \PYG{n+nv}{StrategyTemplate1}\PYG{p}{,} \PYG{n+nv}{Body1}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}euclid\PYGZus{}construction\PYGZsq{}}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Strategy 2: Case Analysis}
+    \PYG{c+c1}{\PYGZpc{} \PYGZdq{}When analyzing a constructed Euclid number N, consider if it is prime or composite.\PYGZdq{}}
+    \PYG{n+nv}{Pattern2} \PYG{o}{=} \PYG{l+s+sAtom}{goal}\PYG{p}{\PYGZob{}}
+        \PYG{n+nn}{context}\PYG{p}{:} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{euclid\PYGZus{}number}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{L}\PYG{p}{))],}
+        \PYG{n+nn}{vars}\PYG{p}{:} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{L}\PYG{p}{]}
+    \PYG{p}{\PYGZcb{},}
+    \PYG{n+nv}{StrategyTemplate2} \PYG{o}{=} \PYG{n+nf}{case\PYGZus{}split}\PYG{p}{(}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{prime}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{)),} \PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{composite}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{))),}
+    \PYG{n+nv}{Body2} \PYG{o}{=} \PYG{l+s+sAtom}{true}\PYG{p}{,} \PYG{c+c1}{\PYGZpc{} Conditions (N\PYGZgt{}1) are checked in the construction phase}
+
+    \PYG{n+nf}{assert\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{Pattern2}\PYG{p}{,} \PYG{n+nv}{StrategyTemplate2}\PYG{p}{,} \PYG{n+nv}{Body2}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}euclid\PYGZus{}case\PYGZus{}analysis\PYGZsq{}}\PYG{p}{),}
+
+    \PYG{l+s+sAtom}{save\PYGZus{}knowledge}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Reflection Complete. Knowledge base updated. \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper to assert a new proof strategy if not already known}
+\PYG{n+nf}{assert\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{GoalPattern}\PYG{p}{,} \PYG{n+nv}{StrategyTemplate}\PYG{p}{,} \PYG{n+nv}{Body}\PYG{p}{,} \PYG{n+nv}{Name}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} We assert the strategy with its body, so the body is executed when the strategy is consulted.}
+    \PYG{p}{(}   \PYG{n+nf}{clause}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{GP}\PYG{p}{,} \PYG{n+nv}{ST}\PYG{p}{),} \PYG{n+nv}{B}\PYG{p}{),}
+        \PYG{c+c1}{\PYGZpc{} Check if a strategy with the same structure already exists (variant check)}
+        \PYG{n+nf}{variant}\PYG{p}{((}\PYG{n+nv}{GP}\PYG{p}{,} \PYG{n+nv}{ST}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{p}{(}\PYG{n+nv}{GoalPattern}\PYG{p}{,} \PYG{n+nv}{StrategyTemplate}\PYG{p}{,} \PYG{n+nv}{Body}\PYG{p}{))}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  (Proof strategy \PYGZti{}w already known)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Name}\PYG{p}{])}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Assert the clause: (learned\PYGZus{}proof\PYGZus{}strategy(GoalPattern, StrategyTemplate) :\PYGZhy{} Body).}
+        \PYG{n+nf}{assertz}\PYG{p}{((}\PYG{n+nf}{learned\PYGZus{}proof\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{GoalPattern}\PYG{p}{,} \PYG{n+nv}{StrategyTemplate}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{)),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  \PYGZhy{}\PYGZgt{} New Proof Strategy Asserted: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Name}\PYG{p}{])}
+    \PYG{p}{).}
+\end{MintedVerbatim}

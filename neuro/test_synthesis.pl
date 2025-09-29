@@ -1,7 +1,7 @@
 % Filename: test_synthesis.pl (Updated for Neuro-Symbolic Testing)
 % Load the core module
-:- use_module(incompatibility_semantics, [
-    proves/1, incoherent/1, set_domain/1, obj_coll/1, normalize/2
+:- use_module('../incompatibility_semantics.pl', [
+    proves/1, incoherent/1, set_domain/1, normalize/2
 ]).
 % Load the bridge module to access the learning triggers.
 % We must ensure the bridge is loaded so the Priority 5 hook in the prover can find it.
@@ -23,7 +23,7 @@ clear_knowledge :-
     retractall(neuro_symbolic_bridge:learned_proof_strategy(_, _)),
     retractall(neuro_symbolic_bridge:run_learned_strategy(_, _, _, _, _)).
 
-:- begin_tests(unified_synthesis).
+:- begin_tests(neuro_unified_synthesis).
 
 % --- Tests for Part 1: Core Logic and Domains ---
 test(identity_subjective) :- assertion(proves([s(p)] => [s(p)])).
@@ -117,4 +117,4 @@ test(fraction_subtraction_limit_n, [setup(set_domain(n))]) :-
     % 1/3 - 1/2 = -1/6. Incoherent in N.
     assertion(incoherent([n(obj_coll(minus(1 rdiv 3, 1 rdiv 2, _)))])).
 
-:- end_tests(unified_synthesis).
+:- end_tests(neuro_unified_synthesis).

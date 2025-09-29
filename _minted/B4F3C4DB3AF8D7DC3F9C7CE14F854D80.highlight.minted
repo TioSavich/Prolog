@@ -1,0 +1,74 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+ch}{\PYGZsh{}!/bin/bash}
+
+\PYG{c+c1}{\PYGZsh{} Startup script for the Prolog synthesis system}
+\PYG{c+c1}{\PYGZsh{} This script starts both the Prolog API server and the frontend HTTP server}
+
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}🚀 Starting Synthesis Explorer System...\PYGZdq{}}
+
+\PYG{c+c1}{\PYGZsh{} Check if SWI\PYGZhy{}Prolog is installed}
+\PYG{k}{if}\PYG{+w}{ }!\PYG{+w}{ }\PYG{n+nb}{command}\PYG{+w}{ }\PYGZhy{}v\PYG{+w}{ }swipl\PYG{+w}{ }\PYG{p}{\PYGZam{}}\PYGZgt{}\PYG{+w}{ }/dev/null\PYG{p}{;}\PYG{+w}{ }\PYG{k}{then}
+\PYG{+w}{    }\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}❌ SWI\PYGZhy{}Prolog is not installed. Please install it first.\PYGZdq{}}
+\PYG{+w}{    }\PYG{n+nb}{exit}\PYG{+w}{ }\PYG{l+m}{1}
+\PYG{k}{fi}
+
+\PYG{c+c1}{\PYGZsh{} Check if Python is available}
+\PYG{k}{if}\PYG{+w}{ }!\PYG{+w}{ }\PYG{n+nb}{command}\PYG{+w}{ }\PYGZhy{}v\PYG{+w}{ }python3\PYG{+w}{ }\PYG{p}{\PYGZam{}}\PYGZgt{}\PYG{+w}{ }/dev/null\PYG{p}{;}\PYG{+w}{ }\PYG{k}{then}
+\PYG{+w}{    }\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}❌ Python 3 is not installed. Please install it first.\PYGZdq{}}
+\PYG{+w}{    }\PYG{n+nb}{exit}\PYG{+w}{ }\PYG{l+m}{1}
+\PYG{k}{fi}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Pre\PYGZhy{}flight Check: Kill existing processes on the ports \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nv}{PROLOG\PYGZus{}PORT}\PYG{o}{=}\PYG{l+m}{8083}
+\PYG{n+nv}{PYTHON\PYGZus{}PORT}\PYG{o}{=}\PYG{l+m}{3000}
+
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}🔎 Checking for existing processes on ports }\PYG{n+nv}{\PYGZdl{}PROLOG\PYGZus{}PORT}\PYG{l+s+s2}{ and }\PYG{n+nv}{\PYGZdl{}PYTHON\PYGZus{}PORT}\PYG{l+s+s2}{...\PYGZdq{}}
+\PYG{c+c1}{\PYGZsh{} The `|| true` prevents the script from exiting if no process is found}
+\PYG{o}{(}lsof\PYG{+w}{ }\PYGZhy{}ti\PYG{+w}{ }:\PYG{n+nv}{\PYGZdl{}PROLOG\PYGZus{}PORT}\PYG{+w}{ }\PYG{p}{|}\PYG{+w}{ }xargs\PYG{+w}{ }\PYG{n+nb}{kill}\PYG{+w}{ }\PYGZhy{}9\PYG{o}{)}\PYG{+w}{ }\PYGZgt{}/dev/null\PYG{+w}{ }\PYG{l+m}{2}\PYGZgt{}\PYG{p}{\PYGZam{}}\PYG{l+m}{1}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{n+nb}{true}
+\PYG{o}{(}lsof\PYG{+w}{ }\PYGZhy{}ti\PYG{+w}{ }:\PYG{n+nv}{\PYGZdl{}PYTHON\PYGZus{}PORT}\PYG{+w}{ }\PYG{p}{|}\PYG{+w}{ }xargs\PYG{+w}{ }\PYG{n+nb}{kill}\PYG{+w}{ }\PYGZhy{}9\PYG{o}{)}\PYG{+w}{ }\PYGZgt{}/dev/null\PYG{+w}{ }\PYG{l+m}{2}\PYGZgt{}\PYG{p}{\PYGZam{}}\PYG{l+m}{1}\PYG{+w}{ }\PYG{o}{||}\PYG{+w}{ }\PYG{n+nb}{true}
+sleep\PYG{+w}{ }\PYG{l+m}{1}\PYG{+w}{ }\PYG{c+c1}{\PYGZsh{} Give a moment for ports to be released}
+
+\PYG{c+c1}{\PYGZsh{} Function to kill processes on exit}
+cleanup\PYG{o}{()}\PYG{+w}{ }\PYG{o}{\PYGZob{}}
+\PYG{+w}{    }\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}🛑 Shutting down servers...\PYGZdq{}}
+\PYG{+w}{    }\PYG{n+nb}{kill}\PYG{+w}{ }\PYG{n+nv}{\PYGZdl{}PROLOG\PYGZus{}PID}\PYG{+w}{ }\PYG{l+m}{2}\PYGZgt{}/dev/null
+\PYG{+w}{    }\PYG{n+nb}{kill}\PYG{+w}{ }\PYG{n+nv}{\PYGZdl{}PYTHON\PYGZus{}PID}\PYG{+w}{ }\PYG{l+m}{2}\PYGZgt{}/dev/null
+\PYG{+w}{    }\PYG{n+nb}{exit}\PYG{+w}{ }\PYG{l+m}{0}
+\PYG{o}{\PYGZcb{}}
+
+\PYG{c+c1}{\PYGZsh{} Set up trap to catch Ctrl+C}
+\PYG{n+nb}{trap}\PYG{+w}{ }cleanup\PYG{+w}{ }SIGINT\PYG{+w}{ }SIGTERM
+
+\PYG{c+c1}{\PYGZsh{} Start Prolog API server}
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}📡 Starting Prolog API server on port 8083...\PYGZdq{}}
+swipl\PYG{+w}{ }\PYGZhy{}g\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}main\PYGZdq{}}\PYG{+w}{ }working\PYGZus{}server.pl\PYG{+w}{ }\PYG{p}{\PYGZam{}}
+\PYG{n+nv}{PROLOG\PYGZus{}PID}\PYG{o}{=}\PYG{n+nv}{\PYGZdl{}!}
+
+\PYG{c+c1}{\PYGZsh{} Wait a moment for Prolog server to start}
+sleep\PYG{+w}{ }\PYG{l+m}{2}
+
+\PYG{c+c1}{\PYGZsh{} Test if Prolog server is running}
+\PYG{k}{if}\PYG{+w}{ }curl\PYG{+w}{ }\PYGZhy{}s\PYG{+w}{ }http://localhost:8083/test\PYG{+w}{ }\PYGZgt{}\PYG{+w}{ }/dev/null\PYG{p}{;}\PYG{+w}{ }\PYG{k}{then}
+\PYG{+w}{    }\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}✅ Prolog API server is running at http://localhost:8083\PYGZdq{}}
+\PYG{k}{else}
+\PYG{+w}{    }\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}⚠️  Prolog server may not be fully ready yet...\PYGZdq{}}
+\PYG{k}{fi}
+
+\PYG{c+c1}{\PYGZsh{} Start Python HTTP server}
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}🌐 Starting frontend HTTP server on port 3000...\PYGZdq{}}
+python3\PYG{+w}{ }serve\PYGZus{}local.py\PYG{+w}{ }\PYG{p}{\PYGZam{}}
+\PYG{n+nv}{PYTHON\PYGZus{}PID}\PYG{o}{=}\PYG{n+nv}{\PYGZdl{}!}
+
+\PYG{c+c1}{\PYGZsh{} Wait a moment for Python server to start}
+sleep\PYG{+w}{ }\PYG{l+m}{1}
+
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}🎉 System is ready!\PYGZdq{}}
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}📱 Open your browser and go to: http://localhost:3000\PYGZdq{}}
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}🔧 API server is at: http://localhost:8083\PYGZdq{}}
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}📋 Press Ctrl+C to stop both servers\PYGZdq{}}
+\PYG{n+nb}{echo}\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}
+
+\PYG{c+c1}{\PYGZsh{} Wait for processes to finish or be interrupted}
+\PYG{n+nb}{wait}
+\end{MintedVerbatim}

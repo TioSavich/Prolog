@@ -6,7 +6,7 @@
 
 % Use the semantics engine
 % Import product_of_list/2, needed for defining the Euclid construction strategy.
-:- use_module(incompatibility_semantics, [proves/1, set_domain/1, current_domain/1, is_recollection/2, normalize/2, product_of_list/2]).
+:- use_module('../incompatibility_semantics.pl', [proves/1, set_domain/1, current_domain/1, is_recollection/2, normalize/2, product_of_list/2]).
 :- use_module(library(random)).
 :- use_module(library(lists)).
 

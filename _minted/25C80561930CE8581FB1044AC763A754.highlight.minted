@@ -1,0 +1,131 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gh}{\PYGZsh{} A Synthesis of Incompatibility Semantics, CGI, and Piagetian Constructivism}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 1. Introduction}
+
+This project presents a novel synthesis of three influential frameworks in philosophy, cognitive science, and education, implemented as a computational model in SWI\PYGZhy{}Prolog.
+
+\PYG{k}{*}\PYG{+w}{ }  \PYG{g+gs}{**Robert Brandom\PYGZsq{}s Incompatibility Semantics:**} A theory asserting that the meaning of a concept is defined by what it is incompatible with. We understand what something \PYG{g+ge}{*is*} by understanding what it rules out.
+\PYG{k}{*}\PYG{+w}{ }  \PYG{g+gs}{**Cognitively Guided Instruction (CGI):**} An educational approach focused on understanding and building upon students\PYGZsq{} intuitive problem\PYGZhy{}solving strategies.
+\PYG{k}{*}\PYG{+w}{ }  \PYG{g+gs}{**Piagetian Constructivism:**} A theory of cognitive development emphasizing the learner\PYGZsq{}s active construction of knowledge through assimilation and accommodation, driven by the resolution of cognitive conflict (disequilibrium).
+
+This synthesis aims to provide a formal, computational model for understanding conceptual development and designing instruction that respects the learner\PYGZsq{}s constructive processes.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 2. Core Concepts}
+
+The core idea of this synthesis is that learning (Constructivism) occurs when a learner recognizes an incompatibility (Brandom) between their existing cognitive structures and new information or experiences. Instruction (CGI) facilitates this process by analyzing the learner\PYGZsq{}s current strategies and introducing experiences that highlight relevant incompatibilities, prompting the necessary cognitive shifts (accommodation).
+
+This is modeled in the repository through several key components:
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Incompatibility Semantics**}: The core logic for determining entailment and contradiction is implemented in \PYG{l+s+sb}{`incompatibility\PYGZus{}semantics.pl`}.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Student Strategy Models**}: The CGI aspect is modeled through a library of student problem\PYGZhy{}solving strategies (\PYG{l+s+sb}{`sar\PYGZus{}*.pl`} for addition/subtraction and \PYG{l+s+sb}{`smr\PYGZus{}*.pl`} for multiplication/division), which simulate how students with different conceptual understandings might approach a problem.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Learning Cycle**}: The Piagetian process of learning through disequilibrium is modeled by the \PYG{g+gs}{**Observe\PYGZhy{}Reorganize\PYGZhy{}Reflect (ORR)**} cycle, which can detect failures in its own knowledge and attempt to repair itself.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 3. System Architecture}
+
+The system is composed of several distinct parts that work together.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.1. The ORR Cycle (Cognitive Core)}
+This is the heart of the system\PYGZsq{}s learning capability, inspired by Piagetian mechanisms.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`execution\PYGZus{}handler.pl`**}: The main driver that orchestrates the ORR cycle.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`meta\PYGZus{}interpreter.pl`**}: The \PYG{g+gs}{**Observe**} phase. It runs a given goal while producing a detailed execution trace, making the system\PYGZsq{}s reasoning process observable to itself.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`reflective\PYGZus{}monitor.pl`**}: The \PYG{g+gs}{**Reflect**} phase. It analyzes the trace from the meta\PYGZhy{}interpreter to detect signs of \PYGZdq{}disequilibrium\PYGZdq{} (e.g., goal failures, contradictions).
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`reorganization\PYGZus{}engine.pl`**}: The \PYG{g+gs}{**Reorganize**} phase. Triggered by disequilibrium, it attempts to modify the system\PYGZsq{}s own knowledge base to resolve the conflict.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.2. Knowledge Base}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`object\PYGZus{}level.pl`**}: Contains the system\PYGZsq{}s foundational, and potentially flawed, knowledge (e.g., an inefficient rule for addition). This is the knowledge that the ORR cycle operates on and modifies.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`incompatibility\PYGZus{}semantics.pl`**}: Defines the core logical and mathematical rules of the \PYGZdq{}world,\PYGZdq{} including what concepts are incompatible with each other.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`learned\PYGZus{}knowledge.pl`**}: An auto\PYGZhy{}generated file where new, more efficient strategies discovered by the \PYG{l+s+sb}{`more\PYGZus{}machine\PYGZus{}learner.pl`} module are stored.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.3. API Servers}
+There are multiple servers for different purposes:
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`working\PYGZus{}server.pl`**}: A robust, simplified server for powering the web\PYGZhy{}based GUI. It contains hard\PYGZhy{}coded analysis logic for stability.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`api\PYGZus{}server.pl`**}: The full\PYGZhy{}featured development server that exposes the entire ORR cycle and the dynamic knowledge base.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`simple\PYGZus{}api\PYGZus{}server.pl`**} and \PYG{g+gs}{**`test\PYGZus{}server.pl`**}: Lightweight servers for testing and demonstration.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 4. Getting Started}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.1. Prerequisites}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**SWI\PYGZhy{}Prolog**}: Ensure it is installed and accessible in your system\PYGZsq{}s PATH.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Python 3**}: Required for the simple web server that serves the frontend files.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.2. Running the Web\PYGZhy{}Based GUI (Recommended)}
+This is the easiest way to interact with the semantic and strategy analysis features. This mode uses the stable \PYG{l+s+sb}{`working\PYGZus{}server.pl`}.
+
+In a terminal, run the provided shell script:
+\PYG{l+s+sb}{```bash}
+./start\PYGZus{}system.sh
+\PYG{l+s+sb}{```}
+This script starts both the Prolog API server (on port 8083) and the Python frontend server (on port 3000).
+
+Once the servers are running, open your web browser to: \PYG{g+gs}{**http://localhost:3000**}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.3. Running the Full ORR System (For Developers)}
+To experiment with the system\PYGZsq{}s learning capabilities, you need to run the full \PYG{l+s+sb}{`api\PYGZus{}server.pl`}.
+
+\PYG{g+gs}{**Step 1: Start the Prolog API Server**}
+\PYG{l+s+sb}{```bash}
+swipl\PYG{+w}{ }api\PYGZus{}server.pl
+\PYG{l+s+sb}{```}
+This will start the server on port 8000 (by default).
+
+\PYG{g+gs}{**Step 2: Interact via API Client**}
+You can now send POST requests to the endpoints, for example, to trigger the ORR cycle:
+\PYG{l+s+sb}{```bash}
+\PYG{c+c1}{\PYGZsh{} This will trigger the ORR cycle for the goal 5 + 5 = X}
+curl\PYG{+w}{ }\PYGZhy{}X\PYG{+w}{ }POST\PYG{+w}{ }\PYGZhy{}H\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}Content\PYGZhy{}Type: application/json\PYGZdq{}}\PYG{+w}{ }\PYG{l+s+se}{\PYGZbs{}}
+\PYG{+w}{     }\PYGZhy{}d\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}\PYGZob{}\PYGZdq{}goal\PYGZdq{}: \PYGZdq{}add(s(s(s(s(s(0))))), s(s(s(s(s(0))))), X)\PYGZdq{}\PYGZcb{}\PYGZsq{}}\PYG{+w}{ }\PYG{l+s+se}{\PYGZbs{}}
+\PYG{+w}{     }http://localhost:8000/solve
+\PYG{l+s+sb}{```}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 5. File Structure Guide}
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`index.html`, `script.js`, `style.css`**}: Frontend files for the web GUI.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`serve\PYGZus{}local.py`**}: A simple Python HTTP server for the frontend.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`start\PYGZus{}system.sh`**}: The main startup script for the web GUI.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**API Servers**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`working\PYGZus{}server.pl`}: Powers the web GUI with stable, hard\PYGZhy{}coded logic.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`api\PYGZus{}server.pl`}: Full\PYGZhy{}featured server with access to the ORR learning cycle.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`simple\PYGZus{}api\PYGZus{}server.pl`}, \PYG{l+s+sb}{`test\PYGZus{}server.pl`}: Minimal servers for testing.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Cognitive Core (ORR Cycle)**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`execution\PYGZus{}handler.pl`}: Orchestrates the ORR cycle.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`meta\PYGZus{}interpreter.pl`}: The \PYGZdq{}Observe\PYGZdq{} phase; runs goals and produces traces.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`reflective\PYGZus{}monitor.pl`}: The \PYGZdq{}Reflect\PYGZdq{} phase; analyzes traces for disequilibrium.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`reorganization\PYGZus{}engine.pl`}: The \PYGZdq{}Reorganize\PYGZdq{} phase; modifies the knowledge base.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`reorganization\PYGZus{}log.pl`}: Logs the events of the ORR cycle.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Knowledge \PYGZam{} Learning**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`object\PYGZus{}level.pl`}: The initial, dynamic knowledge base of the system.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`incompatibility\PYGZus{}semantics.pl`}: The core rules of logic and mathematics.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`more\PYGZus{}machine\PYGZus{}learner.pl`}: The module that implements the \PYGZdq{}protein folding\PYGZdq{} learning analogy.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`learned\PYGZus{}knowledge.pl`}: \PYG{g+gs}{**Auto\PYGZhy{}generated file**} for storing learned strategies. Do not edit manually.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Student Strategy Models**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`sar\PYGZus{}*.pl`}: Models for Student Addition and Subtraction Reasoning.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`smr\PYGZus{}*.pl`}: Models for Student Multiplication and Division Reasoning.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`hermeneutic\PYGZus{}calculator.pl`}: A dispatcher to run specific student strategies.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Command\PYGZhy{}Line Interfaces \PYGZam{} Tests**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`main.pl`}: A simple entry point to run a test query through the ORR cycle.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`interactive\PYGZus{}ui.pl`}: A text\PYGZhy{}based menu for interacting with the learning system.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}synthesis.pl`}: \PYG{l+s+sb}{`plunit`} tests for the \PYG{l+s+sb}{`incompatibility\PYGZus{}semantics`} module.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 6. For Developers}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 6.1. Running Tests}
+The repository uses \PYG{l+s+sb}{`plunit`} for testing. The main test file is \PYG{l+s+sb}{`test\PYGZus{}synthesis.pl`}. To run the tests, start SWI\PYGZhy{}Prolog and run:
+\PYG{l+s+sb}{```prolog}
+\PYG{l+s+sAtom}{?\PYGZhy{}} \PYG{p}{[}\PYG{l+s+sAtom}{test\PYGZus{}synthesis}\PYG{p}{].}
+\PYG{l+s+sAtom}{?\PYGZhy{}} \PYG{l+s+sAtom}{run\PYGZus{}tests}\PYG{p}{.}
+\PYG{l+s+sb}{```}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 6.2. Code Documentation}
+The Prolog source code is documented using \PYG{g+gs}{**PlDoc**}. This format allows for generating HTML documentation directly from the source comments.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 7. Contributing}
+We welcome contributions to the theoretical development, the Prolog implementation, and the frontend interface. Please open an issue to discuss potential changes.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 8. License}
+[Note: Specify your license here.]
+\end{MintedVerbatim}

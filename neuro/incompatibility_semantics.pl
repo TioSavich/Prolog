@@ -1,9 +1,9 @@
 % Filename: incompatibility_semantics.pl (Neuro-Symbolic Integration)
-:- module(incompatibility_semantics,
+:- module(incompatibility_semantics_neuro,
           [ proves/1, is_recollection/2, incoherent/1, set_domain/1, current_domain/1 % obj_coll/1 is deprecated
           , product_of_list/2 % Exported for the learner module
           % Updated exports
-          , s/1, o/1, n/1, comp_nec/1, exp_nec/1, exp_poss/1, comp_poss/1, neg/1
+          , s/1, o/1, n/1, 'comp_nec'/1, 'exp_nec'/1, 'exp_poss'/1, 'comp_poss'/1, 'neg'/1
           , highlander/2, bounded_region/4, equality_iterator/3
           % Geometry
           , square/1, rectangle/1, rhombus/1, parallelogram/1, trapezoid/1, kite/1, quadrilateral/1
@@ -11,7 +11,7 @@
           % Number Theory (Euclid)
           , prime/1, composite/1, divides/2, is_complete/1
           % Fractions (Jason.pl)
-          , rdiv/2, iterate/3, partition/3, normalize/2
+          , 'rdiv'/2, iterate/3, partition/3, normalize/2
           ]).
 % Declare predicates that are defined across different sections.
 :- use_module(hermeneutic_calculator). % Added for is_recollection/2

@@ -1,0 +1,217 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} Import necessary classes from automata\PYGZhy{}lib}
+\PYG{k}{try}\PYG{p}{:}
+    \PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{automata.pda.dpda}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{DPDA}
+    \PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{automata.pda.stack}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{PDAStack}
+    \PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{automata.base.exceptions}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{RejectionException} 
+\PYG{k}{except} \PYG{n+ne}{ImportError}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Error: automata\PYGZhy{}lib not found.\PYGZdq{}}\PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Please install it: pip install automata\PYGZhy{}lib\PYGZdq{}}\PYG{p}{)}
+    \PYG{c+c1}{\PYGZsh{} Mocking classes if needed}
+    \PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{MockPDAConfiguration}\PYG{p}{:}
+        \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{state}\PYG{p}{,} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{):} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{stack} \PYG{o}{=} \PYG{n}{state}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}MockStack}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{)}
+        \PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{\PYGZus{}MockStack}\PYG{p}{:}
+             \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{):} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{stack} \PYG{o}{=} \PYG{n}{stack\PYGZus{}tuple}
+    \PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{MockDPDA}\PYG{p}{:}
+        \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{o}{*}\PYG{n}{args}\PYG{p}{,} \PYG{o}{**}\PYG{n}{kwargs}\PYG{p}{):} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{final\PYGZus{}states} \PYG{o}{=} \PYG{n}{kwargs}\PYG{o}{.}\PYG{n}{get}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}final\PYGZus{}states\PYGZsq{}}\PYG{p}{,} \PYG{n+nb}{set}\PYG{p}{());} \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Warning: Using Mock DPDA class.\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{read\PYGZus{}input}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{input\PYGZus{}sequence}\PYG{p}{):} 
+             \PYG{n}{n} \PYG{o}{=} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{input\PYGZus{}sequence}\PYG{p}{)}
+             \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{999}\PYG{p}{:} \PYG{k}{return} \PYG{n}{MockPDAConfiguration}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{))}
+             \PYG{k}{if} \PYG{n}{n} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{k}{return} \PYG{n}{MockPDAConfiguration}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{))}
+             \PYG{n}{hundreds}\PYG{p}{,} \PYG{n}{rem} \PYG{o}{=} \PYG{n+nb}{divmod}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{l+m+mi}{100}\PYG{p}{)}
+             \PYG{n}{tens}\PYG{p}{,} \PYG{n}{units} \PYG{o}{=} \PYG{n+nb}{divmod}\PYG{p}{(}\PYG{n}{rem}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)}
+             \PYG{n}{stack\PYGZus{}list} \PYG{o}{=} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{hundreds}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{tens}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{units}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+             \PYG{k}{return} \PYG{n}{MockPDAConfiguration}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{stack\PYGZus{}list}\PYG{p}{))}
+    \PYG{n}{DPDA} \PYG{o}{=} \PYG{n}{MockDPDA} 
+    \PYG{n}{RejectionException} \PYG{o}{=} \PYG{n+ne}{Exception} 
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} automata\PYGZhy{}lib not found, using Mock classes \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{sys}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Define the 0\PYGZhy{}999 Counter PDA \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZsh{} States}
+\PYG{n}{states} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}start\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}tens\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{\PYGZsh{} Input Alphabet}
+\PYG{n}{input\PYGZus{}symbols} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}tick\PYGZsq{}}\PYG{p}{\PYGZcb{}} 
+
+\PYG{c+c1}{\PYGZsh{} Stack Alphabet }
+\PYG{n}{stack\PYGZus{}symbols} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{\PYGZcb{}} \PYG{o}{|} \PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{}} \PYG{o}{|} \PYGZbs{}
+                        \PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{}} \PYG{o}{|} \PYGZbs{}
+                        \PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{}}
+
+\PYG{c+c1}{\PYGZsh{} Transitions (Following the successful pattern)}
+\PYG{c+c1}{\PYGZsh{} Remember: Push sequence (S1, S2, S3) pushes S3 first, S2 second, S1 last (top)}
+\PYG{n}{transitions} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}start\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+        \PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+            \PYG{c+c1}{\PYGZsh{} Initial: Push \PYGZsh{}, H0, T0, U0. Stack (\PYGZsh{}, H0, T0, U0). Top U0.}
+            \PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{))} 
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{},}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}} \PYG{c+c1}{\PYGZsh{} Processing Units (top)}
+        \PYG{l+s+s1}{\PYGZsq{}tick\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+            \PYG{c+c1}{\PYGZsh{} Inc Units \PYGZlt{} 9: Pop Un, Push U(n+1). Stay q\PYGZus{}idle.}
+            \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,))} \PYG{k}{for} \PYG{n}{n} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{)\PYGZcb{},}
+            \PYG{c+c1}{\PYGZsh{} Inc Units = 9: Pop U9, Push nothing. Go to q\PYGZus{}inc\PYGZus{}tens (Tens digit now top).}
+            \PYG{l+s+s1}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}tens\PYGZsq{}}\PYG{p}{,} \PYG{p}{())} 
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{},}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}tens\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}} \PYG{c+c1}{\PYGZsh{} Epsilon transitions, processing Tens (top)}
+        \PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+             \PYG{c+c1}{\PYGZsh{} Tens digit Tm (m\PYGZlt{}9): Pop Tm. Push T(m+1), Push U0. Go q\PYGZus{}idle.}
+             \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{))} \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{)\PYGZcb{},} 
+             \PYG{c+c1}{\PYGZsh{} Tens digit T9: Pop T9. Push nothing. Go to q\PYGZus{}inc\PYGZus{}hundreds (Hundreds digit now top).}
+             \PYG{l+s+s1}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{,} \PYG{p}{())}
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{},}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}} \PYG{c+c1}{\PYGZsh{} Epsilon transitions, processing Hundreds (top)}
+        \PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+             \PYG{c+c1}{\PYGZsh{} Hundreds digit Hk (k\PYGZlt{}9): Pop Hk. Push H(k+1), Push T0, Push U0. Go q\PYGZus{}idle.}
+             \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{))} \PYG{k}{for} \PYG{n}{k} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{)\PYGZcb{},}
+             \PYG{c+c1}{\PYGZsh{} Hundreds digit H9 (Overflow): Pop H9. Push H0, Push T0, Push U0. Go q\PYGZus{}halt.}
+             \PYG{l+s+s1}{\PYGZsq{}H9\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{))} 
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{},}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}} 
+        \PYG{c+c1}{\PYGZsh{} No transitions out. Any \PYGZsq{}tick\PYGZsq{} input leads to implicit rejection.}
+    \PYG{p}{\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{\PYGZsh{} Initial state}
+\PYG{n}{initial\PYGZus{}state} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}start\PYGZsq{}}
+\PYG{n}{initial\PYGZus{}stack\PYGZus{}symbol} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}} 
+\PYG{c+c1}{\PYGZsh{} Final states (only q\PYGZus{}idle represents a valid 0\PYGZhy{}999 count)}
+\PYG{n}{final\PYGZus{}states} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{\PYGZsh{} Create the DPDA instance}
+\PYG{k}{try}\PYG{p}{:}
+    \PYG{n}{pda} \PYG{o}{=} \PYG{n}{DPDA}\PYG{p}{(}
+        \PYG{n}{states}\PYG{o}{=}\PYG{n}{states}\PYG{p}{,}
+        \PYG{n}{input\PYGZus{}symbols}\PYG{o}{=}\PYG{n}{input\PYGZus{}symbols}\PYG{p}{,}
+        \PYG{n}{stack\PYGZus{}symbols}\PYG{o}{=}\PYG{n}{stack\PYGZus{}symbols}\PYG{p}{,}
+        \PYG{n}{transitions}\PYG{o}{=}\PYG{n}{transitions}\PYG{p}{,} 
+        \PYG{n}{initial\PYGZus{}state}\PYG{o}{=}\PYG{n}{initial\PYGZus{}state}\PYG{p}{,}
+        \PYG{n}{initial\PYGZus{}stack\PYGZus{}symbol}\PYG{o}{=}\PYG{n}{initial\PYGZus{}stack\PYGZus{}symbol}\PYG{p}{,}
+        \PYG{n}{final\PYGZus{}states}\PYG{o}{=}\PYG{n}{final\PYGZus{}states}\PYG{p}{,}
+        \PYG{n}{acceptance\PYGZus{}mode}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}final\PYGZus{}state\PYGZsq{}} 
+    \PYG{p}{)}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}DPDA for 0\PYGZhy{}999 created successfully.\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{except} \PYG{n+ne}{Exception} \PYG{k}{as} \PYG{n}{e}\PYG{p}{:}
+     \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Error creating DPDA: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+     \PYG{c+c1}{\PYGZsh{} Mock DPDA fallback}
+     \PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{MockPDAConfiguration}\PYG{p}{:}
+        \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{state}\PYG{p}{,} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{):} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{state}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{stack} \PYG{o}{=} \PYG{n}{state}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}MockStack}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{)}
+        \PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{\PYGZus{}MockStack}\PYG{p}{:}
+             \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{):} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{stack} \PYG{o}{=} \PYG{n}{stack\PYGZus{}tuple}
+     \PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{MockDPDA}\PYG{p}{:}
+        \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{o}{*}\PYG{n}{args}\PYG{p}{,} \PYG{o}{**}\PYG{n}{kwargs}\PYG{p}{):} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{final\PYGZus{}states} \PYG{o}{=} \PYG{n}{kwargs}\PYG{o}{.}\PYG{n}{get}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}final\PYGZus{}states\PYGZsq{}}\PYG{p}{,} \PYG{n+nb}{set}\PYG{p}{());} \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Warning: Using Mock DPDA class after creation error.\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{read\PYGZus{}input}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{input\PYGZus{}sequence}\PYG{p}{):} 
+             \PYG{n}{n} \PYG{o}{=} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{input\PYGZus{}sequence}\PYG{p}{)}
+             \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{999}\PYG{p}{:} \PYG{k}{return} \PYG{n}{MockPDAConfiguration}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{))}
+             \PYG{k}{if} \PYG{n}{n} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{k}{return} \PYG{n}{MockPDAConfiguration}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{))}
+             \PYG{n}{hundreds}\PYG{p}{,} \PYG{n}{rem} \PYG{o}{=} \PYG{n+nb}{divmod}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{l+m+mi}{100}\PYG{p}{);} \PYG{n}{tens}\PYG{p}{,} \PYG{n}{units} \PYG{o}{=} \PYG{n+nb}{divmod}\PYG{p}{(}\PYG{n}{rem}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)}
+             \PYG{n}{stack\PYGZus{}list} \PYG{o}{=} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{hundreds}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{tens}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{units}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{)}
+             \PYG{k}{return} \PYG{n}{MockPDAConfiguration}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{stack\PYGZus{}list}\PYG{p}{))}
+     \PYG{n}{pda} \PYG{o}{=} \PYG{n}{MockDPDA}\PYG{p}{(}\PYG{n}{final\PYGZus{}states}\PYG{o}{=}\PYG{n}{final\PYGZus{}states}\PYG{p}{)}
+     \PYG{n}{RejectionException} \PYG{o}{=} \PYG{n+ne}{Exception} 
+     \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Proceeding with Mock PDA \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{c+c1}{\PYGZsh{} Function to convert the 3\PYGZhy{}digit stack contents to an integer}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int\PYGZus{}3digit}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{:} \PYG{n+nb}{tuple}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n+nb}{int}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    Converts the PDA stack tuple (\PYGZsq{}\PYGZsh{}\PYGZsq{}, HX, TY, UZ) to the integer XYZ.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{c+c1}{\PYGZsh{} Basic validation}
+    \PYG{k}{if} \PYG{o+ow}{not} \PYG{p}{(}\PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{,} \PYG{n+nb}{tuple}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{4} \PYG{o+ow}{and} \PYGZbs{}
+            \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{)} \PYG{o+ow}{and} \PYGZbs{}
+            \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{)):}
+        \PYG{c+c1}{\PYGZsh{} Allow for initial state stack (\PYGZsq{}\PYGZsh{}\PYGZsq{}, \PYGZsq{}H0\PYGZsq{}, \PYGZsq{}T0\PYGZsq{}, \PYGZsq{}U0\PYGZsq{}) during halt}
+        \PYG{k}{if} \PYG{o+ow}{not} \PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{4} \PYG{o+ow}{and} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{:]} \PYG{o}{==} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{)):}
+             \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Warning: Invalid stack state for 3\PYGZhy{}digit conversion: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{stack\PYGZus{}tuple}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+             \PYG{k}{return} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1} 
+        
+    \PYG{k}{try}\PYG{p}{:}
+        \PYG{c+c1}{\PYGZsh{} Extract digits, handling potential errors if symbols are wrong}
+        \PYG{n}{h\PYGZus{}digit} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{:])} 
+        \PYG{n}{t\PYGZus{}digit} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{:])} 
+        \PYG{n}{u\PYGZus{}digit} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{:])} 
+        \PYG{k}{return} \PYG{n}{h\PYGZus{}digit} \PYG{o}{*} \PYG{l+m+mi}{100} \PYG{o}{+} \PYG{n}{t\PYGZus{}digit} \PYG{o}{*} \PYG{l+m+mi}{10} \PYG{o}{+} \PYG{n}{u\PYGZus{}digit}
+    \PYG{k}{except} \PYG{p}{(}\PYG{n+ne}{ValueError}\PYG{p}{,} \PYG{n+ne}{IndexError}\PYG{p}{):}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Error converting stack digits to int: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{stack\PYGZus{}tuple}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{return} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{2} 
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Testing the PDA \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{Testing 3\PYGZhy{}Digit (0\PYGZhy{}999) Counter PDA:\PYGZdq{}}\PYG{p}{)}
+\PYG{c+c1}{\PYGZsh{} Test cases around boundaries}
+\PYG{n}{test\PYGZus{}counts} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{9}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{11}\PYG{p}{,} \PYG{l+m+mi}{99}\PYG{p}{,} \PYG{l+m+mi}{100}\PYG{p}{,} \PYG{l+m+mi}{101}\PYG{p}{,} \PYG{l+m+mi}{998}\PYG{p}{,} \PYG{l+m+mi}{999}\PYG{p}{,} \PYG{l+m+mi}{1000}\PYG{p}{,} \PYG{l+m+mi}{1001}\PYG{p}{]} 
+
+\PYG{k}{for} \PYG{n}{count} \PYG{o+ow}{in} \PYG{n}{test\PYGZus{}counts}\PYG{p}{:}
+    \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+se}{\PYGZbs{}n}\PYG{l+s+s2}{\PYGZhy{}\PYGZhy{}\PYGZhy{} Testing count = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{count}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{input\PYGZus{}sequence} \PYG{o}{=} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}tick\PYGZsq{}}\PYG{p}{]} \PYG{o}{*} \PYG{n}{count}
+    \PYG{k}{try}\PYG{p}{:}
+        \PYG{n}{final\PYGZus{}config} \PYG{o}{=} \PYG{n}{pda}\PYG{o}{.}\PYG{n}{read\PYGZus{}input}\PYG{p}{(}\PYG{n}{input\PYGZus{}sequence}\PYG{p}{)}
+        \PYG{n}{final\PYGZus{}state} \PYG{o}{=} \PYG{n}{final\PYGZus{}config}\PYG{o}{.}\PYG{n}{state}
+        \PYG{k}{if} \PYG{n+nb}{hasattr}\PYG{p}{(}\PYG{n}{final\PYGZus{}config}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}stack\PYGZsq{}}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb}{hasattr}\PYG{p}{(}\PYG{n}{final\PYGZus{}config}\PYG{o}{.}\PYG{n}{stack}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}stack\PYGZsq{}}\PYG{p}{):}
+             \PYG{n}{final\PYGZus{}stack\PYGZus{}tuple} \PYG{o}{=} \PYG{n}{final\PYGZus{}config}\PYG{o}{.}\PYG{n}{stack}\PYG{o}{.}\PYG{n}{stack} 
+        \PYG{k}{else}\PYG{p}{:}
+             \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Error: Final configuration object has unexpected structure.\PYGZdq{}}\PYG{p}{)}
+             \PYG{n}{final\PYGZus{}stack\PYGZus{}tuple} \PYG{o}{=} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}ERROR\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}ERROR\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}ERROR\PYGZsq{}}\PYG{p}{)} 
+
+        \PYG{n}{is\PYGZus{}accepted} \PYG{o}{=} \PYG{n}{final\PYGZus{}state} \PYG{o+ow}{in} \PYG{n}{pda}\PYG{o}{.}\PYG{n}{final\PYGZus{}states} \PYG{c+c1}{\PYGZsh{} Check if ended in q\PYGZus{}idle}
+
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Input: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{count}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ \PYGZsq{}tick\PYGZsq{}s\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Ended in State: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{final\PYGZus{}state}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Final Stack: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{final\PYGZus{}stack\PYGZus{}tuple}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        
+        \PYG{n}{expected\PYGZus{}acceptance} \PYG{o}{=} \PYG{p}{(}\PYG{n}{count} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{999}\PYG{p}{)}
+
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Expected Acceptance: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{expected\PYGZus{}acceptance}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Actual Acceptance: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{is\PYGZus{}accepted}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+
+        \PYG{k}{if} \PYG{n}{is\PYGZus{}accepted}\PYG{p}{:}
+            \PYG{n}{calculated\PYGZus{}value} \PYG{o}{=} \PYG{n}{stack\PYGZus{}to\PYGZus{}int\PYGZus{}3digit}\PYG{p}{(}\PYG{n}{final\PYGZus{}stack\PYGZus{}tuple}\PYG{p}{)}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Expected Value (if accepted): }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{count}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Calculated Value: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{calculated\PYGZus{}value}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{calculated\PYGZus{}value} \PYG{o}{==} \PYG{n}{count} \PYG{o+ow}{and} \PYG{n}{expected\PYGZus{}acceptance}\PYG{p}{:} 
+                \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Result: Correct\PYGZdq{}}\PYG{p}{)}
+            \PYG{k}{else}\PYG{p}{:} 
+                \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Result: INCORRECT (Value mismatch or unexpected acceptance)\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{else}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} Rejected (ended in q\PYGZus{}halt)}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Expected Value (if accepted): N/A\PYGZdq{}}\PYG{p}{)}
+            \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Calculated Value: N/A (Rejected)\PYGZdq{}}\PYG{p}{)}
+            \PYG{c+c1}{\PYGZsh{} Check if rejection was expected (count \PYGZgt{}= 1000)}
+            \PYG{k}{if} \PYG{o+ow}{not} \PYG{n}{expected\PYGZus{}acceptance}\PYG{p}{:} 
+                 \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Result: Correct (Rejected as expected)\PYGZdq{}}\PYG{p}{)}
+            \PYG{k}{else}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} Should not happen for count \PYGZlt{}= 999}
+                 \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Result: INCORRECT (Unexpected rejection)\PYGZdq{}}\PYG{p}{)}
+
+    \PYG{k}{except} \PYG{n}{RejectionException} \PYG{k}{as} \PYG{n}{re}\PYG{p}{:}
+        \PYG{c+c1}{\PYGZsh{} This means the PDA got genuinely stuck (no transition defined)}
+        \PYG{c+c1}{\PYGZsh{} Should only happen if input contains something other than \PYGZsq{}tick\PYGZsq{} or logic error}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Input: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{count}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ \PYGZsq{}tick\PYGZsq{}s\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}PDA Rejection Exception: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{re}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        \PYG{c+c1}{\PYGZsh{} Check if this was the expected halt state after 1000+ ticks}
+        \PYG{n}{is\PYGZus{}halt\PYGZus{}state} \PYG{o}{=} \PYG{k+kc}{False}
+        \PYG{k}{try}\PYG{p}{:}
+            \PYG{c+c1}{\PYGZsh{} Try reading again to see the state (might not work if truly stuck)}
+            \PYG{n}{halt\PYGZus{}config} \PYG{o}{=} \PYG{n}{pda}\PYG{o}{.}\PYG{n}{read\PYGZus{}input}\PYG{p}{(}\PYG{n}{input\PYGZus{}sequence}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{halt\PYGZus{}config}\PYG{o}{.}\PYG{n}{state} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{:}
+                \PYG{n}{is\PYGZus{}halt\PYGZus{}state} \PYG{o}{=} \PYG{k+kc}{True}
+        \PYG{k}{except}\PYG{p}{:} 
+            \PYG{k}{pass} \PYG{c+c1}{\PYGZsh{} Ignore errors trying to re\PYGZhy{}read if stuck}
+            
+        \PYG{k}{if} \PYG{o+ow}{not} \PYG{n}{expected\PYGZus{}acceptance} \PYG{o+ow}{and} \PYG{n}{is\PYGZus{}halt\PYGZus{}state}\PYG{p}{:}
+             \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Result: Correct (Rejected via halt state as expected)\PYGZdq{}}\PYG{p}{)}
+        \PYG{k}{else}\PYG{p}{:}
+             \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Result: REJECTED (Stuck) \PYGZhy{} Check Logic\PYGZdq{}}\PYG{p}{)}
+        
+    \PYG{k}{except} \PYG{n+ne}{Exception} \PYG{k}{as} \PYG{n}{e}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Input: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{count}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ \PYGZsq{}tick\PYGZsq{}s\PYGZdq{}}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}PDA Error: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+        \PYG{c+c1}{\PYGZsh{} import traceback }
+        \PYG{c+c1}{\PYGZsh{} traceback.print\PYGZus{}exc() }
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Result: ERROR\PYGZdq{}}\PYG{p}{)}
+\end{MintedVerbatim}

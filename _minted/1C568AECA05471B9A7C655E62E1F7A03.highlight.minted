@@ -1,0 +1,583 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}*\PYGZhy{} coding: utf\PYGZhy{}8 \PYGZhy{}*\PYGZhy{}}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{This script is a Python conversion of the Prolog files \PYGZsq{}incompatibility\PYGZus{}semantics.pl\PYGZsq{}}
+\PYG{l+s+sd}{and \PYGZsq{}test\PYGZus{}synthesis.pl\PYGZsq{}. It implements a logic engine based on incompatibility}
+\PYG{l+s+sd}{semantics and provides a comprehensive test suite using Python\PYGZsq{}s unittest framework.}
+\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{math}
+\PYG{k+kn}{import}\PYG{+w}{ }\PYG{n+nn}{unittest}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{fractions}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{Fraction}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{itertools}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{product}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{copy}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{deepcopy}
+
+\PYG{c+c1}{\PYGZsh{} =================================================================}
+\PYG{c+c1}{\PYGZsh{} Part 0: Term Representation (Python equivalent of Prolog terms)}
+\PYG{c+c1}{\PYGZsh{} =================================================================}
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Term}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Base class for all logical terms.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}eq\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{other}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{other}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n+nv+vm}{\PYGZus{}\PYGZus{}class\PYGZus{}\PYGZus{}}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{n}{other}\PYG{o}{.}\PYG{n}{name} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{args} \PYG{o}{==} \PYG{n}{other}\PYG{o}{.}\PYG{n}{args}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}hash\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb}{hash}\PYG{p}{((}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n+nv+vm}{\PYGZus{}\PYGZus{}class\PYGZus{}\PYGZus{}}\PYG{o}{.}\PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)))}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}repr\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{if} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{args}\PYG{p}{:}
+            \PYG{k}{return} \PYG{n+nb}{str}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name}\PYG{p}{)}
+        \PYG{k}{return} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{(}\PYG{l+s+si}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}, \PYGZsq{}}\PYG{o}{.}\PYG{n}{join}\PYG{p}{(}\PYG{n+nb}{map}\PYG{p}{(}\PYG{n+nb}{repr}\PYG{p}{,}\PYG{+w}{ }\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{args}\PYG{p}{))}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{)\PYGZdq{}}
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Var}\PYG{p}{(}\PYG{n}{Term}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Represents a variable in a logical expression.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{name}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name} \PYG{o}{=} \PYG{n}{name}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{args} \PYG{o}{=} \PYG{p}{[]}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}hash\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n+nb}{hash}\PYG{p}{((}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n+nv+vm}{\PYGZus{}\PYGZus{}class\PYGZus{}\PYGZus{}}\PYG{o}{.}\PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}}\PYG{p}{,} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name}\PYG{p}{))}
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Atom}\PYG{p}{(}\PYG{n}{Term}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Represents an atomic value or constant.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{name}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name} \PYG{o}{=} \PYG{n}{name}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{args} \PYG{o}{=} \PYG{p}{[]}
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Predicate}\PYG{p}{(}\PYG{n}{Term}\PYG{p}{):}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Represents a predicate with a name and arguments.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{name}\PYG{p}{,} \PYG{n}{args}\PYG{o}{=}\PYG{k+kc}{None}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name} \PYG{o}{=} \PYG{n}{name}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{args} \PYG{o}{=} \PYG{n}{args} \PYG{k}{if} \PYG{n}{args} \PYG{o+ow}{is} \PYG{o+ow}{not} \PYG{k+kc}{None} \PYG{k}{else} \PYG{p}{[]}
+    
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}call\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{o}{*}\PYG{n}{args}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n}{Predicate}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{n+nb}{list}\PYG{p}{(}\PYG{n}{args}\PYG{p}{))}
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{Sequent}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Represents a sequent P =\PYGZgt{} C (Premises =\PYGZgt{} Conclusions).\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{premises} \PYG{o}{=} \PYG{n}{premises}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{conclusions} \PYG{o}{=} \PYG{n}{conclusions}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}repr\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{k}{return} \PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{premises}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ =\PYGZgt{} }\PYG{l+s+si}{\PYGZob{}}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{conclusions}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}
+
+\PYG{c+c1}{\PYGZsh{} Define common predicates and connectives for convenience}
+\PYG{n}{s} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}s\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{o} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}o\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{n} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{neg} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}neg\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{comp\PYGZus{}nec} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}comp\PYGZus{}nec\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{exp\PYGZus{}nec} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}exp\PYGZus{}nec\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{exp\PYGZus{}poss} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}exp\PYGZus{}poss\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{comp\PYGZus{}poss} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}comp\PYGZus{}poss\PYGZsq{}}\PYG{p}{)}
+\PYG{n}{conj} \PYG{o}{=} \PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}conj\PYGZsq{}}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} =================================================================}
+\PYG{c+c1}{\PYGZsh{} Part 1 \PYGZam{} 2: Core Logic Engine}
+\PYG{c+c1}{\PYGZsh{} =================================================================}
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{IncompatibilitySemantics}\PYG{p}{:}
+\PYG{+w}{    }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+\PYG{l+s+sd}{    A logic engine implementing incompatibility semantics, translating the}
+\PYG{l+s+sd}{    functionality from \PYGZsq{}incompatibility\PYGZus{}semantics.pl\PYGZsq{}.}
+\PYG{l+s+sd}{    \PYGZdq{}\PYGZdq{}\PYGZdq{}}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf+fm}{\PYGZus{}\PYGZus{}init\PYGZus{}\PYGZus{}}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Part 0: Setup \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current\PYGZus{}domain} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}init\PYGZus{}knowledge\PYGZus{}base}\PYG{p}{()}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}init\PYGZus{}knowledge\PYGZus{}base}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Part 1.1: Geometry \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{incompatible\PYGZus{}pairs} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+            \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r1\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r1\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rhombus\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r1\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}parallelogram\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r1\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}kite\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r1\PYGZsq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r2\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rhombus\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r2\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}kite\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r2\PYGZsq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r3\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r3\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rhombus\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r3\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}parallelogram\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r3\PYGZsq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r4\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rhombus\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r4\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}kite\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r4\PYGZsq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r5\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r5\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rhombus\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r5\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}parallelogram\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r5\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}trapezoid\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r5\PYGZsq{}}\PYG{p}{),}
+            \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r6\PYGZsq{}}\PYG{p}{),} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}r6\PYGZsq{}}\PYG{p}{)}
+        \PYG{p}{\PYGZcb{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{geometric\PYGZus{}shapes} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}rhombus\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}parallelogram\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}trapezoid\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}kite\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}quadrilateral\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+        
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} EML Axioms (for structural rule) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{eml\PYGZus{}axioms} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+            \PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}u\PYGZsq{}}\PYG{p}{):} \PYG{n}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{)),}
+            \PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}u\PYGZus{}prime\PYGZsq{}}\PYG{p}{):} \PYG{n}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{)),}
+            \PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{):} \PYG{p}{[}\PYG{n}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}lg\PYGZsq{}}\PYG{p}{)),} \PYG{n}{comp\PYGZus{}poss}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZsq{}}\PYG{p}{))],}
+            \PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZsq{}}\PYG{p}{):} \PYG{n}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}u\PYGZsq{}}\PYG{p}{))),}
+            \PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}lg\PYGZsq{}}\PYG{p}{):} \PYG{n}{exp\PYGZus{}nec}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}u\PYGZus{}prime\PYGZsq{}}\PYG{p}{)),}
+            \PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZus{}b\PYGZsq{}}\PYG{p}{):} \PYG{n}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZus{}n\PYGZsq{}}\PYG{p}{)),}
+            \PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZus{}n\PYGZsq{}}\PYG{p}{):} \PYG{n}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZus{}b\PYGZsq{}}\PYG{p}{))}
+        \PYG{p}{\PYGZcb{}}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Part 1.2: Domain \PYGZam{} Arithmetic Helpers \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{domain}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n}{domain} \PYG{o+ow}{in} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}z\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{]:}
+            \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current\PYGZus{}domain} \PYG{o}{=} \PYG{n}{domain}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{val}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current\PYGZus{}domain} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{:}
+            \PYG{k}{return} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{val}\PYG{p}{,} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{val} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current\PYGZus{}domain} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}z\PYGZsq{}}\PYG{p}{:}
+            \PYG{k}{return} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{val}\PYG{p}{,} \PYG{n+nb}{int}\PYG{p}{)}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current\PYGZus{}domain} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{:}
+            \PYG{k}{return} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{val}\PYG{p}{,} \PYG{p}{(}\PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{Fraction}\PYG{p}{))}
+        \PYG{k}{return} \PYG{k+kc}{False}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}arith\PYGZus{}op}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{op}\PYG{p}{,} \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{):}
+        \PYG{k}{try}\PYG{p}{:}
+            \PYG{n}{a\PYGZus{}frac} \PYG{o}{=} \PYG{n}{Fraction}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)}
+            \PYG{n}{b\PYGZus{}frac} \PYG{o}{=} \PYG{n}{Fraction}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{op} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}+\PYGZsq{}}\PYG{p}{:} \PYG{k}{return} \PYG{n}{a\PYGZus{}frac} \PYG{o}{+} \PYG{n}{b\PYGZus{}frac}
+            \PYG{k}{if} \PYG{n}{op} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{:} \PYG{k}{return} \PYG{n}{a\PYGZus{}frac} \PYG{o}{\PYGZhy{}} \PYG{n}{b\PYGZus{}frac}
+            \PYG{k}{if} \PYG{n}{op} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}*\PYGZsq{}}\PYG{p}{:} \PYG{k}{return} \PYG{n}{a\PYGZus{}frac} \PYG{o}{*} \PYG{n}{b\PYGZus{}frac}
+            \PYG{k}{if} \PYG{n}{op} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}/\PYGZsq{}}\PYG{p}{:} \PYG{k}{return} \PYG{n}{a\PYGZus{}frac} \PYG{o}{/} \PYG{n}{b\PYGZus{}frac}
+        \PYG{k}{except} \PYG{n+ne}{ZeroDivisionError}\PYG{p}{:}
+            \PYG{k}{return} \PYG{k+kc}{None}
+        \PYG{k}{return} \PYG{k+kc}{None}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Part 1.3: Number Theory Helpers \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}is\PYGZus{}prime}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{n}\PYG{p}{):}
+        \PYG{k}{if} \PYG{o+ow}{not} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{n}\PYG{p}{,} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o+ow}{or} \PYG{n}{n} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{1}\PYG{p}{:} \PYG{k}{return} \PYG{k+kc}{False}
+        \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZlt{}=} \PYG{l+m+mi}{3}\PYG{p}{:} \PYG{k}{return} \PYG{k+kc}{True}
+        \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZpc{}} \PYG{l+m+mi}{2} \PYG{o}{==} \PYG{l+m+mi}{0} \PYG{o+ow}{or} \PYG{n}{n} \PYG{o}{\PYGZpc{}} \PYG{l+m+mi}{3} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{k}{return} \PYG{k+kc}{False}
+        \PYG{n}{i} \PYG{o}{=} \PYG{l+m+mi}{5}
+        \PYG{k}{while} \PYG{n}{i} \PYG{o}{*} \PYG{n}{i} \PYG{o}{\PYGZlt{}=} \PYG{n}{n}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZpc{}} \PYG{n}{i} \PYG{o}{==} \PYG{l+m+mi}{0} \PYG{o+ow}{or} \PYG{n}{n} \PYG{o}{\PYGZpc{}} \PYG{p}{(}\PYG{n}{i} \PYG{o}{+} \PYG{l+m+mi}{2}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+                \PYG{k}{return} \PYG{k+kc}{False}
+            \PYG{n}{i} \PYG{o}{+=} \PYG{l+m+mi}{6}
+        \PYG{k}{return} \PYG{k+kc}{True}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}find\PYGZus{}prime\PYGZus{}factor}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{n}\PYG{p}{):}
+        \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZpc{}} \PYG{l+m+mi}{2} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:} \PYG{k}{return} \PYG{l+m+mi}{2}
+        \PYG{n}{d} \PYG{o}{=} \PYG{l+m+mi}{3}
+        \PYG{k}{while} \PYG{n}{d} \PYG{o}{*} \PYG{n}{d} \PYG{o}{\PYGZlt{}=} \PYG{n}{n}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{n} \PYG{o}{\PYGZpc{}} \PYG{n}{d} \PYG{o}{==} \PYG{l+m+mi}{0}\PYG{p}{:}
+                \PYG{k}{return} \PYG{n}{d}
+            \PYG{n}{d} \PYG{o}{+=} \PYG{l+m+mi}{2}
+        \PYG{k}{return} \PYG{n}{n}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}product\PYGZus{}of\PYGZus{}list}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{lst}\PYG{p}{):}
+        \PYG{k}{return} \PYG{n}{math}\PYG{o}{.}\PYG{n}{prod}\PYG{p}{(}\PYG{n}{lst}\PYG{p}{)}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Part 2.1: Incoherence Definitions \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{incoherent}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{premises}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Full check for incoherence. A set is incoherent if it\PYGZsq{}s}
+\PYG{l+s+sd}{           immediately inconsistent or proves a contradiction.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}is\PYGZus{}incoherent\PYGZus{}check}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{):}
+            \PYG{k}{return} \PYG{k+kc}{True}
+        \PYG{c+c1}{\PYGZsh{} Check if premises prove an empty conclusion (contradiction)}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{,} \PYG{p}{[]))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}is\PYGZus{}incoherent\PYGZus{}check}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{x}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Non\PYGZhy{}recursive incoherence checks.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{c+c1}{\PYGZsh{} Law of Non\PYGZhy{}Contradiction}
+        \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{x}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{neg}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}neg\PYGZsq{}} \PYG{k}{else} \PYG{n}{p}\PYG{p}{)} \PYG{o+ow}{in} \PYG{n}{x}\PYG{p}{:}
+                \PYG{k}{return} \PYG{k+kc}{True}
+            \PYG{k}{if} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{n}{Predicate}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{1}\PYG{p}{:}
+                \PYG{c+c1}{\PYGZsh{} Check for s(p) and s(neg(p)) etc.}
+                \PYG{k}{if} \PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{p}{[}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{])])} \PYG{o+ow}{in} \PYG{n}{x}\PYG{p}{:}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+        
+        \PYG{c+c1}{\PYGZsh{} Geometric Incompatibility}
+        \PYG{k}{for} \PYG{n}{p1}\PYG{p}{,} \PYG{n}{p2} \PYG{o+ow}{in} \PYG{n}{product}\PYG{p}{(}\PYG{n}{x}\PYG{p}{,} \PYG{n}{x}\PYG{p}{):}
+            \PYG{k}{if} \PYG{p}{(}\PYG{n}{p1}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p2}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and}
+                \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{p1}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{1} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{p2}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{1} \PYG{o+ow}{and}
+                \PYG{n}{p1}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{geometric\PYGZus{}shapes} \PYG{o+ow}{and}
+                \PYG{n}{p1}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args} \PYG{o}{==} \PYG{n}{p2}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{):}
+                \PYG{n}{shape} \PYG{o}{=} \PYG{n}{p1}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name}
+                \PYG{n}{restriction} \PYG{o}{=} \PYG{n}{p2}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name}
+                \PYG{k}{if} \PYG{p}{(}\PYG{n}{shape}\PYG{p}{,} \PYG{n}{restriction}\PYG{p}{)} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{incompatible\PYGZus{}pairs}\PYG{p}{:}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{c+c1}{\PYGZsh{} Arithmetic Incompatibility}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{current\PYGZus{}domain} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{:}
+            \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{x}\PYG{p}{:}
+                \PYG{k}{if} \PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0} \PYG{o+ow}{and} 
+                    \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{Predicate}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}obj\PYGZus{}coll\PYGZsq{}} \PYG{o+ow}{and}
+                    \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{Predicate}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}minus\PYGZsq{}}\PYG{p}{):}
+                    \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{,} \PYG{n}{\PYGZus{}} \PYG{o}{=} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}
+                    \PYG{k}{if} \PYG{n}{Fraction}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)} \PYG{o}{\PYGZlt{}} \PYG{n}{Fraction}\PYG{p}{(}\PYG{n}{b}\PYG{p}{):}
+                        \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{c+c1}{\PYGZsh{} Euclid Case 1 Incoherence}
+        \PYG{n}{primes} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{x} \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+        \PYG{n}{completes} \PYG{o}{=} \PYG{p}{[}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{x} \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}is\PYGZus{}complete\PYGZsq{}}\PYG{p}{]}
+        \PYG{k}{for} \PYG{n}{l} \PYG{o+ow}{in} \PYG{n}{completes}\PYG{p}{:}
+            \PYG{n}{ef} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}product\PYGZus{}of\PYGZus{}list}\PYG{p}{(}\PYG{n}{l}\PYG{p}{)} \PYG{o}{+} \PYG{l+m+mi}{1}
+            \PYG{k}{if} \PYG{n}{ef} \PYG{o+ow}{in} \PYG{n}{primes}\PYG{p}{:}
+                \PYG{k}{return} \PYG{k+kc}{True}
+        
+        \PYG{k}{return} \PYG{k+kc}{False}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Part 2.2: Sequent Calculus Prover \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{proves}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{sequent}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Public method to start the proof process.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{c+c1}{\PYGZsh{} Use a frozenset for history items to ensure hashability}
+        \PYG{k}{return} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{sequent}\PYG{p}{,} \PYG{n+nb}{frozenset}\PYG{p}{())}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{,} \PYG{n}{sequent}\PYG{p}{,} \PYG{n}{history}\PYG{p}{):}
+        \PYG{n}{premises}\PYG{p}{,} \PYG{n}{conclusions} \PYG{o}{=} \PYG{n}{sequent}\PYG{o}{.}\PYG{n}{premises}\PYG{p}{,} \PYG{n}{sequent}\PYG{o}{.}\PYG{n}{conclusions}
+        
+        \PYG{c+c1}{\PYGZsh{} PRIORITY 1: Identity and Explosion}
+        \PYG{k}{if} \PYG{n+nb}{any}\PYG{p}{(}\PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{conclusions} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{premises}\PYG{p}{):}
+            \PYG{k}{return} \PYG{k+kc}{True}
+        \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}is\PYGZus{}incoherent\PYGZus{}check}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{):}
+            \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{c+c1}{\PYGZsh{} PRIORITY 2: Material Inferences and Grounding}
+        \PYG{c+c1}{\PYGZsh{} Arithmetic Grounding}
+        \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{conclusions}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{c}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}o\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{:}
+                \PYG{n}{inner} \PYG{o}{=} \PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+                \PYG{k}{if} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}plus\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{3}\PYG{p}{:}
+                    \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{,} \PYG{n}{res} \PYG{o}{=} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}
+                    \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{b}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}arith\PYGZus{}op}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}+\PYGZsq{}}\PYG{p}{,} \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{)} \PYG{o}{==} \PYG{n}{res}\PYG{p}{:}
+                        \PYG{k}{return} \PYG{k+kc}{True}
+                \PYG{k}{elif} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}minus\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{3}\PYG{p}{:}
+                    \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{,} \PYG{n}{res} \PYG{o}{=} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}
+                    \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{a}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{b}\PYG{p}{):}
+                        \PYG{n}{calc\PYGZus{}res} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}arith\PYGZus{}op}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZhy{}\PYGZsq{}}\PYG{p}{,} \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{)}
+                        \PYG{k}{if} \PYG{n}{calc\PYGZus{}res} \PYG{o}{==} \PYG{n}{res} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{calc\PYGZus{}res}\PYG{p}{):}
+                             \PYG{k}{return} \PYG{k+kc}{True}
+                \PYG{c+c1}{\PYGZsh{} Jason.pl Fraction Grounding}
+                \PYG{k}{elif} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}iterate\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{3}\PYG{p}{:}
+                    \PYG{n}{u}\PYG{p}{,} \PYG{n}{m}\PYG{p}{,} \PYG{n}{r} \PYG{o}{=} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}
+                    \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{u}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{m}\PYG{p}{,} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{m} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}arith\PYGZus{}op}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}*\PYGZsq{}}\PYG{p}{,} \PYG{n}{u}\PYG{p}{,} \PYG{n}{m}\PYG{p}{)} \PYG{o}{==} \PYG{n}{r}\PYG{p}{:}
+                        \PYG{k}{return} \PYG{k+kc}{True}
+                \PYG{k}{elif} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}partition\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{3}\PYG{p}{:}
+                    \PYG{n}{w}\PYG{p}{,} \PYG{n}{n\PYGZus{}val}\PYG{p}{,} \PYG{n}{u} \PYG{o}{=} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}
+                    \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{w}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{n\PYGZus{}val}\PYG{p}{,} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{n\PYGZus{}val} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}arith\PYGZus{}op}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}/\PYGZsq{}}\PYG{p}{,} \PYG{n}{w}\PYG{p}{,} \PYG{n}{n\PYGZus{}val}\PYG{p}{)} \PYG{o}{==} \PYG{n}{u}\PYG{p}{:}
+                        \PYG{k}{return} \PYG{k+kc}{True}
+                        
+        \PYG{c+c1}{\PYGZsh{} Number Theory Grounding}
+        \PYG{k}{for} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n}{conclusions}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{c}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0} \PYG{o+ow}{and} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{Predicate}\PYG{p}{):}
+                \PYG{n}{inner} \PYG{o}{=} \PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+                \PYG{k}{if} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}is\PYGZus{}prime}\PYG{p}{(}\PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]):}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+                \PYG{k}{if} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}composite\PYGZsq{}} \PYG{o+ow}{and} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n+nb}{int}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1} \PYG{o+ow}{and} \PYG{o+ow}{not} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}is\PYGZus{}prime}\PYG{p}{(}\PYG{n}{inner}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]):}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+        
+        \PYG{c+c1}{\PYGZsh{} PRIORITY 3: Structural and Logical Rules}
+        \PYG{c+c1}{\PYGZsh{} We check rules that branch or add new premises recursively.}
+        \PYG{c+c1}{\PYGZsh{} To avoid infinite loops, we check history.}
+        
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Reduction Schemata (Negation) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{):}
+            \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}neg\PYGZsq{}}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} LN}
+                \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{n}{premises}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{=} \PYG{n}{conclusions} \PYG{o}{+} \PYG{p}{[}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]]}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):} \PYG{k}{return} \PYG{k+kc}{True}
+            \PYG{k}{elif} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{p}\PYG{p}{,} \PYG{n}{Predicate}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{1} \PYG{o+ow}{and} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{Predicate}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}neg\PYGZsq{}}\PYG{p}{:}
+                \PYG{c+c1}{\PYGZsh{} e.g., s(neg(p))}
+                \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{n}{premises}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{=} \PYG{n}{conclusions} \PYG{o}{+} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{p}{[}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]])]}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):} \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{conclusions}\PYG{p}{):}
+            \PYG{k}{if} \PYG{n}{c}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}neg\PYGZsq{}}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} RN}
+                \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{n}{premises} \PYG{o}{+} \PYG{p}{[}\PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]]}
+                \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{=} \PYG{n}{conclusions}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{conclusions}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):} \PYG{k}{return} \PYG{k+kc}{True}
+            \PYG{k}{elif} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{c}\PYG{p}{,} \PYG{n}{Predicate}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{1} \PYG{o+ow}{and} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{Predicate}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}neg\PYGZsq{}}\PYG{p}{:}
+                \PYG{c+c1}{\PYGZsh{} e.g., s(neg(p))}
+                \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{n}{premises} \PYG{o}{+} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{p}{[}\PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]])]}
+                \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{=} \PYG{n}{conclusions}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{conclusions}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):} \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Reduction Schemata (Conjunction) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{):}
+            \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}conj\PYGZsq{}}\PYG{p}{:}
+                \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{n}{premises}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{p}{[}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):} \PYG{k}{return} \PYG{k+kc}{True}
+            \PYG{k}{elif} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o+ow}{in} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}s\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}o\PYGZsq{}}\PYG{p}{]} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}conj\PYGZsq{}}\PYG{p}{:}
+                \PYG{n}{x}\PYG{p}{,} \PYG{n}{y} \PYG{o}{=} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}
+                \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{n}{premises}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]),} \PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{p}{[}\PYG{n}{y}\PYG{p}{])]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):} \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{c} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{conclusions}\PYG{p}{):}
+            \PYG{k}{if} \PYG{n}{c}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}conj\PYGZsq{}}\PYG{p}{:}
+                \PYG{n}{x}\PYG{p}{,} \PYG{n}{y} \PYG{o}{=} \PYG{n}{c}\PYG{o}{.}\PYG{n}{args}
+                \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{=} \PYG{n}{conclusions}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{conclusions}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{k}{if} \PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{+} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]),} \PYG{n}{history}\PYG{p}{)} \PYG{o+ow}{and}
+                    \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{+} \PYG{p}{[}\PYG{n}{y}\PYG{p}{]),} \PYG{n}{history}\PYG{p}{)):}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+            \PYG{k}{elif} \PYG{n}{c}\PYG{o}{.}\PYG{n}{name} \PYG{o+ow}{in} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}s\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}o\PYGZsq{}}\PYG{p}{]} \PYG{o+ow}{and} \PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}conj\PYGZsq{}}\PYG{p}{:}
+                \PYG{n}{x}\PYG{p}{,} \PYG{n}{y} \PYG{o}{=} \PYG{n}{c}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}
+                \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{=} \PYG{n}{conclusions}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{conclusions}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                \PYG{k}{if} \PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{+} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{])]),} \PYG{n}{history}\PYG{p}{)} \PYG{o+ow}{and}
+                    \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{,} \PYG{n}{new\PYGZus{}conclusions} \PYG{o}{+} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{c}\PYG{o}{.}\PYG{n}{name}\PYG{p}{,} \PYG{p}{[}\PYG{n}{y}\PYG{p}{])]),} \PYG{n}{history}\PYG{p}{)):}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+        
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} General Forward Chaining (Modus Ponens) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{c+c1}{\PYGZsh{} This rule simulates applying material inferences.}
+        \PYG{c+c1}{\PYGZsh{} This is one of the most complex parts to translate.}
+        
+        \PYG{c+c1}{\PYGZsh{} Arithmetic Commutativity}
+        \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{premises}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}plus\PYGZsq{}}\PYG{p}{:}
+                \PYG{n}{a}\PYG{p}{,} \PYG{n}{b}\PYG{p}{,} \PYG{n}{c} \PYG{o}{=} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}
+                \PYG{n}{new\PYGZus{}premise} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}plus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{b}\PYG{p}{,} \PYG{n}{a}\PYG{p}{,} \PYG{n}{c}\PYG{p}{]))}
+                \PYG{k}{if} \PYG{n}{new\PYGZus{}premise} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{premises} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{new\PYGZus{}premise}\PYG{p}{]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{c+c1}{\PYGZsh{} Geometric Entailment}
+        \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{premises}\PYG{p}{:}
+            \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{geometric\PYGZus{}shapes}\PYG{p}{:}
+                \PYG{n}{p\PYGZus{}shape} \PYG{o}{=} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name}
+                \PYG{n}{p\PYGZus{}var} \PYG{o}{=} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+                \PYG{k}{for} \PYG{n}{q\PYGZus{}shape} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{geometric\PYGZus{}shapes}\PYG{p}{:}
+                    \PYG{k}{if} \PYG{n}{p\PYGZus{}shape} \PYG{o}{!=} \PYG{n}{q\PYGZus{}shape}\PYG{p}{:}
+                        \PYG{c+c1}{\PYGZsh{} Check if P entails Q}
+                        \PYG{n}{p\PYGZus{}incomps} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{n}{r} \PYG{k}{for} \PYG{n}{s}\PYG{p}{,} \PYG{n}{r} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{incompatible\PYGZus{}pairs} \PYG{k}{if} \PYG{n}{s} \PYG{o}{==} \PYG{n}{p\PYGZus{}shape}\PYG{p}{\PYGZcb{}}
+                        \PYG{n}{q\PYGZus{}incomps} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{n}{r} \PYG{k}{for} \PYG{n}{s}\PYG{p}{,} \PYG{n}{r} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{incompatible\PYGZus{}pairs} \PYG{k}{if} \PYG{n}{s} \PYG{o}{==} \PYG{n}{q\PYGZus{}shape}\PYG{p}{\PYGZcb{}}
+                        \PYG{k}{if} \PYG{n}{q\PYGZus{}incomps}\PYG{o}{.}\PYG{n}{issubset}\PYG{p}{(}\PYG{n}{p\PYGZus{}incomps}\PYG{p}{):}
+                            \PYG{n}{new\PYGZus{}premise} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{n}{q\PYGZus{}shape}\PYG{p}{,} \PYG{p}{[}\PYG{n}{p\PYGZus{}var}\PYG{p}{]))}
+                            \PYG{k}{if} \PYG{n}{new\PYGZus{}premise} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{premises} \PYG{o+ow}{and} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{new\PYGZus{}premise}\PYG{p}{]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):}
+                                \PYG{k}{return} \PYG{k+kc}{True}
+        
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} EML Dynamics \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{k}{for} \PYG{n}{i}\PYG{p}{,} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n+nb}{enumerate}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{):}
+            \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}s\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o+ow}{in} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{eml\PYGZus{}axioms}\PYG{p}{:}
+                \PYG{k}{if} \PYG{p}{(}\PYG{n}{p}\PYG{p}{,)} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{history}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} History check for this specific rule}
+                    \PYG{n}{new\PYGZus{}history} \PYG{o}{=} \PYG{n}{history} \PYG{o}{|} \PYG{n+nb}{frozenset}\PYG{p}{([(}\PYG{n}{p}\PYG{p}{,)])}
+                    \PYG{n}{results} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{eml\PYGZus{}axioms}\PYG{p}{[}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]]}
+                    \PYG{k}{if} \PYG{o+ow}{not} \PYG{n+nb}{isinstance}\PYG{p}{(}\PYG{n}{results}\PYG{p}{,} \PYG{n+nb}{list}\PYG{p}{):} \PYG{n}{results} \PYG{o}{=} \PYG{p}{[}\PYG{n}{results}\PYG{p}{]}
+                    
+                    \PYG{k}{for} \PYG{n}{m\PYGZus{}q} \PYG{o+ow}{in} \PYG{n}{results}\PYG{p}{:}
+                        \PYG{n}{q} \PYG{o}{=} \PYG{n}{m\PYGZus{}q}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{k}{if} \PYG{n}{m\PYGZus{}q}\PYG{o}{.}\PYG{n}{name} \PYG{o+ow}{in} \PYG{p}{[}\PYG{n}{comp\PYGZus{}nec}\PYG{p}{,} \PYG{n}{exp\PYGZus{}nec}\PYG{p}{]} \PYG{k}{else} \PYG{k+kc}{None}
+                        \PYG{k}{if} \PYG{n}{q}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} Necessity drives state transition}
+                            \PYG{n}{rest\PYGZus{}premises} \PYG{o}{=} \PYG{n}{premises}\PYG{p}{[:}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{[}\PYG{n}{i}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{p}{:]}
+                            \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{q}\PYG{p}{)]} \PYG{o}{+} \PYG{n}{rest\PYGZus{}premises}
+                            \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{new\PYGZus{}history}\PYG{p}{):}
+                                \PYG{k}{return} \PYG{k+kc}{True}
+                        \PYG{k}{else}\PYG{p}{:} \PYG{c+c1}{\PYGZsh{} Possibility is checked against conclusion}
+                            \PYG{k}{if} \PYG{n}{s}\PYG{p}{(}\PYG{n}{m\PYGZus{}q}\PYG{p}{)} \PYG{o+ow}{in} \PYG{n}{conclusions} \PYG{o+ow}{or} \PYG{n}{m\PYGZus{}q} \PYG{o+ow}{in} \PYG{n}{conclusions}\PYG{p}{:}
+                                \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Euclid\PYGZsq{}s Proof Structural Rules \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+        \PYG{n}{completes\PYGZus{}in\PYGZus{}premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{p} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{premises} \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}is\PYGZus{}complete\PYGZsq{}}\PYG{p}{]}
+        \PYG{k}{for} \PYG{n}{p\PYGZus{}is\PYGZus{}complete} \PYG{o+ow}{in} \PYG{n}{completes\PYGZus{}in\PYGZus{}premises}\PYG{p}{:}
+            \PYG{n}{L} \PYG{o}{=} \PYG{n}{p\PYGZus{}is\PYGZus{}complete}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+            
+            \PYG{c+c1}{\PYGZsh{} Euclid\PYGZsq{}s Construction}
+            \PYG{n}{state} \PYG{o}{=} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}euclid\PYGZus{}construction\PYGZsq{}}\PYG{p}{,} \PYG{n+nb}{tuple}\PYG{p}{(}\PYG{n}{L}\PYG{p}{))}
+            \PYG{k}{if} \PYG{n}{state} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{history}\PYG{p}{:}
+                \PYG{n}{ef} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}product\PYGZus{}of\PYGZus{}list}\PYG{p}{(}\PYG{n}{L}\PYG{p}{)} \PYG{o}{+} \PYG{l+m+mi}{1}
+                
+                \PYG{c+c1}{\PYGZsh{} Case Analysis on EF}
+                \PYG{n}{new\PYGZus{}history} \PYG{o}{=} \PYG{n}{history} \PYG{o}{|} \PYG{n+nb}{frozenset}\PYG{p}{([}\PYG{n}{state}\PYG{p}{])}
+                
+                \PYG{c+c1}{\PYGZsh{} Case 1: EF is prime}
+                \PYG{n}{p\PYGZus{}prime} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{ef}\PYG{p}{]))}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{p\PYGZus{}prime}\PYG{p}{]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{new\PYGZus{}history}\PYG{p}{):}
+                    \PYG{c+c1}{\PYGZsh{} Case 2: EF is composite}
+                    \PYG{n}{p\PYGZus{}composite} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}composite\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{ef}\PYG{p}{]))}
+                    \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{p\PYGZus{}composite}\PYG{p}{]} \PYG{o}{+} \PYG{n}{premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{new\PYGZus{}history}\PYG{p}{):}
+                        \PYG{k}{return} \PYG{k+kc}{True}
+        
+        \PYG{c+c1}{\PYGZsh{} Prime Factorization Rule}
+        \PYG{n}{composites\PYGZus{}in\PYGZus{}premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{p} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{premises} \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}composite\PYGZsq{}}\PYG{p}{]}
+        \PYG{k}{for} \PYG{n}{p\PYGZus{}composite} \PYG{o+ow}{in} \PYG{n}{composites\PYGZus{}in\PYGZus{}premises}\PYG{p}{:}
+            \PYG{n}{N} \PYG{o}{=} \PYG{n}{p\PYGZus{}composite}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+            \PYG{n}{state} \PYG{o}{=} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}factorization\PYGZsq{}}\PYG{p}{,} \PYG{n}{N}\PYG{p}{)}
+            \PYG{k}{if} \PYG{n}{state} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{history}\PYG{p}{:}
+                \PYG{n}{g} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}find\PYGZus{}prime\PYGZus{}factor}\PYG{p}{(}\PYG{n}{N}\PYG{p}{)}
+                \PYG{n}{new\PYGZus{}premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{g}\PYG{p}{])),} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}divides\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{g}\PYG{p}{,} \PYG{n}{N}\PYG{p}{]))]} \PYG{o}{+} \PYG{n}{premises}
+                \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{new\PYGZus{}premises}\PYG{p}{,} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{history} \PYG{o}{|} \PYG{n+nb}{frozenset}\PYG{p}{([}\PYG{n}{state}\PYG{p}{])):}
+                    \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{c+c1}{\PYGZsh{} Euclid Material Inferences (M4, M5) applied via Forward Chaining}
+        \PYG{c+c1}{\PYGZsh{} This requires finding premises that match the antecedents of the rules.}
+        \PYG{n}{primes\PYGZus{}in\PYGZus{}premises} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]:} \PYG{n}{p} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{premises} \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+        \PYG{n}{divides\PYGZus{}in\PYGZus{}premises} \PYG{o}{=} \PYG{p}{\PYGZob{}(}\PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{],} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]):} \PYG{n}{p} \PYG{k}{for} \PYG{n}{p} \PYG{o+ow}{in} \PYG{n}{premises} \PYG{k}{if} \PYG{n}{p}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}} \PYG{o+ow}{and} \PYG{n}{p}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{name} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}divides\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+        
+        \PYG{k}{for} \PYG{n}{p\PYGZus{}is\PYGZus{}complete} \PYG{o+ow}{in} \PYG{n}{completes\PYGZus{}in\PYGZus{}premises}\PYG{p}{:}
+            \PYG{n}{L} \PYG{o}{=} \PYG{n}{p\PYGZus{}is\PYGZus{}complete}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{o}{.}\PYG{n}{args}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}
+            \PYG{n}{ef} \PYG{o}{=} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}product\PYGZus{}of\PYGZus{}list}\PYG{p}{(}\PYG{n}{L}\PYG{p}{)} \PYG{o}{+} \PYG{l+m+mi}{1}
+            
+            \PYG{c+c1}{\PYGZsh{} Rule M5}
+            \PYG{k}{if} \PYG{n}{ef} \PYG{o+ow}{in} \PYG{n}{primes\PYGZus{}in\PYGZus{}premises} \PYG{o+ow}{and} \PYG{p}{(}\PYG{n}{ef}\PYG{p}{,} \PYG{n}{ef}\PYG{p}{)} \PYG{o+ow}{in} \PYG{n}{divides\PYGZus{}in\PYGZus{}premises}\PYG{p}{:}
+                \PYG{n}{new\PYGZus{}premise} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}member\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{ef}\PYG{p}{,} \PYG{n}{L}\PYG{p}{])))}
+                \PYG{k}{if} \PYG{n}{new\PYGZus{}premise} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{premises}\PYG{p}{:}
+                    \PYG{c+c1}{\PYGZsh{} Rule M4 application after M5}
+                    \PYG{k}{if} \PYG{n}{n}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}is\PYGZus{}complete\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{L}\PYG{p}{])))} \PYG{o+ow}{not} \PYG{o+ow}{in} \PYG{n}{premises}\PYG{p}{:}
+                       \PYG{k}{if} \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{\PYGZus{}proves\PYGZus{}impl}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{premises} \PYG{o}{+} \PYG{p}{[}\PYG{n}{new\PYGZus{}premise}\PYG{p}{,} \PYG{n}{n}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}is\PYGZus{}complete\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{L}\PYG{p}{])))],} \PYG{n}{conclusions}\PYG{p}{),} \PYG{n}{history}\PYG{p}{):}
+                           \PYG{k}{return} \PYG{k+kc}{True}
+
+        \PYG{k}{return} \PYG{k+kc}{False}
+
+
+\PYG{c+c1}{\PYGZsh{} =================================================================}
+\PYG{c+c1}{\PYGZsh{} Part 3: Test Suite (Python equivalent of test\PYGZus{}synthesis.pl)}
+\PYG{c+c1}{\PYGZsh{} =================================================================}
+
+\PYG{k}{class}\PYG{+w}{ }\PYG{n+nc}{TestUnifiedSynthesis}\PYG{p}{(}\PYG{n}{unittest}\PYG{o}{.}\PYG{n}{TestCase}\PYG{p}{):}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{setUp}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+\PYG{+w}{        }\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Create a new engine instance for each test.\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine} \PYG{o}{=} \PYG{n}{IncompatibilitySemantics}\PYG{p}{()}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Part 1: Core Logic and Domains \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}identity\PYGZus{}subjective}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}p\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}p\PYGZsq{}}\PYG{p}{))])))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}incoherence\PYGZus{}subjective}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}p\PYGZsq{}}\PYG{p}{)),} \PYG{n}{s}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}p\PYGZsq{}}\PYG{p}{)))]))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}negation\PYGZus{}handling\PYGZus{}subjective\PYGZus{}lem}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{c+c1}{\PYGZsh{} Law of Excluded Middle: [] =\PYGZgt{} [s(p), s(neg(p))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}p\PYGZsq{}}\PYG{p}{)),} \PYG{n}{s}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}p\PYGZsq{}}\PYG{p}{)))])))}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Part 2: Arithmetic Coexistence and Fixes \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}arithmetic\PYGZus{}commutativity\PYGZus{}normative}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{prem} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}plus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{]))]}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}plus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{prem}\PYG{p}{,} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{term} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}obj\PYGZus{}coll\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}minus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{)])]))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{([}\PYG{n}{term}\PYG{p}{]))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n\PYGZus{}persistence}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{term} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}obj\PYGZus{}coll\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}minus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{)])]))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{([}\PYG{n}{term}\PYG{p}{,} \PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}p\PYGZsq{}}\PYG{p}{))]))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}arithmetic\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}z}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}z\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{term} \PYG{o}{=} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}obj\PYGZus{}coll\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}minus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{)])]))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{([}\PYG{n}{term}\PYG{p}{]))}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Part 3: Embodied Modal Logic (EML) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}eml\PYGZus{}dynamic\PYGZus{}u\PYGZus{}to\PYGZus{}a}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{c+c1}{\PYGZsh{} Proves by transitioning u \PYGZhy{}\PYGZgt{} comp\PYGZus{}nec(a) \PYGZhy{}\PYGZgt{} a}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}u\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{))])))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}eml\PYGZus{}dynamic\PYGZus{}full\PYGZus{}cycle}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{c+c1}{\PYGZsh{} lg \PYGZhy{}\PYGZgt{} exp\PYGZus{}nec(u\PYGZus{}prime) \PYGZhy{}\PYGZgt{} u\PYGZus{}prime \PYGZhy{}\PYGZgt{} comp\PYGZus{}nec(a) \PYGZhy{}\PYGZgt{} a}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}lg\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{))])))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}eml\PYGZus{}tension\PYGZus{}expansive\PYGZus{}poss}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}lg\PYGZsq{}}\PYG{p}{)))])))}
+    
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}eml\PYGZus{}tension\PYGZus{}compressive\PYGZus{}poss}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{comp\PYGZus{}poss}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZsq{}}\PYG{p}{)))])))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}eml\PYGZus{}tension\PYGZus{}conjunction}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{n}{conj}\PYG{p}{(}\PYG{n}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}lg\PYGZsq{}}\PYG{p}{)),} \PYG{n}{comp\PYGZus{}poss}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZsq{}}\PYG{p}{)))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}a\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{conc}\PYG{p}{)])))}
+    
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}eml\PYGZus{}fixation\PYGZus{}consequence}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{c+c1}{\PYGZsh{} t \PYGZhy{}\PYGZgt{} comp\PYGZus{}nec(neg(u)) \PYGZhy{}\PYGZgt{} neg(u)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}u\PYGZsq{}}\PYG{p}{)))])))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}hegel\PYGZus{}loop\PYGZus{}prevention}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{c+c1}{\PYGZsh{} This should fail as there\PYGZsq{}s no path from t\PYGZus{}b to an arbitrary \PYGZsq{}x\PYGZsq{}}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}t\PYGZus{}b\PYGZsq{}}\PYG{p}{))],} \PYG{p}{[}\PYG{n}{s}\PYG{p}{(}\PYG{n}{Atom}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x\PYGZsq{}}\PYG{p}{))])))}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Quadrilateral Hierarchy \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}quad\PYGZus{}incompatibility\PYGZus{}square\PYGZus{}r1}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{x} \PYG{o}{=} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{])),} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}r1\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}quad\PYGZus{}compatibility\PYGZus{}trapezoid\PYGZus{}r1}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{x} \PYG{o}{=} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}trapezoid\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{])),} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}r1\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}quad\PYGZus{}entailment\PYGZus{}square\PYGZus{}rectangle}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{x} \PYG{o}{=} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{prem} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{prem}\PYG{p}{,} \PYG{n}{conc}\PYG{p}{)))}
+    
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}quad\PYGZus{}entailment\PYGZus{}rectangle\PYGZus{}square\PYGZus{}fail}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{x} \PYG{o}{=} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{prem} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{prem}\PYG{p}{,} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}quad\PYGZus{}entailment\PYGZus{}transitive}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{x} \PYG{o}{=} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{prem} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}parallelogram\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{prem}\PYG{p}{,} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}quad\PYGZus{}projection\PYGZus{}contrapositive}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{x} \PYG{o}{=} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}x\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{prem} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}rectangle\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{])))]}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{neg}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}square\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{x}\PYG{p}{])))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{(}\PYG{n}{prem}\PYG{p}{,} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Number Theory (Euclid\PYGZsq{}s Proof) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}euclid\PYGZus{}grounding\PYGZus{}prime}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{]))])))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{6}\PYG{p}{]))])))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}euclid\PYGZus{}grounding\PYGZus{}composite}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}composite\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{6}\PYG{p}{]))])))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}composite\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{]))])))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}euclid\PYGZus{}case\PYGZus{}1\PYGZus{}incoherence}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}prime\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{7}\PYG{p}{])),} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}is\PYGZus{}complete\PYGZsq{}}\PYG{p}{,} \PYG{p}{[[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{]]))]}
+        \PYG{c+c1}{\PYGZsh{} incoherent because is\PYGZus{}complete([2,3]) \PYGZhy{}\PYGZgt{} EF=7, and prime(7) is in premises.}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}euclid\PYGZus{}case\PYGZus{}2\PYGZus{}incoherence}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{L} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{,} \PYG{l+m+mi}{11}\PYG{p}{,} \PYG{l+m+mi}{13}\PYG{p}{]}
+        \PYG{n}{N} \PYG{o}{=} \PYG{l+m+mi}{30031}  \PYG{c+c1}{\PYGZsh{} 59 * 509}
+        \PYG{n}{premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}composite\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{N}\PYG{p}{])),} \PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}is\PYGZus{}complete\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{L}\PYG{p}{]))]}
+        \PYG{c+c1}{\PYGZsh{} This will be incoherent through the proof steps}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}euclid\PYGZus{}theorem\PYGZus{}infinitude\PYGZus{}of\PYGZus{}primes}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n}{premises} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}is\PYGZus{}complete\PYGZsq{}}\PYG{p}{,} \PYG{p}{[[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{11}\PYG{p}{]]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{(}\PYG{n}{premises}\PYG{p}{))}
+
+    \PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests for Fractions (Jason.pl integration) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}obj\PYGZus{}coll\PYGZus{}q}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}X\PYGZsq{}}\PYG{p}{)))} \PYG{c+c1}{\PYGZsh{} Cannot check non\PYGZhy{}grounded term}
+    
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}obj\PYGZus{}coll\PYGZus{}n}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{)}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertFalse}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)))}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{obj\PYGZus{}coll}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}addition\PYGZus{}grounding}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{o}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}plus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{),} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{),} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{)]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}addition\PYGZus{}mixed}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{o}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}plus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{),} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{)]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}subtraction\PYGZus{}grounding}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{o}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}minus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{),} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{),} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{6}\PYG{p}{)]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}subtraction\PYGZus{}limit\PYGZus{}n}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}n\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{prem} \PYG{o}{=} \PYG{p}{[}\PYG{n}{n}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}obj\PYGZus{}coll\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}minus\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{),} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{),} \PYG{n}{Var}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZsq{}}\PYG{p}{)])]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{incoherent}\PYG{p}{(}\PYG{n}{prem}\PYG{p}{))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}iteration\PYGZus{}grounding}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{o}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}iterate\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{),} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{n}{conc}\PYG{p}{)))}
+
+    \PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{test\PYGZus{}fraction\PYGZus{}partition\PYGZus{}grounding}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{p}{):}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZsq{}}\PYG{p}{)}
+        \PYG{n}{conc} \PYG{o}{=} \PYG{p}{[}\PYG{n}{o}\PYG{p}{(}\PYG{n}{Predicate}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}partition\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{),} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n}{Fraction}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{)]))]}
+        \PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{assertTrue}\PYG{p}{(}\PYG{n+nb+bp}{self}\PYG{o}{.}\PYG{n}{engine}\PYG{o}{.}\PYG{n}{proves}\PYG{p}{(}\PYG{n}{Sequent}\PYG{p}{([],} \PYG{n}{conc}\PYG{p}{)))}
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZsq{}}\PYG{p}{:}
+    \PYG{n}{unittest}\PYG{o}{.}\PYG{n}{main}\PYG{p}{()}
+\end{MintedVerbatim}

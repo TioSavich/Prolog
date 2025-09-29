@@ -1,0 +1,103 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{automata.pda.dpda}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{DPDA}
+\PYG{k+kn}{from}\PYG{+w}{ }\PYG{n+nn}{automata.base.exceptions}\PYG{+w}{ }\PYG{k+kn}{import} \PYG{n}{RejectionException}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Stack to integer converter \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{stack\PYGZus{}to\PYGZus{}int\PYGZus{}3digit}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{:} \PYG{n+nb}{tuple}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n+nb}{int}\PYG{p}{:}
+    \PYG{k}{if} \PYG{o+ow}{not} \PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{)} \PYG{o}{==} \PYG{l+m+mi}{4} \PYG{o+ow}{and} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}} \PYG{o+ow}{and}
+            \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}H\PYGZsq{}}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}T\PYGZsq{}}\PYG{p}{)} \PYG{o+ow}{and} \PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{o}{.}\PYG{n}{startswith}\PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U\PYGZsq{}}\PYG{p}{)):}
+        \PYG{k}{raise} \PYG{n+ne}{ValueError}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Invalid stack state: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{stack\PYGZus{}tuple}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{n}{h} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{:])}
+    \PYG{n}{t} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{:])}
+    \PYG{n}{u} \PYG{o}{=} \PYG{n+nb}{int}\PYG{p}{(}\PYG{n}{stack\PYGZus{}tuple}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{][}\PYG{l+m+mi}{1}\PYG{p}{:])}
+    \PYG{k}{return} \PYG{n}{h} \PYG{o}{*} \PYG{l+m+mi}{100} \PYG{o}{+} \PYG{n}{t} \PYG{o}{*} \PYG{l+m+mi}{10} \PYG{o}{+} \PYG{n}{u}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} DPDA definition (0–999, up/down) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n}{states} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}start\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}tens\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}dec\PYGZus{}tens\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}dec\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}underflow\PYGZsq{}}
+\PYG{p}{\PYGZcb{}}
+\PYG{n}{input\PYGZus{}symbols} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}tick\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}tock\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+\PYG{n}{stack\PYGZus{}symbols} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{\PYGZcb{}} \PYG{o}{|} \PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{}} \PYG{o}{|} \PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{}} \PYG{o}{|} \PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{i}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{}}
+
+\PYG{n}{transitions} \PYG{o}{=} \PYG{p}{\PYGZob{}}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}start\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{))\PYGZcb{}\PYGZcb{},}
+
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+        \PYG{l+s+s1}{\PYGZsq{}tick\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+            \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,))} \PYG{k}{for} \PYG{n}{n} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{)\PYGZcb{},}
+            \PYG{l+s+s1}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}tens\PYGZsq{}}\PYG{p}{,} \PYG{p}{())}
+        \PYG{p}{\PYGZcb{},}
+        \PYG{l+s+s1}{\PYGZsq{}tock\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+            \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}U}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{n}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{,))} \PYG{k}{for} \PYG{n}{n} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{},}
+            \PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}dec\PYGZus{}tens\PYGZsq{}}\PYG{p}{,} \PYG{p}{())}
+        \PYG{p}{\PYGZcb{}}
+    \PYG{p}{\PYGZcb{},}
+
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}tens\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+        \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{))} \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{)\PYGZcb{},}
+        \PYG{l+s+s1}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{,} \PYG{p}{())}
+    \PYG{p}{\PYGZcb{}\PYGZcb{},}
+
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}inc\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+        \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{o}{+}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{))} \PYG{k}{for} \PYG{n}{k} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{9}\PYG{p}{)\PYGZcb{},}
+        \PYG{l+s+s1}{\PYGZsq{}H9\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{))}
+    \PYG{p}{\PYGZcb{}\PYGZcb{},}
+
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}dec\PYGZus{}tens\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+        \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}T}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{m}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{))} \PYG{k}{for} \PYG{n}{m} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{},}
+        \PYG{l+s+s1}{\PYGZsq{}T0\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}dec\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{,} \PYG{p}{())}
+    \PYG{p}{\PYGZcb{}\PYGZcb{},}
+
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}dec\PYGZus{}hundreds\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}}
+        \PYG{o}{**}\PYG{p}{\PYGZob{}}\PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sa}{f}\PYG{l+s+s1}{\PYGZsq{}H}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s1}{\PYGZsq{}}\PYG{p}{))} \PYG{k}{for} \PYG{n}{k} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{)\PYGZcb{},}
+        \PYG{l+s+s1}{\PYGZsq{}H0\PYGZsq{}}\PYG{p}{:} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}underflow\PYGZsq{}}\PYG{p}{,} \PYG{p}{(}\PYG{l+s+s1}{\PYGZsq{}U9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}T9\PYGZsq{}}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}H9\PYGZsq{}}\PYG{p}{))}
+    \PYG{p}{\PYGZcb{}\PYGZcb{},}
+
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}halt\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}\PYGZcb{},}
+    \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}underflow\PYGZsq{}}\PYG{p}{:} \PYG{p}{\PYGZob{}\PYGZcb{}}
+\PYG{p}{\PYGZcb{}}
+
+\PYG{n}{initial\PYGZus{}state} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}start\PYGZsq{}}
+\PYG{n}{initial\PYGZus{}stack\PYGZus{}symbol} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}
+\PYG{n}{final\PYGZus{}states} \PYG{o}{=} \PYG{p}{\PYGZob{}}\PYG{l+s+s1}{\PYGZsq{}q\PYGZus{}idle\PYGZsq{}}\PYG{p}{\PYGZcb{}}
+
+\PYG{c+c1}{\PYGZsh{} Instantiate once}
+\PYG{n}{dpda} \PYG{o}{=} \PYG{n}{DPDA}\PYG{p}{(}
+    \PYG{n}{states}\PYG{o}{=}\PYG{n}{states}\PYG{p}{,}
+    \PYG{n}{input\PYGZus{}symbols}\PYG{o}{=}\PYG{n}{input\PYGZus{}symbols}\PYG{p}{,}
+    \PYG{n}{stack\PYGZus{}symbols}\PYG{o}{=}\PYG{n}{stack\PYGZus{}symbols}\PYG{p}{,}
+    \PYG{n}{transitions}\PYG{o}{=}\PYG{n}{transitions}\PYG{p}{,}
+    \PYG{n}{initial\PYGZus{}state}\PYG{o}{=}\PYG{n}{initial\PYGZus{}state}\PYG{p}{,}
+    \PYG{n}{initial\PYGZus{}stack\PYGZus{}symbol}\PYG{o}{=}\PYG{n}{initial\PYGZus{}stack\PYGZus{}symbol}\PYG{p}{,}
+    \PYG{n}{final\PYGZus{}states}\PYG{o}{=}\PYG{n}{final\PYGZus{}states}\PYG{p}{,}
+    \PYG{n}{acceptance\PYGZus{}mode}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}final\PYGZus{}state\PYGZsq{}}
+\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Counting function \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{k}{def}\PYG{+w}{ }\PYG{n+nf}{count\PYGZus{}dpda}\PYG{p}{(}\PYG{n}{N}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{k}\PYG{p}{:} \PYG{n+nb}{int}\PYG{p}{,} \PYG{n}{direction}\PYG{p}{:} \PYG{n+nb}{str}\PYG{p}{)} \PYG{o}{\PYGZhy{}\PYGZgt{}} \PYG{n+nb}{int}\PYG{p}{:}
+    \PYG{n}{symbol} \PYG{o}{=} \PYG{l+s+s1}{\PYGZsq{}tick\PYGZsq{}} \PYG{k}{if} \PYG{n}{direction} \PYG{o}{==} \PYG{l+s+s1}{\PYGZsq{}up\PYGZsq{}} \PYG{k}{else} \PYG{l+s+s1}{\PYGZsq{}tock\PYGZsq{}}
+    \PYG{c+c1}{\PYGZsh{} combine initial ticks and offset}
+    \PYG{n}{seq} \PYG{o}{=} \PYG{p}{[}\PYG{l+s+s1}{\PYGZsq{}tick\PYGZsq{}}\PYG{p}{]} \PYG{o}{*} \PYG{n}{N} \PYG{o}{+} \PYG{p}{[}\PYG{n}{symbol}\PYG{p}{]} \PYG{o}{*} \PYG{n}{k}
+    \PYG{n}{final\PYGZus{}config} \PYG{o}{=} \PYG{n}{dpda}\PYG{o}{.}\PYG{n}{read\PYGZus{}input}\PYG{p}{(}\PYG{n}{seq}\PYG{p}{)}
+    \PYG{k}{return} \PYG{n}{stack\PYGZus{}to\PYGZus{}int\PYGZus{}3digit}\PYG{p}{(}\PYG{n}{final\PYGZus{}config}\PYG{o}{.}\PYG{n}{stack}\PYG{o}{.}\PYG{n}{stack}\PYG{p}{)}
+
+\PYG{c+c1}{\PYGZsh{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Tests \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{n}{tests} \PYG{o}{=} \PYG{p}{[}
+    \PYG{p}{(}\PYG{l+m+mi}{42}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}up\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{),}
+    \PYG{p}{(}\PYG{l+m+mi}{42}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}down\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{),}
+    \PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}down\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{),}
+    \PYG{p}{(}\PYG{l+m+mi}{999}\PYG{p}{,} \PYG{l+s+s1}{\PYGZsq{}up\PYGZsq{}}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{),}
+\PYG{p}{]}
+
+\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Testing extended 3\PYGZhy{}digit DPDA:\PYGZdq{}}\PYG{p}{)}
+\PYG{k}{for} \PYG{n}{N}\PYG{p}{,} \PYG{n}{dirn}\PYG{p}{,} \PYG{n}{k} \PYG{o+ow}{in} \PYG{n}{tests}\PYG{p}{:}
+    \PYG{k}{try}\PYG{p}{:}
+        \PYG{n}{result} \PYG{o}{=} \PYG{n}{count\PYGZus{}dpda}\PYG{p}{(}\PYG{n}{N}\PYG{p}{,} \PYG{n}{k}\PYG{p}{,} \PYG{n}{dirn}\PYG{p}{)}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{N}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{dirn}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ → }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{result}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{except} \PYG{n}{RejectionException}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}}\PYG{l+s+si}{\PYGZob{}}\PYG{n}{N}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{dirn}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ → REJECTED (overflow/underflow)\PYGZdq{}}\PYG{p}{)}
+    \PYG{k}{except} \PYG{n+ne}{Exception} \PYG{k}{as} \PYG{n}{e}\PYG{p}{:}
+        \PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Error testing }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{N}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{dirn}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{ }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{k}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{: }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{e}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+\end{MintedVerbatim}
