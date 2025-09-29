@@ -30,12 +30,16 @@
           , prime/1, composite/1, divides/2, is_complete/1
           % Fractions (Jason.pl)
           , 'rdiv'/2, iterate/3, partition/3, normalize/2
+          % Normative Crisis Detection
+          , prohibition/2, normative_crisis/2, check_norms/1, current_domain_context/1
           ]).
 % Declare predicates that are defined across different sections.
 :- use_module(hermeneutic_calculator).
+:- use_module(grounded_arithmetic, [incur_cost/1]).
 
 :- discontiguous proves_impl/2.
 :- discontiguous is_incoherent/1. % Non-recursive check
+:- discontiguous check_norms/1.
 
 % =================================================================
 % Part 0: Setup and Configuration
@@ -76,6 +80,8 @@ fraction_predicates([rdiv, iterate, partition]).
 % --- 1.2 Arithmetic (O/N Domains) ---
 
 :- dynamic current_domain/1.
+:- dynamic prohibition/2.
+:- dynamic normative_crisis/2.
 
 %!      current_domain(?Domain:atom) is nondet.
 %
@@ -96,6 +102,107 @@ current_domain(n).
 set_domain(D) :-
     % Added 'q' (Rationals) as a valid domain.
     ( member(D, [n, z, q]) -> retractall(current_domain(_)), assertz(current_domain(D)) ; true).
+
+% --- Normative Crisis Detection ---
+
+%!      prohibition(+Context:atom, +Goal:term) is semidet.
+%
+%       Defines prohibited operations within specific mathematical contexts.
+%       This implements the UMEDCA thesis that mathematical norms are 
+%       revisable and context-dependent, not universal axioms.
+%
+%       @param Context The mathematical context (natural_numbers, integers, rationals)
+%       @param Goal The goal pattern that is prohibited in this context
+
+% Natural numbers context: Cannot subtract larger from smaller
+prohibition(natural_numbers, subtract(M, S, _)) :-
+    % Use grounded comparison to avoid arithmetic backstop
+    current_domain(n),
+    is_recollection(M, _),
+    is_recollection(S, _),
+    grounded_arithmetic:smaller_than(M, S).
+
+% Natural numbers context: Cannot divide when result would not be natural
+prohibition(natural_numbers, divide(Dividend, Divisor, _)) :-
+    current_domain(n),
+    is_recollection(Dividend, _),
+    is_recollection(Divisor, _),
+    \+ grounded_arithmetic:zero(Divisor),
+    % Division would not yield a natural number (simplified check)
+    grounded_arithmetic:smaller_than(Dividend, Divisor).
+
+%!      check_norms(+Goal:term) is det.
+%
+%       Validates a goal against the current mathematical context norms.
+%       Throws normative_crisis/2 if the goal violates current prohibitions.
+%
+%       @param Goal The goal to validate
+%       @error normative_crisis(Goal, Context) if goal violates norms
+check_norms(Goal) :-
+    % Only check norms for core arithmetic operations
+    ( is_core_operation(Goal) ->
+        current_domain_context(Context),
+        ( prohibition(Context, Goal) ->
+            throw(normative_crisis(Goal, Context))
+        ;
+            incur_cost(norm_check)  % Cost of normative validation
+        )
+    ;
+        true  % Non-arithmetic goals pass through
+    ).
+
+%!      is_core_operation(+Goal:term) is semidet.
+%
+%       Identifies core arithmetic operations that require norm checking.
+is_core_operation(add(_, _, _)).
+is_core_operation(subtract(_, _, _)).
+is_core_operation(multiply(_, _, _)).
+is_core_operation(divide(_, _, _)).
+
+%!      current_domain_context(-Context:atom) is det.
+%
+%       Maps the current domain to a context name for prohibition checking.
+current_domain_context(Context) :-
+    current_domain(Domain),
+    domain_to_context(Domain, Context).
+
+domain_to_context(n, natural_numbers).
+domain_to_context(z, integers).
+domain_to_context(q, rationals).
+
+%!      check_norms(+Goal:term) is det.
+%
+%       Validates a goal against current mathematical context norms.
+%       Throws normative_crisis/2 if the goal violates current norms.
+%
+%       @param Goal The goal to validate against current norms
+check_norms(Goal) :-
+    ( is_core_arithmetic_operation(Goal) ->
+        current_domain(Domain),
+        context_name(Domain, Context),
+        ( prohibition(Context, Goal) ->
+            throw(normative_crisis(Goal, Context))
+        ;
+            true
+        )
+    ;
+        true
+    ).
+
+%!      is_core_arithmetic_operation(+Goal:term) is semidet.
+%
+%       Identifies goals that need normative checking.
+is_core_arithmetic_operation(subtract(_, _, _)).
+is_core_arithmetic_operation(divide(_, _, _)).
+is_core_arithmetic_operation(add(_, _, _)).
+is_core_arithmetic_operation(multiply(_, _, _)).
+
+%!      context_name(+Domain:atom, -Context:atom) is det.
+%
+%       Maps domain symbols to context names.
+context_name(n, natural_numbers).
+context_name(z, integers).  
+context_name(q, rationals).
 
 
 % Deprecated: obj_coll/1. Replaced by is_recollection/2.
@@ -122,6 +229,11 @@ set_domain(D) :-
 
 % Base case: 0 is axiomatically a number.
 is_recollection(0, [axiom(zero)]).
+
+% Support for explicit recollection structures from grounded_arithmetic
+is_recollection(recollection(History), [explicit_recollection(History)]) :-
+    is_list(History),
+    maplist(=(tally), History).
 
 % Recursive case for positive integers: N is a recollection if N-1 is, and we
 % can construct N by adding 1 using the hermeneutic calculator.

@@ -24,10 +24,16 @@
  * 
  */
 :- module(sar_sub_cobo_missing_addend,
-          [ run_cobo_ma/4
+          [ run_cobo_ma/4,
+            % FSM Engine Interface
+            setup_strategy/4, transition/3, transition/4,
+            accept_state/1, final_interpretation/2, extract_result_from_history/2
           ]).
 
 :- use_module(library(lists)).
+:- use_module(fsm_engine, [run_fsm_with_base/5]).
+:- use_module(grounded_arithmetic, [incur_cost/1]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_cobo_ma(+M:integer, +S:integer, -FinalResult:integer, -History:list) is det.
 %
@@ -48,32 +54,86 @@
 %       machine's execution path and the interpretation of each step.
 
 run_cobo_ma(M, S, FinalResult, History) :-
+    incur_cost(strategy_selection),
+    setup_strategy(M, S, InitialState, Parameters),
     Base = 10,
+    run_fsm_with_base(sar_sub_cobo_missing_addend, InitialState, Parameters, Base, History),
+    extract_result_from_history(History, FinalResult).
+
+setup_strategy(M, S, InitialState, Parameters) :-
     (S > M ->
-        History = [step(q_error, 0, 0, 'Error: Subtrahend > Minuend.')],
-        FinalResult = 'error'
+        InitialState = state(q_error, 0, 0, 0)
     ;
-        InitialState = state(q_init, S, 0, M),
-        format(string(InitialInterpretation), 'Initialize at S (~w). Target is M (~w).', [S, M]),
-        InitialHistoryEntry = step(q_start, 0, 0, InitialInterpretation),
+        InitialState = state(q_init, S, 0, M)
+    ),
+    Parameters = [M, S],
+    s(exp_poss(initiating_cobo_missing_addend_subtraction)),
+    incur_cost(inference).
 
-        run(InitialState, Base, [InitialHistoryEntry], ReversedHistory),
-        reverse(ReversedHistory, History),
+% FSM Engine Interface
 
-        (last(History, step(q_accept, _, Dist, _)) -> FinalResult = Dist ; FinalResult = 'error')
+transition(q_init, q_add_bases, add_bases) :-
+    s(comp_nec(transitioning_to_base_addition)), incur_cost(state_change).
+
+transition(q_add_bases, q_add_bases, count_on_base) :-
+    s(exp_poss(continuing_base_addition_iteration)), incur_cost(iteration).
+
+transition(q_add_bases, q_add_ones, switch_to_ones) :-
+    s(comp_nec(completing_base_addition_phase)), incur_cost(phase_transition).
+
+transition(q_add_ones, q_add_ones, count_on_one) :-
+    s(exp_poss(continuing_ones_addition_iteration)), incur_cost(iteration).
+
+transition(q_add_ones, q_accept, reach_target) :-
+    s(comp_nec(finalizing_missing_addend_computation)), incur_cost(completion).
+
+% Complete state transitions
+transition(state(q_init, CV, Dist, T), _, state(q_add_bases, CV, Dist, T), 
+           'Proceed to add bases.') :-
+    s(exp_poss(initiating_base_addition_phase)), incur_cost(initialization).
+
+transition(state(q_add_bases, CV, Dist, T), Base, state(q_add_bases, NewCV, NewDist, T), Interp) :-
+    CV + Base =< T,
+    s(comp_nec(applying_embodied_base_addition)),
+    NewCV is CV + Base, NewDist is Dist + Base,
+    format(atom(Interp), 'Count on by base (+~w). New Value=~w.', [Base, NewCV]),
+    incur_cost(base_addition).
+
+transition(state(q_add_bases, CV, Dist, T), Base, state(q_add_ones, CV, Dist, T),
+           'Next base overshoots target. Switching to ones.') :-
+    CV + Base > T,
+    s(exp_poss(transitioning_from_bases_to_ones)), incur_cost(phase_completion).
+
+transition(state(q_add_ones, CV, Dist, T), _, state(q_add_ones, NewCV, NewDist, T), Interp) :-
+    CV < T,
+    s(comp_nec(applying_embodied_ones_addition)),
+    NewCV is CV + 1, NewDist is Dist + 1,
+    format(atom(Interp), 'Count on by one (+1). New Value=~w.', [NewCV]),
+    incur_cost(ones_addition).
+
+transition(state(q_add_ones, T, Dist, T), _, state(q_accept, T, Dist, T),
+           'Target reached.') :-
+    s(exp_poss(completing_cobo_missing_addend_strategy)), incur_cost(strategy_completion).
+
+transition(state(q_error, _, _, _), _, state(q_error, 0, 0, 0),
+           'Error: Subtrahend > Minuend.') :-
+    s(comp_nec(error_state_persistence)), incur_cost(error_maintenance).
+
+accept_state(state(q_accept, _, _, _)).
+
+final_interpretation(state(q_accept, _, Dist, _), Interpretation) :-
+    format(atom(Interpretation), 'Target reached. Result (Distance) = ~w.', [Dist]).
+final_interpretation(state(q_error, _, _, _), 'Error: Subtrahend > Minuend.').
+
+extract_result_from_history(History, Result) :-
+    last(History, LastStep),
+    (LastStep = step(state(q_accept, _, Dist, _), _, _) ->
+        Result = Dist
+    ; LastStep = step(state(q_error, _, _, _), _, _) ->
+        Result = 'error'
+    ;
+        Result = 'error'
     ).
-
-% run/4 is the main recursive loop of the state machine.
-run(state(q_accept, CV, Dist, _), _, Acc, FinalHistory) :-
-    format(string(Interpretation), 'Target reached. Result (Distance) = ~w.', [Dist]),
-    HistoryEntry = step(q_accept, CV, Dist, Interpretation),
-    FinalHistory = [HistoryEntry | Acc].
-
-run(CurrentState, Base, Acc, FinalHistory) :-
-    transition(CurrentState, Base, NextState, Interpretation),
-    CurrentState = state(Name, CV, Dist, _),
-    HistoryEntry = step(Name, CV, Dist, Interpretation),
-    run(NextState, Base, [HistoryEntry | Acc], FinalHistory).
 
 % transition/4 defines the logic for moving from one state to the next.
 

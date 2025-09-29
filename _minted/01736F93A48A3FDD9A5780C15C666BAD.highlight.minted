@@ -1,0 +1,340 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Reorganization Engine for Cognitive Accommodation}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements the \PYGZdq{}Reorganize\PYGZdq{} stage of the ORR cycle. It is}
+\PYG{c+cm}{ * responsible for `accommodate/1`, the process of modifying the system\PYGZsq{}s}
+\PYG{c+cm}{ * own knowledge base (`object\PYGZus{}level.pl`) in response to a state of}
+\PYG{c+cm}{ * disequilibrium detected by the `reflective\PYGZus{}monitor.pl`.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The engine currently handles failures by:}
+\PYG{c+cm}{ * 1.  Identifying the predicate causing the most \PYGZdq{}conceptual stress\PYGZdq{} (i.e.,}
+\PYG{c+cm}{ *     the one involved in the most failures).}
+\PYG{c+cm}{ * 2.  Applying a predefined transformation strategy to that predicate.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The only transformation implemented is `specialize\PYGZus{}add\PYGZus{}rule`, which}
+\PYG{c+cm}{ * replaces a failing `add/3` implementation with a more robust, recursive}
+\PYG{c+cm}{ * one based on the Peano axioms.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{accommodate}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{handle\PYGZus{}normative\PYGZus{}crisis}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{handle\PYGZus{}incoherence}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{reflective\PYGZus{}monitor}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}log}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{strategies}\PYG{p}{).} \PYG{c+c1}{\PYGZpc{} Load all defined strategies}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZsq{}learned\PYGZus{}knowledge.pl\PYGZsq{} is consulted into the learner\PYGZsq{}s module at runtime}
+\PYG{c+c1}{\PYGZpc{} (see more\PYGZus{}machine\PYGZus{}learner:load\PYGZus{}knowledge/0). It is not a separate module, so}
+\PYG{c+c1}{\PYGZpc{} attempting to reexport from it causes a domain error. Remove the faulty}
+\PYG{c+c1}{\PYGZpc{} reexport directive.}
+\PYG{c+c1}{\PYGZpc{} :\PYGZhy{} reexport(learned\PYGZus{}knowledge, [learned\PYGZus{}rule/1]).}
+
+\PYG{c+c1}{\PYGZpc{}!      reorganize\PYGZus{}system(+Goal:term, +Trace:list) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The main entry point for the reorganization process, triggered when}
+\PYG{c+c1}{\PYGZpc{}       a perturbation (e.g., resource exhaustion) occurs. This predicate}
+\PYG{c+c1}{\PYGZpc{}       orchestrates the analysis, synthesis, validation, and integration of}
+\PYG{c+c1}{\PYGZpc{}       a new, more efficient strategy.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The goal that failed.}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The execution trace leading to the failure.}
+\PYG{n+nf}{reorganize\PYGZus{}system}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Deconstruct the goal to get the arguments}
+    \PYG{n+nv}{Goal} \PYG{l+s+sAtom}{=..} \PYG{p}{[}\PYG{n+nv}{Pred}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Result}\PYG{p}{],}
+    \PYG{p}{(} \PYG{p}{(}\PYG{n+nv}{Pred} \PYG{o}{=} \PYG{l+s+sAtom}{add} \PYG{p}{;} \PYG{n+nv}{Pred} \PYG{o}{=} \PYG{l+s+sAtom}{multiply}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{c+c1}{\PYGZpc{} Convert Peano numbers to integers for the learner}
+        \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{IntA}\PYG{p}{),}
+        \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{IntB}\PYG{p}{),}
+
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Invoking machine learner to discover new strategies...\PYGZsq{}}\PYG{p}{),}
+        \PYG{c+c1}{\PYGZpc{} The learner will analyze, validate, and assert the new rule internally}
+        \PYG{p}{(}   \PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner:}\PYG{n+nf}{discover\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{IntA}\PYG{p}{,} \PYG{n+nv}{IntB}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+            \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learner discovered and asserted strategy: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StrategyName}\PYG{p}{]),}
+            \PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner:save\PYGZus{}knowledge}\PYG{p}{,}
+            \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}New knowledge has been persisted.\PYGZsq{}}\PYG{p}{)}
+        \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learner did not find a new strategy for this case.\PYGZsq{}}\PYG{p}{),}
+            \PYG{l+s+sAtom}{fail}
+        \PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Reorganization for predicate \PYGZti{}w is not supported.\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Pred}\PYG{p}{]),}
+        \PYG{l+s+sAtom}{fail}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      peano\PYGZus{}to\PYGZus{}int(+Peano, \PYGZhy{}Int) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Converts a Peano number (e.g., `s(s(0))`) to an integer.}
+\PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{Int}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{SubInt}\PYG{p}{),}
+    \PYG{n+nv}{Int} \PYG{o}{is} \PYG{n+nv}{SubInt} \PYG{o}{+} \PYG{l+m+mf}{1.}
+
+\PYG{c+c1}{\PYGZpc{}!      integrate\PYGZus{}new\PYGZus{}rule(+Rule:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Integrates a validated new rule into the system\PYGZsq{}s knowledge base.}
+\PYG{c+c1}{\PYGZpc{}       It retracts the old, inefficient rule and asserts the new one in}
+\PYG{c+c1}{\PYGZpc{}       the `object\PYGZus{}level` module.}
+\PYG{n+nf}{integrate\PYGZus{}new\PYGZus{}rule}\PYG{p}{((}\PYG{n+nv}{Head} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{functor}\PYG{p}{(}\PYG{n+nv}{Head}\PYG{p}{,} \PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{Arity}\PYG{p}{),}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nv}{Name}\PYG{o}{/}\PYG{n+nv}{Arity}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{p}{(}\PYG{n+nv}{Head} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{)),}
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{reorganized}\PYG{p}{(}\PYG{n+nf}{from}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{o}{/}\PYG{n+nv}{Arity}\PYG{p}{),} \PYG{n+nf}{to}\PYG{p}{(}\PYG{n+nv}{Head} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{))).}
+
+\PYG{c+c1}{\PYGZpc{}!      save\PYGZus{}learned\PYGZus{}rule(+Rule:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Persists a newly learned rule to the `learned\PYGZus{}knowledge.pl` file}
+\PYG{c+c1}{\PYGZpc{}       so that it can be reused across sessions.}
+\PYG{n+nf}{save\PYGZus{}learned\PYGZus{}rule}\PYG{p}{(}\PYG{n+nv}{Rule}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{open}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}learned\PYGZus{}knowledge.pl\PYGZsq{}}\PYG{p}{,} \PYG{l+s+sAtom}{append}\PYG{p}{,} \PYG{n+nv}{Stream}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}learned\PYGZus{}rule(\PYGZti{}q).\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Rule}\PYG{p}{]),}
+    \PYG{n+nf}{close}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      accommodate(+Trigger:term) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Attempts to accommodate a state of disequilibrium by modifying the}
+\PYG{c+c1}{\PYGZpc{}       knowledge base. This is the main entry point for the reorganization engine.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       It dispatches to different handlers based on the type of `Trigger`:}
+\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} `goal\PYGZus{}failure` or `perturbation`: Calls `handle\PYGZus{}failure/1` to attempt}
+\PYG{c+c1}{\PYGZpc{}         a knowledge repair based on conceptual stress.}
+\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} `incoherence`: Currently a placeholder; fails as this type of}
+\PYG{c+c1}{\PYGZpc{}         reorganization is not yet implemented.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Succeeds if a transformation is successfully applied. Fails otherwise.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Trigger The term describing the disequilibrium, provided by the}
+\PYG{c+c1}{\PYGZpc{}       reflective monitor.}
+\PYG{n+nf}{accommodate}\PYG{p}{(}\PYG{n+nv}{Trigger}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{p}{(}\PYG{n+nv}{Trigger} \PYG{o}{=} \PYG{n+nf}{goal\PYGZus{}failure}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{);} \PYG{n+nv}{Trigger} \PYG{o}{=} \PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{handle\PYGZus{}failure}\PYG{p}{(}\PYG{n+nv}{Trigger}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nv}{Trigger} \PYG{o}{=} \PYG{n+nf}{incoherence}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{handle\PYGZus{}incoherence}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Unknown trigger type: \PYGZti{}w. Cannot accommodate.\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Trigger}\PYG{p}{]),}
+        \PYG{l+s+sAtom}{fail}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} handle\PYGZus{}failure(+Trigger)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Handles disequilibrium caused by goal failure. It identifies the most}
+\PYG{c+c1}{\PYGZpc{} stressed predicate from the conceptual stress map and attempts to apply a}
+\PYG{c+c1}{\PYGZpc{} transformation to repair it.}
+\PYG{n+nf}{handle\PYGZus{}failure}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{n+nv}{Trigger}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}most\PYGZus{}stressed\PYGZus{}predicate}\PYG{p}{(}\PYG{n+nv}{Signature}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Highest conceptual stress found for predicate: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Signature}\PYG{p}{]),}
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{reorganization\PYGZus{}start}\PYG{p}{(}\PYG{n+nv}{Signature}\PYG{p}{)),}
+    \PYG{n+nf}{apply\PYGZus{}transformation}\PYG{p}{(}\PYG{n+nv}{Signature}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} handle\PYGZus{}incoherence(+Commitments)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Placeholder for handling disequilibrium caused by logical contradictions.}
+\PYG{c+c1}{\PYGZpc{} This is a future work area and currently always fails.}
+\PYG{n+nf}{handle\PYGZus{}incoherence}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Handling incoherence for commitments: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Commitments}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Incoherence\PYGZhy{}driven reorganization is not yet implemented.\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{fail}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} get\PYGZus{}most\PYGZus{}stressed\PYGZus{}predicate(\PYGZhy{}Signature)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Finds the predicate with the highest stress count in the stress map}
+\PYG{c+c1}{\PYGZpc{} maintained by the reflective monitor.}
+\PYG{n+nf}{get\PYGZus{}most\PYGZus{}stressed\PYGZus{}predicate}\PYG{p}{(}\PYG{n+nv}{Signature}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}stress\PYGZus{}map}\PYG{p}{(}\PYG{n+nv}{StressMap}\PYG{p}{),}
+    \PYG{n+nv}{StressMap} \PYG{l+s+sAtom}{\PYGZbs{}=} \PYG{p}{[],}
+    \PYG{n+nf}{find\PYGZus{}max\PYGZus{}stress}\PYG{p}{(}\PYG{n+nv}{StressMap}\PYG{p}{,} \PYG{n+nf}{stress}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nf}{stress}\PYG{p}{(}\PYG{n+nv}{Signature}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),} \PYG{p}{!.}
+\PYG{n+nf}{get\PYGZus{}most\PYGZus{}stressed\PYGZus{}predicate}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Could not identify a stressed predicate. Reorganization failed.\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{fail}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} find\PYGZus{}max\PYGZus{}stress(+StressMap, +CurrentMax, \PYGZhy{}Max)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Helper predicate to find the maximum entry in the stress map list.}
+\PYG{n+nf}{find\PYGZus{}max\PYGZus{}stress}\PYG{p}{([],} \PYG{n+nv}{Max}\PYG{p}{,} \PYG{n+nv}{Max}\PYG{p}{).}
+\PYG{n+nf}{find\PYGZus{}max\PYGZus{}stress}\PYG{p}{([}\PYG{n+nf}{stress}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{)|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nf}{stress}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{MaxC}\PYG{p}{),} \PYG{n+nv}{Max}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{C} \PYG{o}{\PYGZgt{}} \PYG{n+nv}{MaxC}\PYG{p}{,} \PYG{p}{!,} \PYG{n+nf}{find\PYGZus{}max\PYGZus{}stress}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nf}{stress}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),} \PYG{n+nv}{Max}\PYG{p}{).}
+\PYG{n+nf}{find\PYGZus{}max\PYGZus{}stress}\PYG{p}{([}\PYG{k}{\PYGZus{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{Max}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{find\PYGZus{}max\PYGZus{}stress}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{Max}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} apply\PYGZus{}transformation(+Signature)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Dispatches to a specific transformation strategy based on the predicate}
+\PYG{c+c1}{\PYGZpc{} signature. Currently, only a transformation for `add/3` exists.}
+\PYG{n+nf}{apply\PYGZus{}transformation}\PYG{p}{(}\PYG{l+s+sAtom}{add}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{!,} \PYG{l+s+sAtom}{specialize\PYGZus{}add\PYGZus{}rule}\PYG{p}{.}
+\PYG{n+nf}{apply\PYGZus{}transformation}\PYG{p}{(}\PYG{n+nv}{Signature}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}No specific reorganization strategy available for \PYGZti{}w.\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Signature}\PYG{p}{]),}
+    \PYG{l+s+sAtom}{fail}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Transformation Strategies \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{} specialize\PYGZus{}add\PYGZus{}rule/0}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} A specific transformation strategy that replaces the existing `add/3` rules}
+\PYG{c+c1}{\PYGZpc{} with a correct, recursive implementation based on Peano arithmetic. This}
+\PYG{c+c1}{\PYGZpc{} represents a form of learning or knowledge repair.}
+\PYG{n+nf}{specialize\PYGZus{}add\PYGZus{}rule} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Applying \PYGZdq{}Specialization\PYGZdq{} strategy to add/3.\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Retract all existing rules for add/3 and log each one.}
+    \PYG{n+nf}{forall}\PYG{p}{(}
+        \PYG{n+nf}{clause}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),} \PYG{n+nv}{Body}\PYG{p}{),}
+        \PYG{p}{(}   \PYG{n+nf}{retract}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{),}
+            \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{retracted}\PYG{p}{((}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{)))}
+        \PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Synthesize and assert the new, correct rule and log it.}
+    \PYG{n+nv}{NewHead} \PYG{o}{=} \PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{),}
+    \PYG{n+nv}{NewBody} \PYG{o}{=} \PYG{n+nf}{recursive\PYGZus{}add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{p}{(}\PYG{n+nv}{NewHead} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{NewBody}\PYG{p}{)),}
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{asserted}\PYG{p}{((}\PYG{n+nv}{NewHead} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{NewBody}\PYG{p}{))),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Asserted new specialized add/3 clause.\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Synthesize and assert helper predicates if they don\PYGZsq{}t exist.}
+    \PYG{p}{(}   \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{recursive\PYGZus{}add}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{defined}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{assert\PYGZus{}and\PYGZus{}log}\PYG{p}{((}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{recursive\PYGZus{}add}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{X}\PYG{p}{,} \PYG{n+nv}{X}\PYG{p}{))),}
+        \PYG{n+nf}{assert\PYGZus{}and\PYGZus{}log}\PYG{p}{((}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{recursive\PYGZus{}add}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{Y}\PYG{p}{,} \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{Z}\PYG{p}{))} \PYG{p}{:\PYGZhy{}} \PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{recursive\PYGZus{}add}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{Y}\PYG{p}{,} \PYG{n+nv}{Z}\PYG{p}{))),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Asserted helper predicate recursive\PYGZus{}add/3.\PYGZti{}n\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{l+s+sAtom}{true}
+    \PYG{p}{),}
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}success}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} assert\PYGZus{}and\PYGZus{}log(+Clause)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Helper to assert a clause and log the assertion event.}
+\PYG{n+nf}{assert\PYGZus{}and\PYGZus{}log}\PYG{p}{(}\PYG{n+nv}{Clause}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nv}{Clause}\PYG{p}{),}
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{asserted}\PYG{p}{(}\PYG{n+nv}{Clause}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Normative Crisis Handlers \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      handle\PYGZus{}normative\PYGZus{}crisis(+CrisisGoal:term, +Context:atom) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Handles normative crises by shifting mathematical contexts to accommodate}
+\PYG{c+c1}{\PYGZpc{}       previously prohibited operations. This implements the dialectical}
+\PYG{c+c1}{\PYGZpc{}       expansion of mathematical understanding.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param CrisisGoal The goal that violated current norms}
+\PYG{c+c1}{\PYGZpc{}       @param Context The context in which the violation occurred}
+\PYG{n+nf}{handle\PYGZus{}normative\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{CrisisGoal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{normative\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{CrisisGoal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{)),}
+    
+    \PYG{c+c1}{\PYGZpc{} Determine appropriate context shift}
+    \PYG{n+nf}{propose\PYGZus{}context\PYGZus{}shift}\PYG{p}{(}\PYG{n+nv}{Context}\PYG{p}{,} \PYG{n+nv}{NewContext}\PYG{p}{,} \PYG{n+nv}{CrisisGoal}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Perform the dialectical shift}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Conceptual Bootstrapping: Context Expansion \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Expanding context from \PYGZti{}w to \PYGZti{}w to accommodate \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Context}\PYG{p}{,} \PYG{n+nv}{NewContext}\PYG{p}{,} \PYG{n+nv}{CrisisGoal}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Update the current domain}
+    \PYG{n+nf}{set\PYGZus{}domain\PYGZus{}from\PYGZus{}context}\PYG{p}{(}\PYG{n+nv}{NewContext}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Introduce new vocabulary for the expanded context}
+    \PYG{n+nf}{introduce\PYGZus{}vocabulary}\PYG{p}{(}\PYG{n+nv}{NewContext}\PYG{p}{,} \PYG{n+nv}{CrisisGoal}\PYG{p}{),}
+    
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{context\PYGZus{}shift}\PYG{p}{(}\PYG{n+nv}{Context}\PYG{p}{,} \PYG{n+nv}{NewContext}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      propose\PYGZus{}context\PYGZus{}shift(+Context:atom, \PYGZhy{}NewContext:atom, +Goal:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Proposes an appropriate context expansion based on the nature of the crisis.}
+\PYG{n+nf}{propose\PYGZus{}context\PYGZus{}shift}\PYG{p}{(}\PYG{l+s+sAtom}{natural\PYGZus{}numbers}\PYG{p}{,} \PYG{l+s+sAtom}{integers}\PYG{p}{,} \PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} When subtraction fails in natural numbers, expand to integers}
+    \PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic:}\PYG{n+nf}{smaller\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{).}
+
+\PYG{n+nf}{propose\PYGZus{}context\PYGZus{}shift}\PYG{p}{(}\PYG{l+s+sAtom}{integers}\PYG{p}{,} \PYG{l+s+sAtom}{rationals}\PYG{p}{,} \PYG{n+nf}{divide}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+    \PYG{c+c1}{\PYGZpc{} When division doesn\PYGZsq{}t yield integers, expand to rationals}
+
+\PYG{n+nf}{propose\PYGZus{}context\PYGZus{}shift}\PYG{p}{(}\PYG{n+nv}{Context}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Default: no expansion needed}
+    \PYG{l+s+sAtom}{true}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{}!      set\PYGZus{}domain\PYGZus{}from\PYGZus{}context(+Context:atom) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Maps context names back to domain symbols for incompatibility\PYGZus{}semantics.}
+\PYG{n+nf}{set\PYGZus{}domain\PYGZus{}from\PYGZus{}context}\PYG{p}{(}\PYG{l+s+sAtom}{natural\PYGZus{}numbers}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{).}
+\PYG{n+nf}{set\PYGZus{}domain\PYGZus{}from\PYGZus{}context}\PYG{p}{(}\PYG{l+s+sAtom}{integers}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{z}\PYG{p}{).}
+\PYG{n+nf}{set\PYGZus{}domain\PYGZus{}from\PYGZus{}context}\PYG{p}{(}\PYG{l+s+sAtom}{rationals}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{q}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      introduce\PYGZus{}vocabulary(+Context:atom, +CrisisGoal:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Introduces new mathematical vocabulary and operations for expanded contexts.}
+\PYG{n+nf}{introduce\PYGZus{}vocabulary}\PYG{p}{(}\PYG{l+s+sAtom}{integers}\PYG{p}{,} \PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Introduce negative numbers and debt representation}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Introducing negative number vocabulary...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Add rule for subtraction that yields negative results}
+    \PYG{n+nv}{NewRule} \PYG{o}{=} \PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nf}{debt}\PYG{p}{(}\PYG{n+nv}{R}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+        \PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic:}\PYG{n+nf}{smaller\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),}
+        \PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic:}\PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{n+nf}{assert\PYGZus{}and\PYGZus{}log}\PYG{p}{(}\PYG{n+nv}{NewRule}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Introduced debt/1 representation for negative numbers.\PYGZti{}n\PYGZsq{}}\PYG{p}{).}
+
+\PYG{n+nf}{introduce\PYGZus{}vocabulary}\PYG{p}{(}\PYG{l+s+sAtom}{rationals}\PYG{p}{,} \PYG{n+nf}{divide}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Introduce rational number representation}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Introducing rational number vocabulary...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Add rule for division that yields fractions}
+    \PYG{n+nv}{NewRule} \PYG{o}{=} \PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{divide}\PYG{p}{(}\PYG{n+nv}{Dividend}\PYG{p}{,} \PYG{n+nv}{Divisor}\PYG{p}{,} \PYG{n+nf}{fraction}\PYG{p}{(}\PYG{n+nv}{Dividend}\PYG{p}{,} \PYG{n+nv}{Divisor}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+        \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic:}\PYG{n+nf}{zero}\PYG{p}{(}\PYG{n+nv}{Divisor}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{n+nf}{assert\PYGZus{}and\PYGZus{}log}\PYG{p}{(}\PYG{n+nv}{NewRule}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Introduced fraction/2 representation for rational numbers.\PYGZti{}n\PYGZsq{}}\PYG{p}{).}
+
+\PYG{n+nf}{introduce\PYGZus{}vocabulary}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Default: no new vocabulary needed}
+    \PYG{l+s+sAtom}{true}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{}!      handle\PYGZus{}incoherence(+Commitments:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Handles logical incoherence by identifying and retracting conflicting}
+\PYG{c+c1}{\PYGZpc{}       beliefs. This implements belief revision in response to contradictions.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Commitments The set of commitments that form an incoherent set}
+\PYG{n+nf}{handle\PYGZus{}incoherence}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{incoherence\PYGZus{}detected}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{)),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Belief Revision: Resolving Incoherence \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Analyzing incoherent commitments: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Commitments}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Find the most stressed (frequently failing) commitment}
+    \PYG{n+nf}{identify\PYGZus{}stressed\PYGZus{}commitment}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{,} \PYG{n+nv}{StressedCommitment}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Retract the problematic commitment}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Retracting stressed commitment: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StressedCommitment}\PYG{p}{]),}
+    \PYG{n+nf}{retract\PYGZus{}commitment}\PYG{p}{(}\PYG{n+nv}{StressedCommitment}\PYG{p}{),}
+    
+    \PYG{n+nf}{log\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{commitment\PYGZus{}retracted}\PYG{p}{(}\PYG{n+nv}{StressedCommitment}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      identify\PYGZus{}stressed\PYGZus{}commitment(+Commitments:list, \PYGZhy{}StressedCommitment:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Identifies the most stressed commitment using the reflective monitor\PYGZsq{}s}
+\PYG{c+c1}{\PYGZpc{}       stress tracking system.}
+\PYG{n+nf}{identify\PYGZus{}stressed\PYGZus{}commitment}\PYG{p}{([}\PYG{n+nv}{SingleCommitment}\PYG{p}{],} \PYG{n+nv}{SingleCommitment}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+\PYG{n+nf}{identify\PYGZus{}stressed\PYGZus{}commitment}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{,} \PYG{n+nv}{StressedCommitment}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use stress tracking to find the most problematic commitment}
+    \PYG{n+nf}{maplist}\PYG{p}{(}\PYG{l+s+sAtom}{get\PYGZus{}commitment\PYGZus{}stress}\PYG{p}{,} \PYG{n+nv}{Commitments}\PYG{p}{,} \PYG{n+nv}{StressLevels}\PYG{p}{),}
+    \PYG{n+nf}{pairs\PYGZus{}keys\PYGZus{}values}\PYG{p}{(}\PYG{n+nv}{Pairs}\PYG{p}{,} \PYG{n+nv}{StressLevels}\PYG{p}{,} \PYG{n+nv}{Commitments}\PYG{p}{),}
+    \PYG{n+nf}{keysort}\PYG{p}{(}\PYG{n+nv}{Pairs}\PYG{p}{,} \PYG{n+nv}{SortedPairs}\PYG{p}{),}
+    \PYG{n+nf}{reverse}\PYG{p}{(}\PYG{n+nv}{SortedPairs}\PYG{p}{,} \PYG{p}{[}\PYG{k}{\PYGZus{}}\PYG{o}{\PYGZhy{}}\PYG{n+nv}{StressedCommitment}\PYG{p}{|}\PYG{k}{\PYGZus{}}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      get\PYGZus{}commitment\PYGZus{}stress(+Commitment:term, \PYGZhy{}Stress:number) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Gets the stress level of a commitment from the reflective monitor.}
+\PYG{n+nf}{get\PYGZus{}commitment\PYGZus{}stress}\PYG{p}{(}\PYG{n+nv}{Commitment}\PYG{p}{,} \PYG{n+nv}{Stress}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(} \PYG{l+s+sAtom}{reflective\PYGZus{}monitor:}\PYG{n+nf}{conceptual\PYGZus{}stress}\PYG{p}{(}\PYG{n+nv}{Commitment}\PYG{p}{,} \PYG{n+nv}{Stress}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}
+        \PYG{n+nv}{Stress} \PYG{o}{=} \PYG{l+m+mi}{1}  \PYG{c+c1}{\PYGZpc{} Default stress level}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      retract\PYGZus{}commitment(+Commitment:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Retracts a commitment from the knowledge base.}
+\PYG{n+nf}{retract\PYGZus{}commitment}\PYG{p}{(}\PYG{n+nv}{Commitment}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(} \PYG{n+nf}{retract}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nv}{Commitment}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Warning: Could not retract commitment (may not exist)\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+\end{MintedVerbatim}

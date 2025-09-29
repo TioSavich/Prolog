@@ -1,0 +1,199 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gh}{\PYGZsh{} A Synthesis of Incompatibility Semantics, CGI, and Piagetian Constructivism with FSM Engine Architecture}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 1. Introduction}
+
+This project presents a novel synthesis of three influential frameworks in philosophy, cognitive science, and education, implemented as a computational model in SWI\PYGZhy{}Prolog with a unified Finite State Machine (FSM) engine architecture.
+
+\PYG{k}{*}\PYG{+w}{ }  \PYG{g+gs}{**Robert Brandom\PYGZsq{}s Incompatibility Semantics:**} A theory asserting that the meaning of a concept is defined by what it is incompatible with. We understand what something \PYG{g+ge}{*is*} by understanding what it rules out.
+\PYG{k}{*}\PYG{+w}{ }  \PYG{g+gs}{**Cognitively Guided Instruction (CGI):**} An educational approach focused on understanding and building upon students\PYGZsq{} intuitive problem\PYGZhy{}solving strategies.
+\PYG{k}{*}\PYG{+w}{ }  \PYG{g+gs}{**Piagetian Constructivism:**} A theory of cognitive development emphasizing the learner\PYGZsq{}s active construction of knowledge through assimilation and accommodation, driven by the resolution of cognitive conflict (disequilibrium).
+
+This synthesis aims to provide a formal, computational model for understanding conceptual development and designing instruction that respects the learner\PYGZsq{}s constructive processes.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 2. Core Concepts}
+
+The core idea of this synthesis is that learning (Constructivism) occurs when a learner recognizes an incompatibility (Brandom) between their existing cognitive structures and new information or experiences. Instruction (CGI) facilitates this process by analyzing the learner\PYGZsq{}s current strategies and introducing experiences that highlight relevant incompatibilities, prompting the necessary cognitive shifts (accommodation).
+
+This is modeled in the repository through several key components:
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Incompatibility Semantics**}: The core logic for determining entailment and contradiction is implemented in \PYG{l+s+sb}{`incompatibility\PYGZus{}semantics.pl`}.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Student Strategy Models**}: The CGI aspect is modeled through a library of student problem\PYGZhy{}solving strategies (\PYG{l+s+sb}{`sar\PYGZus{}*.pl`} for addition/subtraction and \PYG{l+s+sb}{`smr\PYGZus{}*.pl`} for multiplication/division), which simulate how students with different conceptual understandings might approach a problem.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Learning Cycle**}: The Piagetian process of learning through disequilibrium is modeled by the \PYG{g+gs}{**Observe\PYGZhy{}Reorganize\PYGZhy{}Reflect (ORR)**} cycle, which can detect failures in its own knowledge and attempt to repair itself.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**FSM Engine Architecture**}: All student strategy models are unified under a common Finite State Machine engine that provides consistent execution, modal logic integration, and cognitive cost tracking.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 3. System Architecture}
+
+The system is composed of several distinct parts that work together, unified by a common FSM engine architecture.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.1. FSM Engine Architecture (New Core Framework)}
+A unified finite state machine engine that standardizes all student strategy execution:
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`fsm\PYGZus{}engine.pl`**}: The core FSM execution engine that provides consistent state transition handling, modal logic integration, and cognitive cost tracking across all student strategies.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`grounded\PYGZus{}arithmetic.pl`**}: The foundational grounded arithmetic system that eliminates dependency on arithmetic backstops by providing embodied mathematical operations with cognitive cost tracking.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`grounded\PYGZus{}utils.pl`**}: Utility functions supporting the grounded arithmetic foundation.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.2. The ORR Cycle (Cognitive Core)}
+This is the heart of the system\PYGZsq{}s learning capability, inspired by Piagetian mechanisms.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`execution\PYGZus{}handler.pl`**}: The main driver that orchestrates the ORR cycle.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`meta\PYGZus{}interpreter.pl`**}: The \PYG{g+gs}{**Observe**} phase. It runs a given goal while producing a detailed execution trace, making the system\PYGZsq{}s reasoning process observable to itself.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`reflective\PYGZus{}monitor.pl`**}: The \PYG{g+gs}{**Reflect**} phase. It analyzes the trace from the meta\PYGZhy{}interpreter to detect signs of \PYGZdq{}disequilibrium\PYGZdq{} (e.g., goal failures, contradictions).
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`reorganization\PYGZus{}engine.pl`**}: The \PYG{g+gs}{**Reorganize**} phase. Triggered by disequilibrium, it attempts to modify the system\PYGZsq{}s own knowledge base to resolve the conflict.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.3. Knowledge Base}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`object\PYGZus{}level.pl`**}: Contains the system\PYGZsq{}s foundational, and potentially flawed, knowledge (e.g., an inefficient rule for addition). This is the knowledge that the ORR cycle operates on and modifies.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`incompatibility\PYGZus{}semantics.pl`**}: Defines the core logical and mathematical rules of the \PYGZdq{}world,\PYGZdq{} including what concepts are incompatible with each other, and provides modal logic operators (s/1, comp\PYGZus{}nec/1, exp\PYGZus{}poss/1).
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`learned\PYGZus{}knowledge.pl`**}: An auto\PYGZhy{}generated file where new, more efficient strategies discovered by the \PYG{l+s+sb}{`more\PYGZus{}machine\PYGZus{}learner.pl`} module are stored.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.4. API Server}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`working\PYGZus{}server.pl`**}: The production\PYGZhy{}ready server for powering the web\PYGZhy{}based GUI. It contains stable, optimized analysis logic and is used by the startup script.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 4. FSM Engine Architecture (Major Innovation)}
+
+This system features a revolutionary \PYG{g+gs}{**Finite State Machine (FSM) Engine**} that unifies all student strategy models under a common computational framework. This represents a significant architectural advancement providing:
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.1. Unified Execution Model}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Consistent Interface**}: All 17+ student strategies (\PYG{l+s+sb}{`sar\PYGZus{}*.pl`}, \PYG{l+s+sb}{`smr\PYGZus{}*.pl`}) use the same FSM engine interface via \PYG{l+s+sb}{`run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base/5`}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Code Reduction**}: \PYGZti{}70\PYGZpc{} reduction in duplicate state machine code across strategy files
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Standardized Transitions**}: All strategies use \PYG{l+s+sb}{`transition/4`} predicates with consistent parameter patterns
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.2. Modal Logic Integration}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Cognitive Operators**}: Every state transition integrates modal logic operators:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`s/1`}: Basic cognitive operations and state changes
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`comp\PYGZus{}nec/1`}: Necessary computational steps and systematic processes  
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`exp\PYGZus{}poss/1`}: Possible expansions and completion states
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Semantic Grounding**}: Modal operators provide semantic meaning to computational steps, connecting to Brandom\PYGZsq{}s incompatibility semantics
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.3. Cognitive Cost Tracking}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Embodied Cognition**}: Every cognitive operation has an associated cost via \PYG{l+s+sb}{`incur\PYGZus{}cost/1`}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Resource Awareness**}: The system tracks computational resources as cognitive resources
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Performance Analysis**}: Enables comparison of strategy efficiency in cognitive terms
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.4. Grounded Arithmetic Foundation  }
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Elimination of Arithmetic Backstop**}: No reliance on hardcoded arithmetic; all operations are grounded in embodied cognitive processes
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Constructivist Mathematics**}: Numbers and operations emerge from cognitive actions rather than being pre\PYGZhy{}given
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Peano Arithmetic**}: Foundation built on successor functions and recursive operations
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 4.5. FSM Engine Benefits}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Maintainability**}: Single engine handles all strategy execution, reducing maintenance burden
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Extensibility**}: New strategies easily added by implementing the FSM interface
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Debugging**}: Unified tracing and debugging across all strategies
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Performance**}: Optimized execution engine with consistent performance characteristics
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 5. Getting Started}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 5.1. Prerequisites}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**SWI\PYGZhy{}Prolog**}: Ensure it is installed and accessible in your system\PYGZsq{}s PATH.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Python 3**}: Required for the simple web server that serves the frontend files.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 5.2. Running the Web\PYGZhy{}Based GUI (Recommended)}
+This is the easiest way to interact with the semantic and strategy analysis features. This mode uses the stable \PYG{l+s+sb}{`working\PYGZus{}server.pl`}.
+
+In a terminal, run the provided shell script:
+\PYG{l+s+sb}{```bash}
+./start\PYGZus{}system.sh
+\PYG{l+s+sb}{```}
+This script starts both the Prolog API server (on port 8083) and the Python frontend server (on port 3000).
+
+Once the servers are running, open your web browser to: \PYG{g+gs}{**http://localhost:3000**}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 5.3. Running the Full ORR System (For Developers)}
+To experiment with the system\PYGZsq{}s learning capabilities, you need to run the full \PYG{l+s+sb}{`api\PYGZus{}server.pl`}.
+
+\PYG{g+gs}{**Step 1: Start the Prolog API Server**}
+\PYG{l+s+sb}{```bash}
+swipl\PYG{+w}{ }api\PYGZus{}server.pl
+\PYG{l+s+sb}{```}
+This will start the server on port 8000 (by default).
+
+\PYG{g+gs}{**Step 2: Interact via API Client**}
+You can now send POST requests to the endpoints, for example, to trigger the ORR cycle:
+\PYG{l+s+sb}{```bash}
+\PYG{c+c1}{\PYGZsh{} This will trigger the ORR cycle for the goal 5 + 5 = X}
+curl\PYG{+w}{ }\PYGZhy{}X\PYG{+w}{ }POST\PYG{+w}{ }\PYGZhy{}H\PYG{+w}{ }\PYG{l+s+s2}{\PYGZdq{}Content\PYGZhy{}Type: application/json\PYGZdq{}}\PYG{+w}{ }\PYG{l+s+se}{\PYGZbs{}}
+\PYG{+w}{     }\PYGZhy{}d\PYG{+w}{ }\PYG{l+s+s1}{\PYGZsq{}\PYGZob{}\PYGZdq{}goal\PYGZdq{}: \PYGZdq{}add(s(s(s(s(s(0))))), s(s(s(s(s(0))))), X)\PYGZdq{}\PYGZcb{}\PYGZsq{}}\PYG{+w}{ }\PYG{l+s+se}{\PYGZbs{}}
+\PYG{+w}{     }http://localhost:8000/solve
+\PYG{l+s+sb}{```}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 6. File Structure Guide}
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Frontend \PYGZam{} Visualization**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`index.html`}, \PYG{l+s+sb}{`script.js`}, \PYG{l+s+sb}{`style.css`}: Frontend files for the web GUI.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`cognition\PYGZus{}viz.html`}: Advanced cognitive visualization interface.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`serve\PYGZus{}local.py`}: A simple Python HTTP server for the frontend.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`start\PYGZus{}system.sh`}: The main startup script for the web GUI.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**FSM Engine Architecture**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`fsm\PYGZus{}engine.pl`}: Core finite state machine execution engine providing unified strategy execution.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`grounded\PYGZus{}arithmetic.pl`}: Foundational grounded arithmetic system with cognitive cost tracking.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`grounded\PYGZus{}utils.pl`}: Utility functions supporting grounded arithmetic operations.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**API Server**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`working\PYGZus{}server.pl`}: Production server that powers the web GUI with stable, optimized logic.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Cognitive Core (ORR Cycle)**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`execution\PYGZus{}handler.pl`}: Orchestrates the ORR cycle.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`meta\PYGZus{}interpreter.pl`}: The \PYGZdq{}Observe\PYGZdq{} phase; runs goals and produces traces.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`reflective\PYGZus{}monitor.pl`}: The \PYGZdq{}Reflect\PYGZdq{} phase; analyzes traces for disequilibrium.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`reorganization\PYGZus{}engine.pl`}: The \PYGZdq{}Reorganize\PYGZdq{} phase; modifies the knowledge base.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`reorganization\PYGZus{}log.pl`}: Logs the events of the ORR cycle.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Knowledge \PYGZam{} Learning**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`object\PYGZus{}level.pl`}: The initial, dynamic knowledge base of the system.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`incompatibility\PYGZus{}semantics.pl`}: The core rules of logic and mathematics, providing modal logic operators.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`more\PYGZus{}machine\PYGZus{}learner.pl`}: The module that implements the \PYGZdq{}protein folding\PYGZdq{} learning analogy.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`learned\PYGZus{}knowledge.pl`}: \PYG{g+gs}{**Auto\PYGZhy{}generated file**} for storing learned strategies. Do not edit manually.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Student Strategy Models (FSM Engine Powered)**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`sar\PYGZus{}*.pl`}: Models for Student Addition and Subtraction Reasoning (all converted to FSM engine).
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`smr\PYGZus{}*.pl`}: Models for Student Multiplication and Division Reasoning (all converted to FSM engine).
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`hermeneutic\PYGZus{}calculator.pl`}: A dispatcher to run specific student strategies.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Testing \PYGZam{} Validation**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}basic\PYGZus{}functionality.pl`}: Basic functionality tests for core components.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}comprehensive.pl`}: Comprehensive testing suite for the entire system.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}orr\PYGZus{}cycle.pl`}: Specific tests for the ORR learning cycle.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}synthesis.pl`}: \PYG{l+s+sb}{`plunit`} tests for the \PYG{l+s+sb}{`incompatibility\PYGZus{}semantics`} module.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}full\PYGZus{}loop.pl`}: End\PYGZhy{}to\PYGZhy{}end testing of the complete system.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Command\PYGZhy{}Line Interfaces**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`main.pl`}: A simple entry point to run a test query through the ORR cycle.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`interactive\PYGZus{}ui.pl`}: A text\PYGZhy{}based menu for interacting with the learning system.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Configuration \PYGZam{} Utilities**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`config.pl`}: System configuration settings.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`jason.pl`}: Fraction and arithmetic helper functions.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`strategies.pl`}: Strategy coordination and management.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`counting2.pl`}, \PYG{l+s+sb}{`counting\PYGZus{}on\PYGZus{}back.pl`}: Additional counting strategies.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }Various Python scripts for external interfaces and testing.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 7. For Developers}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 7.1. FSM Engine Architecture}
+All student strategy models have been converted to use the unified FSM engine. When implementing new strategies:
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }Implement \PYG{l+s+sb}{`transition/4`} predicates defining state transitions
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }Use modal logic operators (\PYG{l+s+sb}{`s/1`}, \PYG{l+s+sb}{`comp\PYGZus{}nec/1`}, \PYG{l+s+sb}{`exp\PYGZus{}poss/1`}) in transitions
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }Include cognitive cost tracking with \PYG{l+s+sb}{`incur\PYGZus{}cost/1`}
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }Provide \PYG{l+s+sb}{`accept\PYGZus{}state/1`}, \PYG{l+s+sb}{`final\PYGZus{}interpretation/2`}, and \PYG{l+s+sb}{`extract\PYGZus{}result\PYGZus{}from\PYGZus{}history/2`} predicates
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }Call \PYG{l+s+sb}{`run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base(ModuleName, InitialState, Parameters, Base, History)`} to execute
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 7.2. Running Tests}
+The repository uses \PYG{l+s+sb}{`plunit`} for testing. The main test files include:
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}synthesis.pl`}: Tests for the \PYG{l+s+sb}{`incompatibility\PYGZus{}semantics`} module
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}basic\PYGZus{}functionality.pl`}: Basic system functionality tests  
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}comprehensive.pl`}: Comprehensive system testing
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}orr\PYGZus{}cycle.pl`}: ORR cycle specific tests
+
+To run the tests, start SWI\PYGZhy{}Prolog and run:
+\PYG{l+s+sb}{```prolog}
+\PYG{l+s+sAtom}{?\PYGZhy{}} \PYG{p}{[}\PYG{l+s+sAtom}{test\PYGZus{}synthesis}\PYG{p}{].}
+\PYG{l+s+sAtom}{?\PYGZhy{}} \PYG{l+s+sAtom}{run\PYGZus{}tests}\PYG{p}{.}
+\PYG{l+s+sb}{```}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 7.3. Code Documentation}
+The Prolog source code is documented using \PYG{g+gs}{**PlDoc**}. This format allows for generating HTML documentation directly from the source comments.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 8. Contributing}
+We welcome contributions to the theoretical development, the Prolog implementation, and the frontend interface. Please open an issue to discuss potential changes.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{} 9. License}
+[Note: Specify your license here.]
+\end{MintedVerbatim}

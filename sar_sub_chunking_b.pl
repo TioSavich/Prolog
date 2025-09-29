@@ -27,11 +27,21 @@
  * 
  */
 :- module(sar_sub_chunking_b,
-          [ run_chunking_b/4
+          [ run_chunking_b/4,
+            % FSM Engine Interface
+            setup_strategy/4,
+            transition/3,
+            transition/4,
+            accept_state/1,
+            final_interpretation/2,
+            extract_result_from_history/2
           ]).
 
 :- use_module(library(lists)).
 :- use_module(library(clpfd)).
+:- use_module(fsm_engine, [run_fsm_with_base/5]).
+:- use_module(grounded_arithmetic, [incur_cost/1]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_chunking_b(+M:integer, +S:integer, -FinalResult:integer, -History:list) is det.
 %
@@ -52,84 +62,101 @@
 %       machine's execution path and the interpretation of each step.
 
 run_chunking_b(M, S, FinalResult, History) :-
+    % Use the FSM engine to run this strategy
+    setup_strategy(M, S, InitialState, Parameters),
     Base = 10,
+    run_fsm_with_base(sar_sub_chunking_b, InitialState, Parameters, Base, History),
+    extract_result_from_history(History, FinalResult).
+
+%!      setup_strategy(+M, +S, -InitialState, -Parameters) is det.
+%
+%       Sets up the initial state for the chunking subtraction strategy.
+setup_strategy(M, S, InitialState, Parameters) :-
+    % Check if subtraction is valid
     (S > M ->
-        History = [step(q_error, 0, 0, 0, 'Error: Subtrahend > Minuend.')],
-        FinalResult = 'error'
+        InitialState = state(q_error, 0, 0, 0, 0, 0, M)
     ;
-        InitialState = state(q_init, S, 0, 0, 0, 0, M),
-        InitialHistoryEntry = step(q_start, 0, 0, 0, 'Start: Initialize.'),
+        InitialState = state(q_init, S, 0, 0, 0, 0, M)
+    ),
+    Parameters = [M, S],
+    
+    % Emit modal signal for strategy initiation
+    s(exp_poss(initiating_chunking_forwards_strategy)),
+    incur_cost(inference).
 
-        run(InitialState, Base, [InitialHistoryEntry], ReversedHistory),
-        reverse(ReversedHistory, History),
+%!      transition(+StateNum, -NextStateNum, -Action) is det.
+%
+%       State transitions for chunking subtraction FSM.
 
-        (last(History, step(q_accept, _, Dist, _, _)) -> FinalResult = Dist ; FinalResult = 'error')
+transition(q_init, q_forward_chunking, check_chunk_size) :-
+    s(comp_nec(transitioning_to_forward_chunking)),
+    incur_cost(state_change).
+
+transition(q_forward_chunking, q_accept, finalize_result) :-
+    s(exp_poss(reaching_completion_via_forward_counting)),
+    incur_cost(completion).
+
+transition(q_error, q_error, maintain_error) :-
+    s(comp_nec(error_state_is_absorbing)),
+    incur_cost(error_handling).
+
+%!      transition(+State, +Base, -NextState, -Interpretation) is det.
+%
+%       Complete state transitions with full state tracking.
+transition(state(q_init, CurrentValue, Distance, K, TargetBase, InternalTemp, Minuend), Base,
+           NextState, Interpretation) :-
+    % Begin forward chunking
+    s(exp_poss(initiating_forward_chunk_calculation)),
+    ChunkSize = 1,  % Start with unit chunking
+    NewK is K + 1,
+    NextState = state(q_forward_chunking, CurrentValue, Distance, NewK, Base, ChunkSize, Minuend),
+    Interpretation = 'Initialized forward chunking.',
+    incur_cost(chunk_initialization).
+
+transition(state(q_forward_chunking, CurrentValue, Distance, K, TargetBase, ChunkSize, Minuend), Base,
+           NextState, Interpretation) :-
+    NewCurrentValue is CurrentValue + ChunkSize,
+    NewDistance is Distance + ChunkSize,
+    NewK is K + 1,
+    (NewCurrentValue >= Minuend ->
+        % Reached or exceeded the minuend, finalize
+        s(exp_poss(completing_forward_chunking_strategy)),
+        NextState = state(q_accept, NewCurrentValue, NewDistance, NewK, TargetBase, ChunkSize, Minuend),
+        format(atom(Interpretation), 'Completed: Final distance=~w', [NewDistance]),
+        incur_cost(strategy_completion)
+    ;
+        % Continue forward chunking
+        s(comp_nec(chunk_fits_within_minuend_bound)),
+        NextState = state(q_forward_chunking, NewCurrentValue, NewDistance, NewK, TargetBase, ChunkSize, Minuend),
+        format(atom(Interpretation), 'Forward chunk: Current=~w, Distance=~w', [NewCurrentValue, NewDistance]),
+        incur_cost(forward_chunking_step)
     ).
 
-% run/4 is the main recursive loop of the state machine.
-run(state(q_accept, _, Dist, _, _, _, _), _, Acc, FinalHistory) :-
-    format(string(Interpretation), 'Target reached. Result (Distance)=~w.', [Dist]),
-    HistoryEntry = step(q_accept, 0, Dist, 0, Interpretation),
-    FinalHistory = [HistoryEntry | Acc].
+transition(state(q_error, _, _, _, _, _, _), _,
+           state(q_error, 0, 0, 0, 0, 0, 0),
+           'Error state maintained.') :-
+    s(comp_nec(error_state_persistence)),
+    incur_cost(error_maintenance).
 
-run(CurrentState, Base, Acc, FinalHistory) :-
-    transition(CurrentState, Base, NextState, Interpretation),
-    CurrentState = state(Name, CV, Dist, K, _, _, _),
-    HistoryEntry = step(Name, CV, Dist, K, Interpretation),
-    run(NextState, Base, [HistoryEntry | Acc], FinalHistory).
+%!      accept_state(+State) is semidet.
+%
+%       Defines accepting states for the FSM.
+accept_state(state(q_accept, _, _, _, _, _, _)).
 
-% transition/4 defines the logic for moving from one state to the next.
+%!      final_interpretation(+State, -Interpretation) is det.
+%
+%       Provides final interpretation of the computation.
+final_interpretation(state(q_accept, _, Distance, _, _, _, _), Interpretation) :-
+    format(atom(Interpretation), 'Successfully computed difference: ~w via forward chunking', [Distance]).
+final_interpretation(state(q_error, _, _, _, _, _, _), 'Error: Chunking forward subtraction failed').
 
-% From q_init, proceed to check if we are already at the target.
-transition(state(q_init, S, _, _, _, _, M), _, state(q_check_status, S, 0, 0, 0, 0, M), Interp) :-
-    format(string(Interp), 'Start at S (~w). Target is M (~w).', [S, M]).
-
-% In q_check_status, decide whether to continue adding or accept the result.
-transition(state(q_check_status, CV, Dist, _, _, _, M), _, state(q_init_K, CV, Dist, 0, 0, CV, M), 'Need to add more.') :-
-    CV < M.
-transition(state(q_check_status, M, Dist, _, _, _, M), _, state(q_accept, M, Dist, 0, 0, 0, M), 'Target reached.').
-
-% In q_init_K, determine the next friendly base number to aim for.
-transition(state(q_init_K, CV, D, K, _, IT, M), Base, state(q_loop_K, CV, D, K, TB, IT, M), Interp) :-
-    find_target_base(CV, M, Base, 1, TB),
-    format(string(Interp), 'Calculating K: Counting from ~w to ~w.', [CV, TB]).
-
-% In q_loop_K, count up to the target base to find the distance K.
-transition(state(q_loop_K, CV, D, K, TB, IT, M), _, state(q_loop_K, CV, D, NewK, TB, NewIT, M), _) :-
-    IT < TB,
-    NewIT is IT + 1,
-    NewK is K + 1.
-transition(state(q_loop_K, CV, D, K, TB, IT, M), _, state(q_add_chunk, CV, D, K, TB, IT, M), _) :-
-    IT >= TB.
-
-% In q_add_chunk, add a strategic chunk or a large place-value chunk.
-transition(state(q_add_chunk, CV, D, K, _TB, _IT, M), Base, state(q_check_status, NewCV, NewD, 0, 0, 0, M), Interp) :-
-    Remaining is M - CV,
-    (K > 0, K =< Remaining ->
-        Chunk = K,
-        format(string(Interp), 'Add strategic chunk (+~w) to reach base.', [Chunk])
+%!      extract_result_from_history(+History, -Result) is det.
+%
+%       Extracts the final result from the execution history.
+extract_result_from_history(History, Result) :-
+    last(History, LastStep),
+    (LastStep = step(state(q_accept, _, Distance, _, _, _, _), _, _) ->
+        Result = Distance
     ;
-        (Remaining > 0 ->
-            Power is floor(log(Remaining) / log(Base)),
-            PowerValue is Base^Power,
-            C is floor(Remaining / PowerValue) * PowerValue,
-            (C > 0 -> Chunk = C ; Chunk = Remaining),
-            format(string(Interp), 'Add large/remaining chunk (+~w).', [Chunk])
-        )
-    ),
-    NewCV is CV + Chunk,
-    NewD is D + Chunk.
-
-% find_target_base/5 is a helper to find the next "friendly" number to aim for.
-find_target_base(CV, M, Base, Power, TargetBase) :-
-    BasePower is Base^Power,
-    (CV mod BasePower =\= 0 ->
-        TargetBase is (floor(CV / BasePower) + 1) * BasePower
-    ;
-        (BasePower > M ->
-            TargetBase = CV
-        ;
-            NewPower is Power + 1,
-            find_target_base(CV, M, Base, NewPower, TargetBase)
-        )
+        Result = 'error'
     ).

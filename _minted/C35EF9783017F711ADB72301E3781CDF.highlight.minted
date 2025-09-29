@@ -1,0 +1,98 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} ORR Cycle Integration Test}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module tests the complete ORR (Observe\PYGZhy{}Reorganize\PYGZhy{}Reflect) cycle}
+\PYG{c+cm}{ * with our updated system including grounded arithmetic and normative crisis detection.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author UMEDCA System Test}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{test\PYGZus{}orr\PYGZus{}cycle}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{test\PYGZus{}addition\PYGZus{}cycle}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+s+sAtom}{test\PYGZus{}normative\PYGZus{}crisis\PYGZus{}cycle}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{config}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}addition\PYGZus{}cycle is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests the ORR cycle with a simple addition operation.}
+\PYG{n+nf}{test\PYGZus{}addition\PYGZus{}cycle} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== Testing ORR Cycle with Addition ===\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test simple addition using Peano numbers}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Testing: add(s(s(0)), s(0), Result)\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}This should trigger the ORR cycle due to inefficient enumeration.\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{n+nf}{catch}\PYG{p}{(}
+        \PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)),} \PYG{n+nf}{s}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{),} \PYG{l+m+mi}{15}\PYG{p}{),}
+        \PYG{n+nv}{Error}\PYG{p}{,}
+        \PYG{p}{(}\PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Caught error: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Error}\PYG{p}{]),} \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Addition result: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Result}\PYG{p}{]),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== Addition Test Complete ===\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}normative\PYGZus{}crisis\PYGZus{}cycle is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests the normative crisis detection and context shifting.}
+\PYG{n+nf}{test\PYGZus{}normative\PYGZus{}crisis\PYGZus{}cycle} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== Testing Normative Crisis Detection ===\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Ensure we start in natural numbers domain}
+    \PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{),}
+    \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{Domain}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Starting domain: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Domain}\PYG{p}{]),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test operation that should cause normative crisis: 3 \PYGZhy{} 8}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Testing: subtract(s(s(s(0))), s(s(s(s(s(s(s(s(0)))))))), Result)\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}This should trigger a normative crisis (3 \PYGZhy{} 8 in natural numbers).\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{n+nf}{catch}\PYG{p}{(}
+        \PYG{p}{(}
+            \PYG{c+c1}{\PYGZpc{} Convert to grounded representation for normative checking}
+            \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{),}
+            \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{8}\PYG{p}{,} \PYG{n+nv}{Eight}\PYG{p}{),}
+            \PYG{n+nf}{check\PYGZus{}norms}\PYG{p}{(}\PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Eight}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+            \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}No crisis detected (unexpected)\PYGZsq{}}\PYG{p}{)}
+        \PYG{p}{),}
+        \PYG{n+nf}{normative\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{),}
+        \PYG{p}{(}
+            \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}SUCCESS: Normative crisis detected!\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+            \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Goal: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Goal}\PYG{p}{]),}
+            \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Context: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Context}\PYG{p}{]),}
+            \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  System would now initiate context expansion.\PYGZsq{}}\PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== Normative Crisis Test Complete ===\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}cognitive\PYGZus{}cost\PYGZus{}accumulation is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests cognitive cost accumulation in strategy execution.}
+\PYG{n+nf}{test\PYGZus{}cognitive\PYGZus{}cost\PYGZus{}accumulation} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== Testing Cognitive Cost Accumulation ===\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test that our grounded operations incur appropriate costs}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Testing cost accumulation in grounded operations...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n+nv}{Five}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} These operations should incur costs via incur\PYGZus{}cost/1 calls}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Five}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{SumInt}\PYG{p}{),}
+    
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}5 + 3 = \PYGZti{}w (with cognitive cost tracking)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{SumInt}\PYG{p}{]),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== Cognitive Cost Test Complete ===\PYGZsq{}}\PYG{p}{).}
+\end{MintedVerbatim}

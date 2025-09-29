@@ -23,11 +23,21 @@
  * 
  */
 :- module(sar_sub_chunking_a,
-          [ run_chunking_a/4
+          [ run_chunking_a/4,
+            % FSM Engine Interface
+            setup_strategy/4,
+            transition/3,
+            transition/4,
+            accept_state/1,
+            final_interpretation/2,
+            extract_result_from_history/2
           ]).
 
 :- use_module(library(lists)).
 :- use_module(library(clpfd)). % For log/2
+:- use_module(fsm_engine).
+:- use_module(grounded_arithmetic, [incur_cost/1]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_chunking_a(+M:integer, +S:integer, -FinalResult:integer, -History:list) is det.
 %
@@ -47,36 +57,41 @@
 %       machine's execution path and the interpretation of each step.
 
 run_chunking_a(M, S, FinalResult, History) :-
+    % Use the FSM engine to run this strategy
+    setup_strategy(M, S, InitialState, Parameters),
     Base = 10,
+    run_fsm_with_base(sar_sub_chunking_a, InitialState, Parameters, Base, History),
+    extract_result_from_history(History, FinalResult).
+
+%!      setup_strategy(+M, +S, -InitialState, -Parameters) is det.
+%
+%       Sets up the initial state for the chunking subtraction strategy.
+setup_strategy(M, S, InitialState, Parameters) :-
+    % Check if subtraction is valid
     (S > M ->
-        History = [step(q_error, 0, 0, 0, 'Error: Subtrahend > Minuend.')],
-        FinalResult = 'error'
+        InitialState = state(q_error, 0, 0, 0)
     ;
-        InitialState = state(q_init, M, S, 0),
-        InitialHistoryEntry = step(q_start, 0, 0, 0, 'Start: Initialize.'),
+        InitialState = state(q_init, M, S, 0)
+    ),
+    Parameters = [M, S],
+    
+    % Emit modal signal for strategy initiation
+    s(exp_poss(initiating_chunking_subtraction_strategy)),
+    incur_cost(inference).
 
-        run(InitialState, Base, [InitialHistoryEntry], ReversedHistory),
-        reverse(ReversedHistory, History),
+%!      transition(+CurrentState, -NextState, -Interpretation) is det.
+%       transition(+CurrentState, +Base, -NextState, -Interpretation) is det.
+%
+%       State transition rules for the chunking subtraction strategy.
 
-        (last(History, step(q_accept, CV, _, _, _)) -> FinalResult = CV ; FinalResult = 'error')
-    ).
-
-% run/4 is the main recursive loop of the state machine.
-run(state(q_accept, CV, 0, _), _, Acc, FinalHistory) :-
-    format(string(Interpretation), 'S fully subtracted. Result=~w.', [CV]),
-    HistoryEntry = step(q_accept, CV, 0, 0, Interpretation),
-    FinalHistory = [HistoryEntry | Acc].
-
-run(CurrentState, Base, Acc, FinalHistory) :-
-    transition(CurrentState, Base, NextState, Interpretation),
-    CurrentState = state(Name, CV, S_Rem, Chunk),
-    HistoryEntry = step(Name, CV, S_Rem, Chunk, Interpretation),
-    run(NextState, Base, [HistoryEntry | Acc], FinalHistory).
-
-% transition/4 defines the logic for moving from one state to the next.
+% Version without base parameter (for FSM engine compatibility)
+transition(CurrentState, NextState, Interpretation) :-
+    transition(CurrentState, 10, NextState, Interpretation).
 
 % From q_init, proceed to identify the first chunk.
 transition(state(q_init, M, S, _), _, state(q_identify_chunk, M, S, 0), Interp) :-
+    s(exp_poss(setting_initial_values_for_chunking)),
+    incur_cost(inference),
     format(string(Interp), 'Set CurrentValue=~w. S_Remaining=~w.', [M, S]).
 
 % In q_identify_chunk, determine the next chunk of S to subtract.
@@ -86,13 +101,47 @@ transition(state(q_identify_chunk, CV, S_Rem, _), Base, state(q_subtract_chunk, 
     Power is floor(log(S_Rem) / log(Base)),
     PowerValue is Base^Power,
     Chunk is floor(S_Rem / PowerValue) * PowerValue,
+    s(comp_nec(identifying_largest_place_value_chunk)),
+    incur_cost(inference),
     format(string(Interp), 'Identified chunk to subtract: ~w.', [Chunk]).
+
 % If no subtrahend remains, the process is finished.
 transition(state(q_identify_chunk, CV, 0, _), _, state(q_accept, CV, 0, 0),
-           'S fully subtracted.').
+           'S fully subtracted.') :-
+    s(comp_nec(completing_chunking_subtraction)),
+    incur_cost(inference).
 
 % In q_subtract_chunk, perform the subtraction and loop back to identify the next chunk.
 transition(state(q_subtract_chunk, CV, S_Rem, Chunk), _, state(q_identify_chunk, NewCV, NewSRem, 0), Interp) :-
     NewCV is CV - Chunk,
     NewSRem is S_Rem - Chunk,
+    s(exp_poss(subtracting_identified_chunk)),
+    incur_cost(unit_count),
     format(string(Interp), 'Subtracted ~w. New Value=~w.', [Chunk, NewCV]).
+
+%!      accept_state(+State) is semidet.
+%
+%       Identifies terminal states.
+accept_state(state(q_accept, _, _, _)).
+accept_state(state(q_error, _, _, _)).
+
+%!      final_interpretation(+State, -Interpretation) is det.
+%
+%       Provides final interpretation for terminal states.
+final_interpretation(state(q_accept, CV, _, _), Interpretation) :-
+    format(string(Interpretation), 'Chunking subtraction complete. Result: ~w.', [CV]).
+
+final_interpretation(state(q_error, _, _, _), 'Chunking subtraction failed: Subtrahend > Minuend.').
+
+%!      extract_result_from_history(+History, -Result) is det.
+%
+%       Extracts the final result from the execution history.
+extract_result_from_history(History, Result) :-
+    last(History, LastStep),
+    (LastStep = step(state(q_accept, CV, _, _), _, _) ->
+        Result = CV
+    ; LastStep = step(state(q_error, _, _, _), _, _) ->
+        Result = 'error'
+    ;
+        Result = 'error'
+    ).

@@ -1,0 +1,125 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} ORR Cycle Execution Handler}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module serves as the central controller for the cognitive architecture,}
+\PYG{c+cm}{ * managing the Observe\PYGZhy{}Reorganize\PYGZhy{}Reflect (ORR) cycle. It orchestrates the}
+\PYG{c+cm}{ * interaction between the meta\PYGZhy{}interpreter (Observe), the reflective monitor}
+\PYG{c+cm}{ * (Reflect), and the reorganization engine (Reorganize).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The primary entry point is `run\PYGZus{}query/1`, which initiates the ORR cycle}
+\PYG{c+cm}{ * for a given goal.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}computation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}computation(+Goal:term, +Limit:integer) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The main entry point for the self\PYGZhy{}reorganizing system. It attempts}
+\PYG{c+c1}{\PYGZpc{}       to solve the given `Goal` within the specified `Limit` of}
+\PYG{c+c1}{\PYGZpc{}       computational steps.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       If the computation exceeds the resource limit, it triggers the}
+\PYG{c+c1}{\PYGZpc{}       reorganization process and then retries the goal.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The computational goal to be solved.}
+\PYG{c+c1}{\PYGZpc{}       @param Limit The maximum number of inference steps allowed.}
+\PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{catch}\PYG{p}{(}
+        \PYG{n+nf}{call\PYGZus{}meta\PYGZus{}interpreter}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+        \PYG{n+nv}{Error}\PYG{p}{,}
+        \PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nv}{Error}\PYG{p}{,} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      call\PYGZus{}meta\PYGZus{}interpreter(+Goal, +Limit, \PYGZhy{}Trace) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       A wrapper for the `meta\PYGZus{}interpreter:solve/4` predicate. It}
+\PYG{c+c1}{\PYGZpc{}       executes the goal and, upon success, reports that the computation}
+\PYG{c+c1}{\PYGZpc{}       is complete.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The goal to be solved.}
+\PYG{c+c1}{\PYGZpc{}       @param Limit The inference limit.}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The resulting execution trace.}
+\PYG{n+nf}{call\PYGZus{}meta\PYGZus{}interpreter}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{meta\PYGZus{}interpreter:}\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Computation successful.\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{reflect\PYGZus{}on\PYGZus{}success}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      normalize\PYGZus{}trace(+Trace, \PYGZhy{}NormalizedTrace) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Converts different trace formats into a unified dictionary format}
+\PYG{c+c1}{\PYGZpc{}       for the learner. It specifically handles the `arithmetic\PYGZus{}trace/3`}
+\PYG{c+c1}{\PYGZpc{}       term, converting it to a `trace\PYGZob{}\PYGZcb{}` dict.}
+\PYG{c+c1}{\PYGZpc{} Case 1: The trace is a list containing a single arithmetic\PYGZus{}trace term.}
+\PYG{n+nf}{normalize\PYGZus{}trace}\PYG{p}{([}\PYG{n+nf}{arithmetic\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Steps}\PYG{p}{)],} \PYG{n+nv}{NormalizedTrace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{!,}
+    \PYG{n+nv}{NormalizedTrace} \PYG{o}{=} \PYG{l+s+sAtom}{trace}\PYG{p}{\PYGZob{}}\PYG{n+nn}{strategy}\PYG{p}{:}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nn}{steps}\PYG{p}{:}\PYG{n+nv}{Steps}\PYG{p}{\PYGZcb{}.}
+\PYG{c+c1}{\PYGZpc{} Case 2: The trace is a bare arithmetic\PYGZus{}trace term.}
+\PYG{n+nf}{normalize\PYGZus{}trace}\PYG{p}{(}\PYG{n+nf}{arithmetic\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Steps}\PYG{p}{),} \PYG{n+nv}{NormalizedTrace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{!,}
+    \PYG{n+nv}{NormalizedTrace} \PYG{o}{=} \PYG{l+s+sAtom}{trace}\PYG{p}{\PYGZob{}}\PYG{n+nn}{strategy}\PYG{p}{:}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nn}{steps}\PYG{p}{:}\PYG{n+nv}{Steps}\PYG{p}{\PYGZcb{}.}
+\PYG{c+c1}{\PYGZpc{} Case 3: Pass through any other format (already normalized dicts, etc.)}
+\PYG{n+nf}{normalize\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      reflect\PYGZus{}on\PYGZus{}success(+Goal, +Trace) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       After a successful computation, this predicate triggers the}
+\PYG{c+c1}{\PYGZpc{}       reflective learning process. It passes the goal and the resulting}
+\PYG{c+c1}{\PYGZpc{}       trace to the learning module to check for potential optimizations.}
+\PYG{n+nf}{reflect\PYGZus{}on\PYGZus{}success}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Proactive Reflection Cycle Initiated (Success) \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{normalize\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{NormalizedTrace}\PYG{p}{),}
+    \PYG{n+nv}{Result} \PYG{o}{=} \PYG{k}{\PYGZus{}}\PYG{p}{\PYGZob{}}\PYG{n+nn}{goal}\PYG{p}{:}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nn}{trace}\PYG{p}{:}\PYG{n+nv}{NormalizedTrace}\PYG{p}{\PYGZcb{},}
+    \PYG{n+nf}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Reflection Cycle Complete \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      handle\PYGZus{}perturbation(+Error, +Goal, +Trace, +Limit) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Catches errors from the meta\PYGZhy{}interpreter and initiates the}
+\PYG{c+c1}{\PYGZpc{}       reorganization process.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate handles multiple types of perturbations:}
+\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} perturbation(resource\PYGZus{}exhaustion): Computational efficiency crisis}
+\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} perturbation(normative\PYGZus{}crisis(Goal, Context)): Mathematical norm violation}
+\PYG{c+c1}{\PYGZpc{}       \PYGZhy{} perturbation(incoherence(Commitments)): Logical contradiction}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Error The error term thrown by `catch/3`.}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The original goal that was being attempted.}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The execution trace produced before the error occurred.}
+\PYG{c+c1}{\PYGZpc{}       @param Limit The original resource limit.}
+\PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{),} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Resource exhaustion detected. Initiating reorganization...\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} First, attempt to learn from the failure trace}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{}\PYGZhy{}\PYGZhy{} Reflective Cycle Initiated (Failure) \PYGZhy{}\PYGZhy{}\PYGZhy{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{normalize\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{NormalizedTrace}\PYG{p}{),}
+    \PYG{n+nv}{Result} \PYG{o}{=} \PYG{k}{\PYGZus{}}\PYG{p}{\PYGZob{}}\PYG{n+nn}{goal}\PYG{p}{:}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nn}{trace}\PYG{p}{:}\PYG{n+nv}{NormalizedTrace}\PYG{p}{\PYGZcb{},}
+    \PYG{n+nf}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Reorganization complete. Retrying goal...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{).}
+
+\PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{n+nf}{normative\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{CrisisGoal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{)),} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Normative crisis detected: \PYGZti{}w violates norms of \PYGZti{}w context.\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{CrisisGoal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{]),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Initiating context shift reorganization...\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Handle normative crisis through context expansion}
+    \PYG{l+s+sAtom}{reorganization\PYGZus{}engine:}\PYG{n+nf}{handle\PYGZus{}normative\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{CrisisGoal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Context shift complete. Retrying goal...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{).}
+
+\PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{n+nf}{incoherence}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{)),} \PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Logical incoherence detected in commitments: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Commitments}\PYG{p}{]),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Initiating incoherence resolution...\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Handle logical incoherence through belief revision}
+    \PYG{l+s+sAtom}{reorganization\PYGZus{}engine:}\PYG{n+nf}{handle\PYGZus{}incoherence}\PYG{p}{(}\PYG{n+nv}{Commitments}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Incoherence resolution complete. Retrying goal...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}computation}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{).}
+
+\PYG{n+nf}{handle\PYGZus{}perturbation}\PYG{p}{(}\PYG{n+nv}{Error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}An unhandled error occurred:\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{n+nv}{Error}\PYG{p}{),}
+    \PYG{l+s+sAtom}{fail}\PYG{p}{.}
+\end{MintedVerbatim}

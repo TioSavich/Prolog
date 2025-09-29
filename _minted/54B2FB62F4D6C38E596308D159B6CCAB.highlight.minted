@@ -1,0 +1,198 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Addition Strategy: Chunking by Bases and Ones}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements the \PYGZsq{}Chunking by Bases and Ones\PYGZsq{} strategy for}
+\PYG{c+cm}{ * multi\PYGZhy{}digit addition, modeled as a finite state machine. This strategy}
+\PYG{c+cm}{ * involves decomposing one of the numbers (B) into its base\PYGZhy{}10 components}
+\PYG{c+cm}{ * (e.g., tens and ones), adding them sequentially to the other number (A),}
+\PYG{c+cm}{ * and using strategic \PYGZsq{}chunks\PYGZsq{} to reach friendly base\PYGZhy{}10 numbers.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1. Decompose B into a \PYGZsq{}base chunk\PYGZsq{} (the tens part) and an \PYGZsq{}ones chunk\PYGZsq{}.}
+\PYG{c+cm}{ * 2. Add the entire base chunk to A at once.}
+\PYG{c+cm}{ * 3. Strategically add parts of the ones chunk to get the sum to the next multiple of 10.}
+\PYG{c+cm}{ * 4. Repeat until all parts of B have been added.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state is represented by the term:}
+\PYG{c+cm}{ * `state(Name, Sum, BasesRem, OnesRem, K, InternalSum, TargetBase)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(StateName, CurrentSum, BasesRemaining, OnesRemaining, K, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}chunking}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}chunking}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{c+c1}{\PYGZpc{} FSM Engine Interface}
+            \PYG{l+s+sAtom}{setup\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{accept\PYGZus{}state}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+            \PYG{l+s+sAtom}{final\PYGZus{}interpretation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+            \PYG{l+s+sAtom}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{greater\PYGZus{}than}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{smaller\PYGZus{}than}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{equal\PYGZus{}to}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+                                  \PYG{l+s+sAtom}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} 
+                                  \PYG{l+s+sAtom}{add\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{subtract\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{successor}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+                                  \PYG{l+s+sAtom}{zero}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}utils}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{base\PYGZus{}decompose\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+s+sAtom}{base\PYGZus{}recompose\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}chunking(+A:integer, +B:integer, \PYGZhy{}FinalSum:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Chunking by Bases and Ones\PYGZsq{} addition strategy for A + B.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes the state machine and runs it until it}
+\PYG{c+c1}{\PYGZpc{}       reaches the accept state. It traces the execution, providing a}
+\PYG{c+c1}{\PYGZpc{}       step\PYGZhy{}by\PYGZhy{}step history of how the sum was computed.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param A The first addend.}
+\PYG{c+c1}{\PYGZpc{}       @param B The second addend, which will be decomposed and added in chunks.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalSum The resulting sum of A and B.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/6` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{n+nf}{run\PYGZus{}chunking}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{FinalSum}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use the FSM engine to run this strategy}
+    \PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{),}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}chunking}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{FinalSum}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      setup\PYGZus{}strategy(+A, +B, \PYGZhy{}InitialState, \PYGZhy{}Parameters) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Sets up the initial state for the chunking strategy.}
+\PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}    
+    \PYG{c+c1}{\PYGZpc{} For now, use built\PYGZhy{}in arithmetic but add modal signals and cost tracking}
+    \PYG{c+c1}{\PYGZpc{} This will be converted to full grounded arithmetic in a future iteration}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nv}{BasesRemaining} \PYG{o}{is} \PYG{p}{(}\PYG{n+nv}{B} \PYG{o}{//} \PYG{n+nv}{Base}\PYG{p}{)} \PYG{o}{*} \PYG{n+nv}{Base}\PYG{p}{,}
+    \PYG{n+nv}{OnesRemaining} \PYG{o}{is} \PYG{n+nv}{B} \PYG{o}{mod} \PYG{n+nv}{Base}\PYG{p}{,}
+    
+    \PYG{c+c1}{\PYGZpc{} Initial state}
+    \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{BasesRemaining}\PYG{p}{,} \PYG{n+nv}{OnesRemaining}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),}
+    \PYG{n+nv}{Parameters} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal for strategy initiation}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}chunking\PYGZus{}strategy}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+CurrentState, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}       transition(+CurrentState, +Base, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       State transition rules for the chunking strategy.}
+
+\PYG{c+c1}{\PYGZpc{} Version without base parameter (for FSM engine compatibility)}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, always proceed to add the base chunk.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{IS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}base\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{IS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}Proceed to add base chunk.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{beginning\PYGZus{}base\PYGZus{}chunk\PYGZus{}addition}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}add\PYGZus{}base\PYGZus{}chunk:}
+\PYG{c+c1}{\PYGZpc{} If there are bases remaining, add them all at once.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}base\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{K}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{IS}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{BR} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{NewSum} \PYG{o}{is} \PYG{n+nv}{Sum} \PYG{o}{+} \PYG{n+nv}{BR}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{adding\PYGZus{}complete\PYGZus{}base\PYGZus{}chunk}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Add Base Chunk (+\PYGZti{}w). Sum = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} If there are no bases, move on.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}base\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{K}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{IS}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}No bases to add.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{skipping\PYGZus{}empty\PYGZus{}base\PYGZus{}chunk}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init\PYGZus{}ones\PYGZus{}chunk:}
+\PYG{c+c1}{\PYGZpc{} If there are ones to add, start the strategic chunking process.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{IS}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}K}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{TargetBase}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{OR} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{c+c1}{\PYGZpc{} Calculate target base using built\PYGZhy{}in arithmetic (to be converted later)}
+    \PYG{n+nf}{calculate\PYGZus{}next\PYGZus{}base\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{TargetBase}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{beginning\PYGZus{}strategic\PYGZus{}ones\PYGZus{}chunking}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Begin strategic chunking of remaining ones (\PYGZti{}w).\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{OR}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} If no ones are left, the process is finished.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}All ones added. Accepting.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}chunking\PYGZus{}strategy}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init\PYGZus{}K, calculate the value K needed to reach the next base.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}K}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{IS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}K}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{IS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{calculating\PYGZus{}distance\PYGZus{}to\PYGZus{}target\PYGZus{}base}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Calculating K: Counting from \PYGZti{}w to \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}loop\PYGZus{}K, count up from the current sum to the target base to find K.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}K}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{IS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}K}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{NewK}\PYG{p}{,} \PYG{n+nv}{NewIS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{IS} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{TB}\PYG{p}{,}
+    \PYG{n+nv}{NewIS} \PYG{o}{is} \PYG{n+nv}{IS} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nv}{NewK} \PYG{o}{is} \PYG{n+nv}{K} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{counting\PYGZus{}units\PYGZus{}to\PYGZus{}target}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Counting Up: \PYGZti{}w, K=\PYGZti{}w\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NewIS}\PYG{p}{,} \PYG{n+nv}{NewK}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Once the target base is reached, the value of K is known.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}K}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{IS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{IS}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{IS} \PYG{o}{\PYGZgt{}=} \PYG{n+nv}{TB}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{target\PYGZus{}distance\PYGZus{}calculated}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}K needed to reach base is \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{K}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}add\PYGZus{}ones\PYGZus{}chunk:}
+\PYG{c+c1}{\PYGZpc{} If we have enough ones remaining to add the strategic chunk K, do so.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{IS}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{NewOR}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{OR} \PYG{o}{\PYGZgt{}=} \PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{K} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{NewSum} \PYG{o}{is} \PYG{n+nv}{Sum} \PYG{o}{+} \PYG{n+nv}{K}\PYG{p}{,}
+    \PYG{n+nv}{NewOR} \PYG{o}{is} \PYG{n+nv}{OR} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{K}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{adding\PYGZus{}strategic\PYGZus{}chunk\PYGZus{}to\PYGZus{}reach\PYGZus{}base}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Add Strategic Chunk (+\PYGZti{}w) to make base. Sum = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Otherwise, add all remaining ones. This happens if K is too large or 0.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{K}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{IS}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{TB}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}ones\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{,} \PYG{n+nv}{BR}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}\PYG{n+nv}{OR} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{K} \PYG{p}{;} \PYG{n+nv}{K} \PYG{o}{=\PYGZlt{}} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nv}{OR} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{NewSum} \PYG{o}{is} \PYG{n+nv}{Sum} \PYG{o}{+} \PYG{n+nv}{OR}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{adding\PYGZus{}remaining\PYGZus{}ones}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Add Remaining Chunk (+\PYGZti{}w). Sum = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{OR}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      calculate\PYGZus{}next\PYGZus{}base\PYGZus{}grounded(+Sum, \PYGZhy{}TargetBase) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Calculates the next multiple of 10 using the same logic as before.}
+\PYG{n+nf}{calculate\PYGZus{}next\PYGZus{}base\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{TargetBase}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} For now, keep the arithmetic calculation but mark it for future conversion}
+    \PYG{p}{(}\PYG{n+nv}{Sum} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{Sum} \PYG{o}{mod} \PYG{l+m+mi}{10} \PYG{l+s+sAtom}{=\PYGZbs{}=} \PYG{l+m+mi}{0} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{TargetBase} \PYG{o}{is} \PYG{p}{((}\PYG{n+nv}{Sum} \PYG{o}{//} \PYG{l+m+mi}{10}\PYG{p}{)} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{)} \PYG{o}{*} \PYG{l+m+mi}{10} \PYG{p}{;} \PYG{n+nv}{TargetBase} \PYG{o}{is} \PYG{n+nv}{Sum}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      accept\PYGZus{}state(+State) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Identifies terminal states.}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      final\PYGZus{}interpretation(+State, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Provides final interpretation for terminal states.}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Chunking Complete. Final sum: \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Sum}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result\PYGZus{}from\PYGZus{}history(+History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{LastStep}\PYG{p}{),}
+    \PYG{p}{(}\PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{n+nv}{Sum}
+    \PYG{p}{;}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{).}
+\end{MintedVerbatim}

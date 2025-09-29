@@ -14,10 +14,14 @@
  * 
  * 
  */
-:- module(object_level, [add/3, multiply/3]).
+:- module(object_level, [add/3, subtract/3, multiply/3, divide/3]).
+
+:- use_module(grounded_arithmetic).
 
 :- dynamic add/3.
+:- dynamic subtract/3.
 :- dynamic multiply/3.
+:- dynamic divide/3.
 
 % enumerate/1
 % Helper to force enumeration of a Peano number. Its primary purpose
@@ -76,3 +80,52 @@ recursive_multiply(0, _, 0).
 recursive_multiply(s(A), B, Product) :-
     recursive_multiply(A, B, PartialProduct),
     add(PartialProduct, B, Product).
+
+% recursive_subtract/3
+% The standard, efficient recursive definition of subtraction for Peano numbers.
+% This will be synthesized by the reorganization engine.
+recursive_subtract(A, 0, A).
+recursive_subtract(s(A), s(B), Difference) :-
+    recursive_subtract(A, B, Difference).
+
+%!      subtract(?Minuend, ?Subtrahend, ?Difference) is nondet.
+%
+%       The initial, inefficient definition of subtraction.
+%       Like add/3, this deliberately enumerates both inputs to trigger
+%       reorganization. It uses the grounded arithmetic to avoid the
+%       Prolog arithmetic backstop.
+%
+%       @param Minuend A Peano number to subtract from.
+%       @param Subtrahend A Peano number to subtract.
+%       @param Difference The result of Minuend - Subtrahend.
+subtract(Minuend, Subtrahend, Difference) :-
+    enumerate(Minuend),
+    enumerate(Subtrahend),
+    recursive_subtract(Minuend, Subtrahend, Difference).
+
+% recursive_divide/3  
+% The standard definition of division for Peano numbers via repeated subtraction.
+recursive_divide(Dividend, Divisor, Quotient) :-
+    recursive_divide_helper(Dividend, Divisor, 0, Quotient).
+
+recursive_divide_helper(Remainder, Divisor, AccQuotient, Quotient) :-
+    ( recursive_subtract(Remainder, Divisor, NewRemainder) ->
+        recursive_add(AccQuotient, s(0), NewAccQuotient),
+        recursive_divide_helper(NewRemainder, Divisor, NewAccQuotient, Quotient)
+    ;
+        Quotient = AccQuotient
+    ).
+
+%!      divide(?Dividend, ?Divisor, ?Quotient) is nondet.
+%
+%       The initial, inefficient definition of division.
+%       Enumerates inputs and uses repeated subtraction to compute quotient.
+%
+%       @param Dividend A Peano number to be divided.
+%       @param Divisor A Peano number to divide by.
+%       @param Quotient The result of Dividend / Divisor.
+divide(Dividend, Divisor, Quotient) :-
+    enumerate(Dividend),
+    enumerate(Divisor),
+    \+ (Divisor = 0),  % Prevent division by zero
+    recursive_divide(Dividend, Divisor, Quotient).

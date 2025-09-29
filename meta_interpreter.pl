@@ -19,7 +19,9 @@
 :- module(meta_interpreter, [solve/4]).
 :- use_module(object_level). % Ensure we can access the object-level code
 :- use_module(hermeneutic_calculator). % For strategic choice
-:- use_module(incompatibility_semantics, [s/1, 'comp_nec'/1, 'comp_poss'/1, 'exp_nec'/1, 'exp_poss'/1]). % For modal operators
+:- use_module(incompatibility_semantics, [s/1, 'comp_nec'/1, 'comp_poss'/1, 'exp_nec'/1, 'exp_poss'/1, check_norms/1]). % For modal operators and norm checking
+:- use_module(grounded_arithmetic). % For cognitive cost tracking
+:- use_module(config). % For cognitive cost lookup
 
 % Note: is_list/1 is a built-in, no need to import from library(lists).
 
@@ -98,12 +100,25 @@ solve(Goal, I_In, I_Out, Trace) :-
 % Base case: `true` always succeeds. Context is unchanged.
 solve(true, Ctx, Ctx, I, I, []) :- !.
 
+% Cognitive Cost Tracking: Intercept cost signals for embodied learning
+solve(incur_cost(Action), Ctx, Ctx, I_In, I_Out, [cognitive_cost(Action, Cost)]) :-
+    !,
+    ( config:cognitive_cost(Action, Cost) -> true ; Cost = 0 ),
+    check_viability(I_In, Cost),
+    I_Out is I_In - Cost.
+
 % Modal Operator: Detect a modal operator, switch context for the sub-proof,
-% and restore it upon completion.
-solve(s(ModalGoal), CtxIn, CtxIn, I_In, I_Out, [modal_trace(ModalGoal, Ctx, SubTrace)]) :-
+% and restore it upon completion. Enhanced to capture detailed modal information.
+solve(s(ModalGoal), CtxIn, CtxIn, I_In, I_Out, [modal_trace(ModalGoal, Ctx, SubTrace, ModalInfo)]) :-
     is_modal_operator(ModalGoal, Ctx),
     !,
     ModalGoal =.. [_, InnerGoal],
+    % Record modal transition information
+    ModalInfo = modal_info(
+        transition(CtxIn, Ctx),
+        cost_impact(CtxIn, Ctx),
+        goal(InnerGoal)
+    ),
     % The context is switched for the InnerGoal, but restored to CtxIn afterward.
     solve(InnerGoal, Ctx, _, I_In, I_Out, SubTrace).
 
@@ -139,6 +154,10 @@ solve(Goal, Ctx, Ctx, I_In, I_Out, [arithmetic_trace(Strategy, Result, History)]
 
 % Object-level predicates: Use context-dependent cost. Context flows through sub-proof.
 solve(Goal, CtxIn, CtxOut, I_In, I_Out, [clause(object_level:(Goal:-Body)), trace(Body, BodyTrace)]) :-
+    % NORMATIVE CHECKING: Validate goal against current mathematical context
+    catch(check_norms(Goal), normative_crisis(CrisisGoal, Context), 
+          throw(perturbation(normative_crisis(CrisisGoal, Context)))),
+    
     get_inference_cost(CtxIn, Cost),
     check_viability(I_In, Cost),
     I_Mid is I_In - Cost,

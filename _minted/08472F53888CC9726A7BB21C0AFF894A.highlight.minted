@@ -1,0 +1,265 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Comprehensive Integration Test}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module tests the complete enhanced UMEDCA system including:}
+\PYG{c+cm}{ * \PYGZhy{} Grounded arithmetic operations}
+\PYG{c+cm}{ * \PYGZhy{} Modal logic integration}
+\PYG{c+cm}{ * \PYGZhy{} Normative crisis detection and context shifting}
+\PYG{c+cm}{ * \PYGZhy{} Cognitive cost tracking}
+\PYG{c+cm}{ * \PYGZhy{} Multiplicative pattern detection}
+\PYG{c+cm}{ * \PYGZhy{} Enhanced ORR cycle functionality}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author UMEDCA System Test}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{test\PYGZus{}comprehensive}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}comprehensive\PYGZus{}tests}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}utils}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{config}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}comprehensive\PYGZus{}tests is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Runs comprehensive tests of the enhanced UMEDCA system.}
+\PYG{n+nf}{run\PYGZus{}comprehensive\PYGZus{}tests} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== COMPREHENSIVE UMEDCA SYSTEM TESTS ===\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 1: Enhanced grounded arithmetic with modal signals}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 1: Enhanced Grounded Arithmetic with Modal Context\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}grounded\PYGZus{}arithmetic\PYGZus{}with\PYGZus{}modals}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 2: Normative crisis and context shifting}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 2: Normative Crisis and Context Shifting\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}normative\PYGZus{}crisis\PYGZus{}and\PYGZus{}context\PYGZus{}shifting}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 3: Cognitive cost accumulation and tracking}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 3: Cognitive Cost Accumulation\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}cognitive\PYGZus{}cost\PYGZus{}accumulation}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 4: Modal pattern detection in learning}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 4: Modal Pattern Detection in Learning\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}modal\PYGZus{}pattern\PYGZus{}detection}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 5: Multiplicative pattern bootstrapping}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 5: Multiplicative Pattern Bootstrapping\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}multiplicative\PYGZus{}bootstrapping}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 6: FSM engine functionality}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 6: FSM Engine Infrastructure\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}fsm\PYGZus{}engine}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 7: Configuration\PYGZhy{}based server endpoints}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 7: Server Configuration System\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}server\PYGZus{}configuration}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== ALL COMPREHENSIVE TESTS COMPLETE ===\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}grounded\PYGZus{}arithmetic\PYGZus{}with\PYGZus{}modals is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests grounded arithmetic operations with modal context emission.}
+\PYG{n+nf}{test\PYGZus{}grounded\PYGZus{}arithmetic\PYGZus{}with\PYGZus{}modals} \PYG{o}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Test basic grounded operations with cost tracking}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{7}\PYG{p}{,} \PYG{n+nv}{Seven}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing grounded addition with modal context...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Seven}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{SumInt}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    7 + 3 = \PYGZti{}w (grounded with modal tracking)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{SumInt}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test grounded subtraction}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing grounded subtraction...\PYGZsq{}}\PYG{p}{),}
+    \PYG{p}{(} \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Seven}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Diff}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Diff}\PYG{p}{,} \PYG{n+nv}{DiffInt}\PYG{p}{),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    7 \PYGZhy{} 3 = \PYGZti{}w (grounded subtraction)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{DiffInt}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Subtraction failed (may be expected)\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test modal context in recollection validation}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing modal context in validation...\PYGZsq{}}\PYG{p}{),}
+    \PYG{p}{(} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{Seven}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Seven is valid recollection with history: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{History}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Seven recollection validation failed\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}normative\PYGZus{}crisis\PYGZus{}and\PYGZus{}context\PYGZus{}shifting is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests the normative crisis detection and context shifting mechanism.}
+\PYG{n+nf}{test\PYGZus{}normative\PYGZus{}crisis\PYGZus{}and\PYGZus{}context\PYGZus{}shifting} \PYG{o}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Ensure we start in natural numbers domain}
+    \PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{n}\PYG{p}{),}
+    \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{StartDomain}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Starting domain: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StartDomain}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test crisis detection for 3 \PYGZhy{} 8}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{8}\PYG{p}{,} \PYG{n+nv}{Eight}\PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing normative crisis detection (3 \PYGZhy{} 8 in natural numbers)...\PYGZsq{}}\PYG{p}{),}
+    \PYG{p}{(} \PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{check\PYGZus{}norms}\PYG{p}{(}\PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Eight}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+            \PYG{n+nf}{normative\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{),}
+            \PYG{p}{(}\PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ Crisis detected: \PYGZti{}w in \PYGZti{}w context\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{]),} \PYG{l+s+sAtom}{true}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Crisis detection working correctly\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    No crisis detected (unexpected)\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test context shifting capabilities}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing context expansion capabilities...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{current\PYGZus{}domain\PYGZus{}context}\PYG{p}{(}\PYG{n+nv}{CurrentContext}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Current context: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{CurrentContext}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test domain expansion}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing domain expansion to integers...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{set\PYGZus{}domain}\PYG{p}{(}\PYG{l+s+sAtom}{z}\PYG{p}{),}
+    \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{ExpandedDomain}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Expanded to domain: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{ExpandedDomain}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}cognitive\PYGZus{}cost\PYGZus{}accumulation is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests cognitive cost tracking and accumulation.}
+\PYG{n+nf}{test\PYGZus{}cognitive\PYGZus{}cost\PYGZus{}accumulation} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing cognitive cost definitions...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test various cost types}
+    \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{,} \PYG{n+nv}{UnitCost}\PYG{p}{),}
+    \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{slide\PYGZus{}step}\PYG{p}{,} \PYG{n+nv}{SlideCost}\PYG{p}{),}
+    \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{modal\PYGZus{}shift}\PYG{p}{,} \PYG{n+nv}{ModalCost}\PYG{p}{),}
+    \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{norm\PYGZus{}check}\PYG{p}{,} \PYG{n+nv}{NormCost}\PYG{p}{),}
+    
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Unit count cost: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{UnitCost}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Slide step cost: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{SlideCost}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Modal shift cost: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{ModalCost}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Norm check cost: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NormCost}\PYG{p}{]),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing cost emission in operations...\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} The incur\PYGZus{}cost/1 calls in grounded operations should work}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ Cost emission successful\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}modal\PYGZus{}pattern\PYGZus{}detection is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests modal pattern detection in the learning system.}
+\PYG{n+nf}{test\PYGZus{}modal\PYGZus{}pattern\PYGZus{}detection} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing modal pattern detection infrastructure...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Create a mock trace with modal elements}
+    \PYG{n+nv}{MockTrace} \PYG{o}{=} \PYG{p}{[}
+        \PYG{n+nf}{modal\PYGZus{}trace}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{focus}\PYG{p}{),} \PYG{l+s+sAtom}{compressive}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{step1}\PYG{p}{,} \PYG{l+s+sAtom}{step2}\PYG{p}{],} \PYG{n+nf}{modal\PYGZus{}info}\PYG{p}{(}\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{neutral}\PYG{p}{,} \PYG{l+s+sAtom}{compressive}\PYG{p}{),} \PYG{n+nf}{cost\PYGZus{}impact}\PYG{p}{(}\PYG{l+s+sAtom}{neutral}\PYG{p}{,} \PYG{l+s+sAtom}{compressive}\PYG{p}{),} \PYG{n+nf}{goal}\PYG{p}{(}\PYG{l+s+sAtom}{test}\PYG{p}{))),}
+        \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{modal\PYGZus{}shift}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{),}
+        \PYG{n+nf}{modal\PYGZus{}trace}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{explore}\PYG{p}{),} \PYG{l+s+sAtom}{expansive}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{step3}\PYG{p}{],} \PYG{n+nf}{modal\PYGZus{}info}\PYG{p}{(}\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{compressive}\PYG{p}{,} \PYG{l+s+sAtom}{expansive}\PYG{p}{),} \PYG{n+nf}{cost\PYGZus{}impact}\PYG{p}{(}\PYG{l+s+sAtom}{compressive}\PYG{p}{,} \PYG{l+s+sAtom}{expansive}\PYG{p}{),} \PYG{n+nf}{goal}\PYG{p}{(}\PYG{l+s+sAtom}{test2}\PYG{p}{)))}
+    \PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Test modal sequence extraction}
+    \PYG{p}{(} \PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner:}\PYG{n+nf}{extract\PYGZus{}modal\PYGZus{}sequence}\PYG{p}{(}\PYG{n+nv}{MockTrace}\PYG{p}{,} \PYG{n+nv}{ModalSequence}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ Extracted modal sequence: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{ModalSequence}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Modal sequence extraction failed\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test efficiency calculation}
+    \PYG{n+nv}{TestModalSeq} \PYG{o}{=} \PYG{p}{[}\PYG{n+nf}{modal\PYGZus{}state}\PYG{p}{(}\PYG{l+s+sAtom}{compressive}\PYG{p}{,} \PYG{l+s+sAtom}{focus}\PYG{p}{),} \PYG{l+s+sAtom}{modal\PYGZus{}transition}\PYG{p}{,} \PYG{n+nf}{modal\PYGZus{}state}\PYG{p}{(}\PYG{l+s+sAtom}{expansive}\PYG{p}{,} \PYG{l+s+sAtom}{explore}\PYG{p}{)],}
+    \PYG{p}{(} \PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner:}\PYG{n+nf}{calculate\PYGZus{}modal\PYGZus{}efficiency\PYGZus{}gain}\PYG{p}{(}\PYG{n+nv}{TestModalSeq}\PYG{p}{,} \PYG{n+nv}{Gain}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ Calculated efficiency gain: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Gain}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Efficiency calculation failed\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}multiplicative\PYGZus{}bootstrapping is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests multiplicative pattern detection and bootstrapping.}
+\PYG{n+nf}{test\PYGZus{}multiplicative\PYGZus{}bootstrapping} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing multiplicative pattern detection...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Create a mock trace showing repeated addition}
+    \PYG{n+nv}{MockAdditionTrace} \PYG{o}{=} \PYG{p}{[}
+        \PYG{n+nf}{addition\PYGZus{}ops}\PYG{p}{([}\PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{add}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{),} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{add}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{),} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{add}\PYG{p}{,} \PYG{l+m+mi}{15}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{20}\PYG{p}{)])}
+    \PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Test pattern detection}
+    \PYG{p}{(} \PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner:}\PYG{n+nf}{analyze\PYGZus{}for\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{MockAdditionTrace}\PYG{p}{,} \PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ Detected pattern: \PYGZti{}w × \PYGZti{}w (count: \PYGZti{}w)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Multiplicative pattern detection failed\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing algebraic abstraction detection...\PYGZsq{}}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Test algebraic pattern detection}
+    \PYG{n+nv}{MockPatterns} \PYG{o}{=} \PYG{p}{[}\PYG{n+nf}{add\PYGZus{}pattern}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{8}\PYG{p}{),} \PYG{n+nf}{add\PYGZus{}pattern}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{8}\PYG{p}{),} \PYG{n+nf}{add\PYGZus{}pattern}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{7}\PYG{p}{,} \PYG{l+m+mi}{9}\PYG{p}{)],}
+    \PYG{p}{(} \PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner:}\PYG{n+nf}{find\PYGZus{}algebraic\PYGZus{}abstraction}\PYG{p}{(}\PYG{n+nv}{MockPatterns}\PYG{p}{,} \PYG{n+nv}{AbstractForm}\PYG{p}{,} \PYG{n+nv}{Instances}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ Found abstraction: \PYGZti{}w with instances: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{AbstractForm}\PYG{p}{,} \PYG{n+nv}{Instances}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Algebraic abstraction detection failed\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}fsm\PYGZus{}engine is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests the finite state machine engine infrastructure.}
+\PYG{n+nf}{test\PYGZus{}fsm\PYGZus{}engine} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing FSM engine infrastructure...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test basic FSM utilities}
+    \PYG{n+nv}{TestState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{test\PYGZus{}state}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{data1}\PYG{p}{,} \PYG{l+s+sAtom}{data2}\PYG{p}{]),}
+    \PYG{l+s+sAtom}{fsm\PYGZus{}engine:}\PYG{n+nf}{extract\PYGZus{}state\PYGZus{}info}\PYG{p}{(}\PYG{n+nv}{TestState}\PYG{p}{,} \PYG{n+nv}{StateName}\PYG{p}{,} \PYG{n+nv}{StateData}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ State extraction: \PYGZti{}w \PYGZhy{}\PYGZgt{} \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StateName}\PYG{p}{,} \PYG{n+nv}{StateData}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test history entry creation}
+    \PYG{l+s+sAtom}{fsm\PYGZus{}engine:}\PYG{n+nf}{create\PYGZus{}history\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{TestState}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Test interpretation\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{HistoryEntry}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ History entry created: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{HistoryEntry}\PYG{p}{]),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    FSM engine foundation is ready for strategy refactoring\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}server\PYGZus{}configuration is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests the server configuration system.}
+\PYG{n+nf}{test\PYGZus{}server\PYGZus{}configuration} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing server configuration system...\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test current server mode}
+    \PYG{n+nf}{server\PYGZus{}mode}\PYG{p}{(}\PYG{n+nv}{CurrentMode}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Current server mode: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{CurrentMode}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test endpoint availability}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing endpoint availability:\PYGZsq{}}\PYG{p}{),}
+    \PYG{p}{(} \PYG{n+nf}{server\PYGZus{}endpoint\PYGZus{}enabled}\PYG{p}{(}\PYG{l+s+sAtom}{solve}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ solve endpoint enabled\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✗ solve endpoint disabled\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{p}{(} \PYG{n+nf}{server\PYGZus{}endpoint\PYGZus{}enabled}\PYG{p}{(}\PYG{l+s+sAtom}{debug}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ debug endpoint enabled\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✗ debug endpoint disabled\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test mode switching}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Testing mode switching...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{server\PYGZus{}mode}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{server\PYGZus{}mode}\PYG{p}{(}\PYG{l+s+sAtom}{production}\PYG{p}{)),}
+    
+    \PYG{p}{(} \PYG{n+nf}{server\PYGZus{}endpoint\PYGZus{}enabled}\PYG{p}{(}\PYG{l+s+sAtom}{debug}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✗ debug endpoint still enabled in production (error)\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    ✓ debug endpoint correctly disabled in production\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Restore development mode}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{server\PYGZus{}mode}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{server\PYGZus{}mode}\PYG{p}{(}\PYG{l+s+sAtom}{development}\PYG{p}{)),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    Restored development mode\PYGZsq{}}\PYG{p}{).}
+\end{MintedVerbatim}

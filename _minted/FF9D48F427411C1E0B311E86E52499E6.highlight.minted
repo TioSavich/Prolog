@@ -1,0 +1,161 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Addition Strategy: Counting On by Bases and Ones (COBO)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements the \PYGZsq{}Counting On by Bases and then Ones\PYGZsq{} (COBO)}
+\PYG{c+cm}{ * strategy for multi\PYGZhy{}digit addition, modeled as a finite state machine.}
+\PYG{c+cm}{ * This strategy involves decomposing one number (B) into its base\PYGZhy{}10}
+\PYG{c+cm}{ * components and then incrementally counting on from the other number (A).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1. Decompose B into a number of \PYGZsq{}bases\PYGZsq{} (tens) and \PYGZsq{}ones\PYGZsq{}.}
+\PYG{c+cm}{ * 2. Starting with A, count on by ten for each base.}
+\PYG{c+cm}{ * 3. After all bases are added, count on by one for each one.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state of the automaton is represented by the term:}
+\PYG{c+cm}{ * `state(StateName, Sum, BaseCounter, OneCounter)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(StateName, CurrentSum, BaseCounter, OneCounter, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}cobo}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}cobo}\PYG{o}{/}\PYG{l+m+mi}{4}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}utils}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}cobo(+A:integer, +B:integer, \PYGZhy{}FinalSum:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Counting On by Bases and Ones\PYGZsq{} (COBO) addition strategy for A + B.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes the state machine and runs it until it}
+\PYG{c+c1}{\PYGZpc{}       reaches the accept state. It traces the execution, providing a}
+\PYG{c+c1}{\PYGZpc{}       step\PYGZhy{}by\PYGZhy{}step history of how the sum was computed by first counting}
+\PYG{c+c1}{\PYGZpc{}       on by tens, and then by ones.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param A The first addend, the number to start counting from.}
+\PYG{c+c1}{\PYGZpc{}       @param B The second addend, which is decomposed into bases and ones.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalSum The resulting sum of A and B.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/5` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{n+nf}{run\PYGZus{}cobo}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{FinalSum}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Emit cognitive cost for the overall strategy setup}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Convert inputs to recollection format for grounded arithmetic}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{RecA}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{RecB}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Decompose B into base\PYGZhy{}10 components without using arithmetic}
+    \PYG{n+nf}{decompose\PYGZus{}base10}\PYG{p}{(}\PYG{n+nv}{RecB}\PYG{p}{,} \PYG{n+nv}{RecBases}\PYG{p}{,} \PYG{n+nv}{RecOnes}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Convert back to integers for compatibility with existing state machine}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{RecBases}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{RecOnes}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),}
+
+    \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}initialize}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Record the start and the interpretation of the initialization.}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{InitialInterpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Initialize Sum to \PYGZti{}w. Decompose \PYGZti{}w into \PYGZti{}w Bases, \PYGZti{}w Ones.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{]),}
+    \PYG{n+nv}{InitialHistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}start}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{,} \PYG{n+nv}{InitialInterpretation}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Run the state machine.}
+    \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{InitialHistoryEntry}\PYG{p}{],} \PYG{n+nv}{ReversedHistory}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Reverse the history for correct chronological order.}
+    \PYG{n+nf}{reverse}\PYG{p}{(}\PYG{n+nv}{ReversedHistory}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Extract the final sum from the last history entry.}
+    \PYG{p}{(}\PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nf}{step}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{FinalSum}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{n+nv}{FinalSum} \PYG{o}{=} \PYG{n+nv}{A}\PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{} run/3 is the main recursive loop of the state machine.}
+\PYG{c+c1}{\PYGZpc{} It drives the state transitions until the accept state is reached.}
+
+\PYG{c+c1}{\PYGZpc{} Base case: Stop when the machine reaches the \PYGZsq{}q\PYGZus{}accept\PYGZsq{} state.}
+\PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),} \PYG{n+nv}{AccHistory}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nv}{Interpretation} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}All ones added. Accept.\PYGZsq{}}\PYG{p}{,}
+    \PYG{n+nv}{HistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nv}{FinalHistory} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{].}
+
+\PYG{c+c1}{\PYGZpc{} Recursive step: Perform one transition and continue.}
+\PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{AccHistory}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nv}{CurrentState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),}
+    \PYG{n+nv}{HistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{NextState}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{],} \PYG{n+nv}{FinalHistory}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} transition/3 defines the logic for moving from one state to the next.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}initialize, always transition to q\PYGZus{}add\PYGZus{}bases to start counting.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}initialize}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal: entering focused counting mode (compressive necessity)}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{modal\PYGZus{}shift}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{focus\PYGZus{}on\PYGZus{}bases}\PYG{p}{)),}
+    \PYG{n+nv}{Interpretation} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}Begin counting on by bases.\PYGZsq{}}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} Loop in q\PYGZus{}add\PYGZus{}bases, counting on by one base (10) at a time.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{,} \PYG{n+nv}{NewBaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if BaseCounter \PYGZgt{} 0 using grounded comparison}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{RecBaseCounter}\PYG{p}{),}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{is\PYGZus{}zero\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecBaseCounter}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Add 10 to Sum using grounded arithmetic}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{slide\PYGZus{}step}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{RecSum}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{RecTen}\PYG{p}{),}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecSum}\PYG{p}{,} \PYG{n+nv}{RecTen}\PYG{p}{,} \PYG{n+nv}{RecNewSum}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{RecNewSum}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Subtract 1 from BaseCounter using grounded arithmetic}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{RecOne}\PYG{p}{),}
+    \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecBaseCounter}\PYG{p}{,} \PYG{n+nv}{RecOne}\PYG{p}{,} \PYG{n+nv}{RecNewBaseCounter}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{RecNewBaseCounter}\PYG{p}{,} \PYG{n+nv}{NewBaseCounter}\PYG{p}{),}
+    
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Count on by base: \PYGZti{}w \PYGZhy{}\PYGZgt{} \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} When all bases are added, transition from q\PYGZus{}add\PYGZus{}bases to q\PYGZus{}add\PYGZus{}ones.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{RecBaseCounter}\PYG{p}{),}
+    \PYG{n+nf}{is\PYGZus{}zero\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecBaseCounter}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal: transitioning to more fine\PYGZhy{}grained counting (expansive possibility)}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{modal\PYGZus{}shift}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{shift\PYGZus{}to\PYGZus{}ones}\PYG{p}{)),}
+    \PYG{n+nv}{Interpretation} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}All bases added. Transition to adding ones.\PYGZsq{}}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} Loop in q\PYGZus{}add\PYGZus{}ones, counting on by one at a time.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{NewOneCounter}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if OneCounter \PYGZgt{} 0 using grounded comparison}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{OneCounter}\PYG{p}{,} \PYG{n+nv}{RecOneCounter}\PYG{p}{),}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{is\PYGZus{}zero\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecOneCounter}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Add 1 to Sum using grounded arithmetic}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{RecSum}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{RecOne}\PYG{p}{),}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecSum}\PYG{p}{,} \PYG{n+nv}{RecOne}\PYG{p}{,} \PYG{n+nv}{RecNewSum}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{RecNewSum}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Subtract 1 from OneCounter using grounded arithmetic}
+    \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecOneCounter}\PYG{p}{,} \PYG{n+nv}{RecOne}\PYG{p}{,} \PYG{n+nv}{RecNewOneCounter}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{RecNewOneCounter}\PYG{p}{,} \PYG{n+nv}{NewOneCounter}\PYG{p}{),}
+    
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Count on by one: \PYGZti{}w \PYGZhy{}\PYGZgt{} \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{NewSum}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} When all ones are added, transition from q\PYGZus{}add\PYGZus{}ones to the final accept state.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}add\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{BaseCounter}\PYG{p}{,} \PYG{n+nv}{OneCounter}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{OneCounter}\PYG{p}{,} \PYG{n+nv}{RecOneCounter}\PYG{p}{),}
+    \PYG{n+nf}{is\PYGZus{}zero\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RecOneCounter}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nv}{Interpretation} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}All ones added. Final sum reached.\PYGZsq{}}\PYG{p}{.}
+\end{MintedVerbatim}

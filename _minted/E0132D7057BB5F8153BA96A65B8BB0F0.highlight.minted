@@ -1,0 +1,157 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Basic Functionality Tests}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module tests the basic functionality of the updated UMEDCA system,}
+\PYG{c+cm}{ * particularly the grounded arithmetic and normative crisis detection.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author UMEDCA System Test}
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{test\PYGZus{}basic\PYGZus{}functionality}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}basic\PYGZus{}tests}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}utils}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{current\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{current\PYGZus{}domain\PYGZus{}context}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{check\PYGZus{}norms}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{config}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}basic\PYGZus{}tests is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Runs a series of basic tests to verify system functionality.}
+\PYG{n+nf}{run\PYGZus{}basic\PYGZus{}tests} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== UMEDCA Basic Functionality Tests ===\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 1: Grounded arithmetic operations}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 1: Grounded Arithmetic Operations\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}grounded\PYGZus{}arithmetic}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 2: Recollection conversions}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 2: Recollection Conversions\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}recollection\PYGZus{}conversions}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 3: Cognitive cost tracking}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 3: Cognitive Cost Configuration\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}cognitive\PYGZus{}costs}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 4: Basic object\PYGZhy{}level operations}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 4: Object\PYGZhy{}Level Operations\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}object\PYGZus{}level\PYGZus{}operations}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test 5: Normative crisis detection (simple)}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Test 5: Normative Crisis Detection\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}normative\PYGZus{}crisis}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=== All Basic Tests Complete ===\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}grounded\PYGZus{}arithmetic is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests basic grounded arithmetic operations.}
+\PYG{n+nf}{test\PYGZus{}grounded\PYGZus{}arithmetic} \PYG{o}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Test addition}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{n+nv}{Five}\PYG{p}{),}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Five}\PYG{p}{,} \PYG{n+nv}{Sum}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Sum}\PYG{p}{,} \PYG{n+nv}{SumInt}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  3 + 5 = \PYGZti{}w (grounded arithmetic)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{SumInt}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test comparison}
+    \PYG{p}{(} \PYG{n+nf}{smaller\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Five}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  3 \PYGZlt{} 5 is true (grounded comparison)\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  ERROR: 3 \PYGZlt{} 5 should be true\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test subtraction}
+    \PYG{p}{(} \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Five}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Diff}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Diff}\PYG{p}{,} \PYG{n+nv}{DiffInt}\PYG{p}{),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  5 \PYGZhy{} 3 = \PYGZti{}w (grounded subtraction)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{DiffInt}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  5 \PYGZhy{} 3 failed (expected for this test)\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}recollection\PYGZus{}conversions is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests conversion between integers and recollection structures.}
+\PYG{n+nf}{test\PYGZus{}recollection\PYGZus{}conversions} \PYG{o}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Test integer to recollection}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n+nv}{Four}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Integer 4 converts to: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Four}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test recollection to integer}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Four}\PYG{p}{,} \PYG{n+nv}{BackToInt}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Back to integer: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{BackToInt}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test zero}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{Zero}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Zero as recollection: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Zero}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}cognitive\PYGZus{}costs is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests cognitive cost configuration.}
+\PYG{n+nf}{test\PYGZus{}cognitive\PYGZus{}costs} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{,} \PYG{n+nv}{UnitCost}\PYG{p}{),}
+    \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{,} \PYG{n+nv}{InferenceCost}\PYG{p}{),}
+    \PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{slide\PYGZus{}step}\PYG{p}{,} \PYG{n+nv}{SlideCost}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Unit count cost: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{UnitCost}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Inference cost: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{InferenceCost}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Slide step cost: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{SlideCost}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}object\PYGZus{}level\PYGZus{}operations is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests basic object\PYGZhy{}level predicate availability.}
+\PYG{n+nf}{test\PYGZus{}object\PYGZus{}level\PYGZus{}operations} \PYG{o}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if predicates are defined}
+    \PYG{p}{(} \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{add}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{dynamic}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  add/3 is properly defined as dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  ERROR: add/3 not found or not dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{p}{(} \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{subtract}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{dynamic}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  subtract/3 is properly defined as dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  ERROR: subtract/3 not found or not dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{p}{(} \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{dynamic}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  multiply/3 is properly defined as dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  ERROR: multiply/3 not found or not dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{),}
+    
+    \PYG{p}{(} \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{n+nf}{divide}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{dynamic}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  divide/3 is properly defined as dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  ERROR: divide/3 not found or not dynamic\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      test\PYGZus{}normative\PYGZus{}crisis is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Tests basic normative crisis detection.}
+\PYG{n+nf}{test\PYGZus{}normative\PYGZus{}crisis} \PYG{o}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Test current domain}
+    \PYG{n+nf}{current\PYGZus{}domain}\PYG{p}{(}\PYG{n+nv}{Domain}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Current domain: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Domain}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test prohibition checking}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{Three}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{8}\PYG{p}{,} \PYG{n+nv}{Eight}\PYG{p}{),}
+    
+    \PYG{n+nf}{current\PYGZus{}domain\PYGZus{}context}\PYG{p}{(}\PYG{n+nv}{Context}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Current context: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Context}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Test if subtraction is prohibited}
+    \PYG{p}{(} \PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{check\PYGZus{}norms}\PYG{p}{(}\PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{Three}\PYG{p}{,} \PYG{n+nv}{Eight}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),} 
+            \PYG{n+nf}{normative\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{CrisisContext}\PYG{p}{),} 
+            \PYG{p}{(}\PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Normative crisis detected: \PYGZti{}w in \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{CrisisContext}\PYG{p}{]),} \PYG{l+s+sAtom}{true}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Crisis detection working correctly\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  No crisis detected (may be expected depending on implementation)\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+\end{MintedVerbatim}

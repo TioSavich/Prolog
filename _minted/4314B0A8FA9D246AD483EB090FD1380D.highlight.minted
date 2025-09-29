@@ -1,0 +1,239 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Multiplication Strategy: Distributive Reasoning (DR)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a multiplication strategy based on the distributive}
+\PYG{c+cm}{ * property of multiplication over addition, modeled as a finite state machine.}
+\PYG{c+cm}{ * It solves `N * S` by breaking `S` into two easier parts (`S1` and `S2`).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1.  Split the group size `S` into two smaller, more manageable parts,}
+\PYG{c+cm}{ *     `S1` and `S2`, using a simple heuristic. For example, 7 might be}
+\PYG{c+cm}{ *     split into 2 + 5.}
+\PYG{c+cm}{ * 2.  Calculate the first partial product, `P1 = N * S1`, using repeated addition.}
+\PYG{c+cm}{ * 3.  Calculate the second partial product, `P2 = N * S2`, also using repeated addition.}
+\PYG{c+cm}{ * 4.  Sum the two partial products to get the final answer: `Total = P1 + P2`.}
+\PYG{c+cm}{ *     This demonstrates the distributive property: `N * (S1 + S2) = (N * S1) + (N * S2)`.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state is represented by the term:}
+\PYG{c+cm}{ * `state(Name, S1, S2, P1, P2, Total, Counter, N\PYGZus{}Groups, S\PYGZus{}Size)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(Name, S1, S2, P1, P2, Total, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}dr}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}dr}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{c+c1}{\PYGZpc{} FSM Engine Interface}
+            \PYG{l+s+sAtom}{setup\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{accept\PYGZus{}state}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+            \PYG{l+s+sAtom}{final\PYGZus{}interpretation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+            \PYG{l+s+sAtom}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}dr(+N:integer, +S:integer, \PYGZhy{}FinalTotal:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Distributive Reasoning\PYGZsq{} multiplication strategy for N * S.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the DR}
+\PYG{c+c1}{\PYGZpc{}       strategy. It heuristically splits the multiplier `S` into two parts,}
+\PYG{c+c1}{\PYGZpc{}       calculates the partial product for each part via repeated addition, and}
+\PYG{c+c1}{\PYGZpc{}       then sums the partial products. It traces the entire execution.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param N The number of groups.}
+\PYG{c+c1}{\PYGZpc{}       @param S The size of each group (this is the number that will be split).}
+\PYG{c+c1}{\PYGZpc{}       @param FinalTotal The resulting product of N * S.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/7` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{n+nf}{run\PYGZus{}dr}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{FinalTotal}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use the FSM engine to run this strategy}
+    \PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{),}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}dr}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{FinalTotal}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      setup\PYGZus{}strategy(+N, +S, \PYGZhy{}InitialState, \PYGZhy{}Parameters) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Sets up the initial state for the distributive reasoning strategy.}
+\PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),}
+    \PYG{n+nv}{Parameters} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal for strategy initiation}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}distributive\PYGZus{}reasoning\PYGZus{}strategy}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+StateNum, \PYGZhy{}NextStateNum, \PYGZhy{}Action) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       State transitions for distributive reasoning multiplication FSM.}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}split}\PYG{p}{,} \PYG{l+s+sAtom}{split\PYGZus{}multiplicand}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}to\PYGZus{}split\PYGZus{}phase}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{state\PYGZus{}change}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}split}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P1}\PYG{p}{,} \PYG{l+s+sAtom}{prepare\PYGZus{}first\PYGZus{}partial}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{preparing\PYGZus{}first\PYGZus{}partial\PYGZus{}product}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{preparation}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P1}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{l+s+sAtom}{begin\PYGZus{}first\PYGZus{}calculation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{beginning\PYGZus{}first\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{initialization}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P2}\PYG{p}{,} \PYG{l+s+sAtom}{prepare\PYGZus{}second\PYGZus{}partial}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}to\PYGZus{}second\PYGZus{}partial}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{transition}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}sum}\PYG{p}{,} \PYG{l+s+sAtom}{skip\PYGZus{}to\PYGZus{}sum}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{skipping\PYGZus{}second\PYGZus{}partial\PYGZus{}when\PYGZus{}unnecessary}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{optimization}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P2}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P2}\PYG{p}{,} \PYG{l+s+sAtom}{begin\PYGZus{}second\PYGZus{}calculation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{beginning\PYGZus{}second\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{initialization}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P2}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}sum}\PYG{p}{,} \PYG{l+s+sAtom}{proceed\PYGZus{}to\PYGZus{}sum}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}second\PYGZus{}partial\PYGZus{}calculation}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{completion}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sum}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{l+s+sAtom}{finalize\PYGZus{}result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{finalizing\PYGZus{}distributive\PYGZus{}multiplication}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{finalization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+State, +Base, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Complete state transitions with full state tracking.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, proceed to split the group size S.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}split}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initializing\PYGZus{}distributive\PYGZus{}reasoning}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Inputs: \PYGZti{}w x \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{initialization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}split, split S into two parts, S1 and S2, using a heuristic.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}split}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{n+nv}{Base}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P1}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{applying\PYGZus{}distributive\PYGZus{}splitting\PYGZus{}heuristic}\PYG{p}{)),}
+    \PYG{n+nf}{heuristic\PYGZus{}split}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{),}
+    \PYG{p}{(}\PYG{n+nv}{S2} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} 
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Split S (\PYGZti{}w) into \PYGZti{}w + \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{]),}
+        \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{complex\PYGZus{}splitting}\PYG{p}{)}
+    \PYG{p}{;} 
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}S (\PYGZti{}w) is easy. No split needed.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{S}\PYG{p}{]),}
+        \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{simple\PYGZus{}case}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}init\PYGZus{}P1, prepare to calculate the first partial product (N * S1).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P1}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{preparing\PYGZus{}first\PYGZus{}partial\PYGZus{}product\PYGZus{}calculation}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Initializing calculation of P1 (\PYGZti{}w x \PYGZti{}w).\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{partial\PYGZus{}initialization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}loop\PYGZus{}P1, calculate P1 using repeated addition.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{NewP1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{NewC}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{C} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{continuing\PYGZus{}first\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{)),}
+    \PYG{n+nv}{NewP1} \PYG{o}{is} \PYG{n+nv}{P1} \PYG{o}{+} \PYG{n+nv}{S1}\PYG{p}{,}
+    \PYG{n+nv}{NewC} \PYG{o}{is} \PYG{n+nv}{C} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Iterate P1: Added \PYGZti{}w. P1 = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{NewP1}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{addition\PYGZus{}step}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} After P1 is calculated, decide whether to calculate P2 or just sum.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sum}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}first\PYGZus{}partial\PYGZus{}without\PYGZus{}second}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}P1 complete. P1 = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{P1}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{completion}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P1}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P2}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{S2} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}to\PYGZus{}second\PYGZus{}partial\PYGZus{}calculation}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}P1 complete. P1 = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{P1}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{transition}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}init\PYGZus{}P2, prepare to calculate the second partial product (N * S2).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}P2}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P2}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{preparing\PYGZus{}second\PYGZus{}partial\PYGZus{}product\PYGZus{}calculation}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Initializing calculation of P2 (\PYGZti{}w x \PYGZti{}w).\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{partial\PYGZus{}initialization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}loop\PYGZus{}P2, calculate P2 using repeated addition.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P2}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P2}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{NewP2}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{NewC}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{C} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{continuing\PYGZus{}second\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{)),}
+    \PYG{n+nv}{NewP2} \PYG{o}{is} \PYG{n+nv}{P2} \PYG{o}{+} \PYG{n+nv}{S2}\PYG{p}{,}
+    \PYG{n+nv}{NewC} \PYG{o}{is} \PYG{n+nv}{C} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Iterate P2: Added \PYGZti{}w. P2 = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{NewP2}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{addition\PYGZus{}step}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}P2}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sum}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}second\PYGZus{}partial\PYGZus{}calculation}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}P2 complete. P2 = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{P2}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{completion}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}sum, add the partial products to get the final total.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sum}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{Total}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{l+s+sAtom}{\PYGZsq{}Summing partials.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{executing\PYGZus{}final\PYGZus{}distributive\PYGZus{}sum}\PYG{p}{)),}
+    \PYG{n+nv}{Total} \PYG{o}{is} \PYG{n+nv}{P1} \PYG{o}{+} \PYG{n+nv}{P2}\PYG{p}{,}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{final\PYGZus{}addition}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      accept\PYGZus{}state(+State) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Defines accepting states for the FSM.}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      final\PYGZus{}interpretation(+State, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Provides final interpretation of the computation.}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{,} \PYG{n+nv}{Total}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Successfully computed product: \PYGZti{}w via distributive reasoning (\PYGZti{}w + \PYGZti{}w)\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Total}\PYG{p}{,} \PYG{n+nv}{P1}\PYG{p}{,} \PYG{n+nv}{P2}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result\PYGZus{}from\PYGZus{}history(+History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result\PYGZus{}from\PYGZus{}history(+History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{LastStep}\PYG{p}{),}
+    \PYG{p}{(}\PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} heuristic\PYGZus{}split/4 is a helper to split a number S into two parts, S1 and S2.}
+\PYG{c+c1}{\PYGZpc{} It uses a simple set of rules to find an \PYGZdq{}easy\PYGZdq{} part to split off.}
+\PYG{n+nf}{heuristic\PYGZus{}split}\PYG{p}{(}\PYG{n+nv}{Value}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{S1}\PYG{p}{,} \PYG{n+nv}{S2}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}\PYG{n+nv}{Value} \PYG{o}{\PYGZgt{}} \PYG{n+nv}{Base} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{S1} \PYG{o}{=} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{S2} \PYG{o}{is} \PYG{n+nv}{Value} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Base} \PYG{p}{;}
+    \PYG{p}{(}\PYG{n+nv}{Base} \PYG{o}{mod} \PYG{l+m+mi}{2} \PYG{o}{=:=} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{Value} \PYG{o}{\PYGZgt{}} \PYG{n+nv}{Base} \PYG{o}{/} \PYG{l+m+mi}{2} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{S1} \PYG{o}{is} \PYG{n+nv}{Base} \PYG{o}{/} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n+nv}{S2} \PYG{o}{is} \PYG{n+nv}{Value} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{S1} \PYG{p}{;}
+    \PYG{p}{(}\PYG{n+nv}{Value} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{2} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{S1} \PYG{o}{=} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n+nv}{S2} \PYG{o}{is} \PYG{n+nv}{Value} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{2} \PYG{p}{;}
+    \PYG{p}{(}\PYG{n+nv}{Value} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{S1} \PYG{o}{=} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{S2} \PYG{o}{is} \PYG{n+nv}{Value} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1} \PYG{p}{;}
+    \PYG{n+nv}{S1} \PYG{o}{=} \PYG{n+nv}{Value}\PYG{p}{,} \PYG{n+nv}{S2} \PYG{o}{=} \PYG{l+m+mi}{0}\PYG{p}{)))).}
+\end{MintedVerbatim}

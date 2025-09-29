@@ -29,6 +29,11 @@
           ]).
 
 :- use_module(library(lists)).
+:- use_module(grounded_arithmetic, [greater_than/2, equal_to/2, smaller_than/2,
+                                  integer_to_recollection/2, recollection_to_integer/2, 
+                                  add_grounded/3, subtract_grounded/3, successor/2,
+                                  zero/1, incur_cost/1]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_cbo_mult(+N:integer, +S:integer, +Base:integer, -FinalTotal:integer, -History:list) is det.
 %
@@ -48,28 +53,65 @@
 %       machine's execution path and the interpretation of each step.
 
 run_cbo_mult(N, S, Base, FinalTotal, History) :-
-    (N > 0 -> length(Groups, N), maplist(=(S), Groups) ; Groups = []),
-    (N > 0 -> SourceIdx is N - 1 ; SourceIdx = -1),
-    InitialState = state(q_init, Groups, SourceIdx, 0),
+    % Convert inputs to recollection structures
+    integer_to_recollection(N, N_Rec),
+    integer_to_recollection(S, S_Rec),
+    integer_to_recollection(Base, Base_Rec),
+    integer_to_recollection(0, Zero_Rec),
+    
+    % Emit modal signal: entering multiplication via grouping context (expansive possibility)
+    s(exp_poss(creating_groups_for_multiplication)),
+    
+    (greater_than(N_Rec, Zero_Rec) ->
+        create_groups_grounded(N, S, Groups),
+        predecessor_grounded(N, SourceIdx)
+    ;
+        Groups = [],
+        SourceIdx = -1
+    ),
+    
+    InitialState = state(q_init, Groups, SourceIdx, Zero_Rec),
 
-    run(InitialState, Base, [], ReversedHistory),
+    run(InitialState, Base_Rec, [], ReversedHistory),
     reverse(ReversedHistory, History),
 
     (last(History, step(q_accept, FinalGroups, _)),
-     calculate_total(FinalGroups, Base, FinalTotal) -> true ; FinalTotal = 'error').
+     calculate_total_grounded(FinalGroups, FinalTotal) -> true ; FinalTotal = 'error').
+
+% Helper to create N groups of S items each using grounded operations
+create_groups_grounded(N, S, Groups) :-
+    integer_to_recollection(N, N_Rec),
+    integer_to_recollection(S, S_Rec),
+    create_groups_helper(N_Rec, S_Rec, [], Groups).
+
+create_groups_helper(N_Rec, S_Rec, Acc, Groups) :-
+    (zero(N_Rec) ->
+        Groups = Acc
+    ;
+        recollection_to_integer(S_Rec, S),
+        grounded_arithmetic:predecessor(N_Rec, N_Pred),
+        create_groups_helper(N_Pred, S_Rec, [S|Acc], Groups)
+    ).
+
+% Helper to get predecessor in grounded arithmetic
+predecessor_grounded(N, Pred) :-
+    integer_to_recollection(N, N_Rec),
+    integer_to_recollection(1, One_Rec),
+    subtract_grounded(N_Rec, One_Rec, Pred_Rec),
+    recollection_to_integer(Pred_Rec, Pred).
 
 % run/4 is the main recursive loop of the state machine.
-run(state(q_accept, Gs, _, _), Base, Acc, FinalHistory) :-
-    calculate_total(Gs, Base, Total),
+run(state(q_accept, Gs, _, _), Base_Rec, Acc, FinalHistory) :-
+    calculate_total_grounded(Gs, Total),
     format(string(Interpretation), 'Final Tally. Total = ~w.', [Total]),
     HistoryEntry = step(q_accept, Gs, Interpretation),
     FinalHistory = [HistoryEntry | Acc].
 
-run(CurrentState, Base, Acc, FinalHistory) :-
-    transition(CurrentState, Base, NextState, Interpretation),
+run(CurrentState, Base_Rec, Acc, FinalHistory) :-
+    transition(CurrentState, Base_Rec, NextState, Interpretation),
     CurrentState = state(Name, Gs, _, _),
     HistoryEntry = step(Name, Gs, Interpretation),
-    run(NextState, Base, [HistoryEntry | Acc], FinalHistory).
+    run(NextState, Base_Rec, [HistoryEntry | Acc], FinalHistory).
 
 % transition/4 defines the logic for moving from one state to the next.
 
@@ -83,32 +125,71 @@ transition(state(q_select_source, Gs, SourceIdx, TI), _, state(q_init_transfer, 
         format(string(Interp), 'Selected Group ~w as the source.', [SI1])
     ;
         Interp = 'No groups to process.'
-    ).
+    ),
+    s(comp_nec(selecting_source_group_for_redistribution)).
 
 % From q_init_transfer, start the main redistribution loop.
-transition(state(q_init_transfer, Gs, SI, _), _, state(q_loop_transfer, Gs, SI, 0),
-           'Starting redistribution loop.').
+transition(state(q_init_transfer, Gs, SI, _), _, state(q_loop_transfer, Gs, SI, Zero_Rec),
+           'Starting redistribution loop.') :-
+    integer_to_recollection(0, Zero_Rec),
+    s(exp_poss(beginning_redistribution_process)).
 
 % In q_loop_transfer, move one item from the source group to a target group.
-transition(state(q_loop_transfer, Gs, SI, TI), Base, state(q_loop_transfer, NewGs, SI, NewTI), Interp) :-
+transition(state(q_loop_transfer, Gs, SI, TI_Rec), Base_Rec, state(q_loop_transfer, NewGs, SI, NewTI_Rec), Interp) :-
+    % Convert TI_Rec to integer for list operations (maintaining compatibility)
+    recollection_to_integer(TI_Rec, TI),
+    
     % Conditions for transfer: source has items, target is not full.
-    nth0(SI, Gs, SourceItems), SourceItems > 0,
-    length(Gs, N), TI < N,
+    nth0(SI, Gs, SourceItems), 
+    integer_to_recollection(SourceItems, SourceItems_Rec),
+    integer_to_recollection(0, Zero_Rec),
+    \+ equal_to(SourceItems_Rec, Zero_Rec), % SourceItems > 0
+    
+    length(Gs, N), 
+    integer_to_recollection(N, N_Rec),
+    smaller_than(TI_Rec, N_Rec), % TI < N
+    
     (TI =\= SI ->
-        nth0(TI, Gs, TargetItems), TargetItems < Base,
-        % Perform transfer of one item.
-        update_list(Gs, SI, SourceItems - 1, Gs_mid),
-        update_list(Gs_mid, TI, TargetItems + 1, NewGs),
+        nth0(TI, Gs, TargetItems), 
+        integer_to_recollection(TargetItems, TargetItems_Rec),
+        smaller_than(TargetItems_Rec, Base_Rec), % TargetItems < Base
+        
+        % Perform transfer of one item using grounded arithmetic.
+        integer_to_recollection(1, One_Rec),
+        subtract_grounded(SourceItems_Rec, One_Rec, NewSourceItems_Rec),
+        add_grounded(TargetItems_Rec, One_Rec, NewTargetItems_Rec),
+        
+        recollection_to_integer(NewSourceItems_Rec, NewSourceItems),
+        recollection_to_integer(NewTargetItems_Rec, NewTargetItems),
+        
+        update_list(Gs, SI, NewSourceItems, Gs_mid),
+        update_list(Gs_mid, TI, NewTargetItems, NewGs),
+        
         % Check if target is now full, if so, advance target index.
-        (TargetItems + 1 =:= Base -> NewTI is TI + 1 ; NewTI is TI),
-        format(string(Interp), 'Transferred 1 from ~w to ~w.', [SI+1, TI+1])
+        (equal_to(NewTargetItems_Rec, Base_Rec) -> 
+            grounded_arithmetic:successor(TI_Rec, NewTI_Rec)
+        ; 
+            NewTI_Rec = TI_Rec
+        ),
+        
+        TI_Display is TI + 1,
+        SI_Display is SI + 1,
+        format(string(Interp), 'Transferred 1 from ~w to ~w.', [SI_Display, TI_Display]),
+        s(exp_poss(transferring_item_between_groups))
     ;
         % Skip transferring to the source index itself.
-        NewTI is TI + 1, NewGs = Gs, Interp = 'Skipping source index.'
+        grounded_arithmetic:successor(TI_Rec, NewTI_Rec), 
+        NewGs = Gs, 
+        Interp = 'Skipping source index.'
     ).
+
 % Exit the loop when the source is empty or all targets have been considered.
-transition(state(q_loop_transfer, Gs, SI, TI), _, state(q_finalize, Gs, SI, TI), 'Redistribution complete.') :-
-    (nth0(SI, Gs, 0) ; length(Gs, N), TI >= N).
+transition(state(q_loop_transfer, Gs, SI, TI_Rec), _, state(q_finalize, Gs, SI, TI_Rec), 'Redistribution complete.') :-
+    recollection_to_integer(TI_Rec, TI),
+    (   (nth0(SI, Gs, 0))  % Source is empty
+    ;   (length(Gs, N), TI >= N)  % All targets considered
+    ),
+    s(comp_nec(redistribution_process_complete)).
 
 % From q_finalize, move to the accept state.
 transition(state(q_finalize, Gs, SI, TI), _, state(q_accept, Gs, SI, TI), 'Finalizing.').
@@ -118,9 +199,12 @@ update_list(List, Index, NewVal, NewList) :-
     nth0(Index, List, _, Rest),
     nth0(Index, NewList, NewVal, Rest).
 
-% calculate_total/3 is a helper to sum the elements of the final groups list.
-% Note: The Base is not used, as this just verifies the total number of items.
-calculate_total([], _, 0).
-calculate_total([H|T], Base, Total) :-
-    calculate_total(T, Base, RestTotal),
-    Total is H + RestTotal.
+% calculate_total_grounded/2 is a helper to sum the elements using grounded arithmetic.
+calculate_total_grounded([], 0).
+calculate_total_grounded([H|T], Total) :-
+    calculate_total_grounded(T, RestTotal),
+    integer_to_recollection(H, H_Rec),
+    integer_to_recollection(RestTotal, RestTotal_Rec),
+    add_grounded(H_Rec, RestTotal_Rec, Total_Rec),
+    recollection_to_integer(Total_Rec, Total),
+    incur_cost(unit_count). % Cognitive cost for each addition

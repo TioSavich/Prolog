@@ -18,6 +18,8 @@
 
 % Automatically generated knowledge base.
 :- op(550, xfy, rdiv).
+
+% --- Arithmetic Strategy Rules ---
 run_learned_strategy(A, B, C, rmb(10), D) :-
     integer(A),
     integer(B),
@@ -53,3 +55,10 @@ run_learned_strategy(A, B, C, cob, D) :-
     ),
     solve_foundationally(E, F, C, I),
     D=trace{a_start:A, b_start:B, steps:[G, inner_trace(I)], strategy:cob}.
+
+% --- Proof Strategy Rules (from v2) ---
+learned_proof_strategy(goal{context:[n(is_complete(A))], vars:[A, B]}, introduce(n(euclid_number(B, A)))) :-
+    incompatibility_semantics:product_of_list(A, C),
+    B is C+1,
+    B>1.
+learned_proof_strategy(goal{context:[n(euclid_number(A, B))], vars:[A, B]}, case_split(n(prime(A)), n(composite(A)))).

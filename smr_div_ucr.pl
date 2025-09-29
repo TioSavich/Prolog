@@ -1,35 +1,27 @@
 /** <module> Student Division Strategy: Using Commutative Reasoning (Repeated Addition)
  *
  * This module implements a division strategy based on the concept of
- * commutative reasoning, modeled as a finite state machine. It solves a
- * partitive division problem (E items into G groups) by reframing it as a
+ * commutative reasoning, modeled as a finite state machine using the FSM engine.
+ * It solves a partitive division problem (E items into G groups) by reframing it as a
  * missing factor multiplication problem: `? * G = E`.
  *
- * The process is as follows:
- * 1.  Start with an accumulated total of 0 and a quotient (items per group) of 0.
- * 2.  In each step, simulate adding one item to each of the `G` groups. This
- *     is equivalent to adding `G` to the accumulated total and `1` to the quotient.
- * 3.  Continue this process of repeated addition until the accumulated total
- *     equals the target number of items `E`.
- * 4.  The final quotient represents the number of items that were placed in
- *     each group, which is the answer to the division problem.
- * 5.  This strategy implicitly uses the commutative property by solving
- *     `E / G = ?` as `? * G = E`.
- *
- * The state is represented by the term:
- * `state(Name, Total_Accumulated, Quotient_PerGroup, E_Total, G_Groups)`
- *
- * The history of execution is captured as a list of steps:
- * `step(Name, Total_Accumulated, Quotient_PerGroup, Interpretation)`
- *
- * 
- * 
+ * @author Assistant
+ * @license MIT
  */
+
 :- module(smr_div_ucr,
-          [ run_ucr/4
+          [ run_ucr/4,
+            % FSM Engine Interface
+            transition/4,
+            accept_state/1, 
+            final_interpretation/2, 
+            extract_result_from_history/2
           ]).
 
 :- use_module(library(lists)).
+:- use_module(fsm_engine, [run_fsm_with_base/5]).
+:- use_module(grounded_arithmetic, [incur_cost/1]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_ucr(+E:integer, +G:integer, -FinalQuotient:integer, -History:list) is det.
 %
@@ -48,46 +40,63 @@
 
 run_ucr(E, G, FinalQuotient, History) :-
     InitialState = state(q_start, 0, 0, E, G),
+    Parameters = [E, G],
+    ModalCosts = [
+        s(initiating_commutative_reasoning_division),
+        s(comp_nec(systematic_repeated_addition_for_division)),
+        s(exp_poss(finding_missing_factor_through_iteration))
+    ],
+    incur_cost(ModalCosts),
+    
+    run_fsm_with_base(smr_div_ucr, InitialState, Parameters, _, History),
+    extract_result_from_history(History, FinalQuotient).
 
-    run(InitialState, [], ReversedHistory),
-    reverse(ReversedHistory, History),
-
-    (last(History, step(q_accept, _, FinalQuotient, _)) -> true ; FinalQuotient = 'error').
-
-% run/3 is the main recursive loop of the state machine.
-run(state(q_accept, _, Q, _, _), Acc, FinalHistory) :-
-    format(string(Interpretation), 'Total reached. Problem solved. Output Q=~w.', [Q]),
-    HistoryEntry = step(q_accept, 0, Q, Interpretation),
-    FinalHistory = [HistoryEntry | Acc].
-
-run(CurrentState, Acc, FinalHistory) :-
-    transition(CurrentState, NextState, Interpretation),
-    CurrentState = state(Name, T, Q, _, _),
-    HistoryEntry = step(Name, T, Q, Interpretation),
-    run(NextState, [HistoryEntry | Acc], FinalHistory).
-
-% transition/3 defines the logic for moving from one state to the next.
+% transition/4 defines the FSM engine transitions with modal logic integration.
 
 % From q_start, identify the problem parameters.
-transition(state(q_start, T, Q, E, G), state(q_initialize, T, Q, E, G),
-           'Identify total items and number of groups.').
+transition(state(q_start, T, Q, E, G), [E, G], state(q_initialize, T, Q, E, G), Interp) :-
+    s(identifying_division_problem_parameters),
+    Interp = 'Identify total items and number of groups.',
+    incur_cost(state_change).
 
 % From q_initialize, begin the iterative process.
-transition(state(q_initialize, T, Q, E, G), state(q_iterate, T, Q, E, G),
-           'Initialize distribution total and count per group.').
+transition(state(q_initialize, T, Q, E, G), [E, G], state(q_iterate, T, Q, E, G), Interp) :-
+    s(comp_nec(initializing_systematic_distribution_process)),
+    Interp = 'Initialize distribution total and count per group.',
+    incur_cost(initialization).
 
 % In q_iterate, perform one round of distribution (repeated addition).
-transition(state(q_iterate, T, Q, E, G), state(q_check, NewT, NewQ, E, G), Interp) :-
+transition(state(q_iterate, T, Q, E, G), [E, G], state(q_check, NewT, NewQ, E, G), Interp) :-
     NewT is T + G,
     NewQ is Q + 1,
-    format(string(Interp), 'Distribute round ~w. Total distributed: ~w.', [NewQ, NewT]).
+    s(comp_nec(executing_repeated_addition_step)),
+    format(string(Interp), 'Distribute round ~w. Total distributed: ~w.', [NewQ, NewT]),
+    incur_cost(iteration).
 
 % In q_check, compare the accumulated total to the target total.
-transition(state(q_check, T, Q, E, G), state(q_iterate, T, Q, E, G), Interp) :-
+transition(state(q_check, T, Q, E, G), [E, G], state(q_iterate, T, Q, E, G), Interp) :-
     T < E,
-    format(string(Interp), 'Check: T (~w) < E (~w); continue distributing.', [T, E]).
-transition(state(q_check, E, Q, E, G), state(q_accept, E, Q, E, G), Interp) :-
-    format(string(Interp), 'Check: T (~w) == E (~w); total reached.', [E, E]).
-transition(state(q_check, T, _, E, G), state(q_error, T, 0, E, G), Interp) :-
+    s(comp_nec(checking_progress_against_target)),
+    format(string(Interp), 'Check: T (~w) < E (~w); continue distributing.', [T, E]),
+    incur_cost(comparison).
+    
+transition(state(q_check, E, Q, E, G), [E, G], state(q_accept, E, Q, E, G), Interp) :-
+    s(exp_poss(target_total_reached_successfully)),
+    format(string(Interp), 'Check: T (~w) == E (~w); total reached.', [E, E]),
+    incur_cost(completion).
+    
+transition(state(q_check, T, _, E, G), [E, G], state(q_error, T, 0, E, G), Interp) :-
     T > E,
     format(string(Interp), 'Error: Accumulated total (~w) exceeded E (~w).', [T, E]).
+
+% Accept state predicate for FSM engine
+accept_state(state(q_accept, _, _, _, _)).
+
+% Final interpretation predicate
+final_interpretation(state(q_accept, _, Q, E, G), Interpretation) :-
+    format(string(Interpretation), 'Division complete. ~w / ~w = ~w through repeated addition.', [E, G, Q]).
+
+% Extract result from FSM engine history
+extract_result_from_history(History, FinalQuotient) :-
+    last(History, step(state(q_accept, _, Q, _, _), [], _)),
+    FinalQuotient = Q.

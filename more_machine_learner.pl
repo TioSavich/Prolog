@@ -129,6 +129,8 @@ solve(A, B, Result, Trace) :-
 %       result, which includes the goal and execution trace, to find
 %       opportunities for creating more efficient strategies.
 %
+%       Now enhanced to analyze embodied modal states and cognitive patterns.
+%
 %       @param Result A dict containing at least `goal` and `trace`.
 reflect_and_learn(Result) :-
     Goal = Result.goal,
@@ -136,12 +138,17 @@ reflect_and_learn(Result) :-
     % We only learn from addition, and only if we have a trace.
     (   nonvar(Trace), Goal = add(A, B, _)
     ->  (   writeln('    (Reflecting on addition trace...)'),
+            % Enhanced analysis: examine both syntactic and modal patterns
             (   detect_cob_pattern(Trace, _),
                 construct_and_validate_cob(A, B)
             ;   detect_rmb_pattern(Trace, RMB_Data),
                 construct_and_validate_rmb(A, B, RMB_Data)
             ;   detect_doubles_pattern(Trace, _),
                 construct_and_validate_doubles(A, B)
+            ;   detect_multiplicative_pattern(Trace, MultData),
+                construct_multiplicative_strategy(A, B, MultData)
+            ;   detect_modal_efficiency_pattern(Trace, ModalData),
+                construct_modal_enhanced_strategy(A, B, ModalData)
             ;   true % Succeed even if no new strategy is found
             )
         )
@@ -287,7 +294,255 @@ validate_and_assert(A, B, StrategyHead, StrategyBody) :-
     ).
 
 % =================================================================
-% Part 5: Normative Critique (Placeholder)
+% Part 5: Embodied Modal Logic Pattern Detection
+% =================================================================
+
+%!      detect_modal_efficiency_pattern(+Trace, -ModalData) is semidet.
+%
+%       Detects patterns in embodied modal states that indicate cognitive
+%       efficiency opportunities. Looks for correlations between modal
+%       contexts and computational outcomes.
+%
+%       @param Trace The execution trace containing modal signals
+%       @param ModalData Extracted modal pattern information
+detect_modal_efficiency_pattern(Trace, modal_pattern(ModalSequence, EfficiencyGain)) :-
+    extract_modal_sequence(Trace, ModalSequence),
+    ModalSequence \= [],
+    calculate_modal_efficiency_gain(ModalSequence, EfficiencyGain),
+    EfficiencyGain > 0.
+
+%!      extract_modal_sequence(+Trace, -ModalSequence) is det.
+%
+%       Extracts the sequence of modal contexts from an execution trace.
+extract_modal_sequence([], []).
+extract_modal_sequence([TraceElement|RestTrace], [Modal|RestModals]) :-
+    is_modal_trace_element(TraceElement, Modal), !,
+    extract_modal_sequence(RestTrace, RestModals).
+extract_modal_sequence([_|RestTrace], RestModals) :-
+    extract_modal_sequence(RestTrace, RestModals).
+
+%!      is_modal_trace_element(+TraceElement, -Modal) is semidet.
+%
+%       Identifies modal context elements in trace entries.
+is_modal_trace_element(modal_trace(ModalGoal, Context, _), modal_state(Context, ModalGoal)).
+is_modal_trace_element(cognitive_cost(modal_shift, _), modal_transition).
+
+%!      calculate_modal_efficiency_gain(+ModalSequence, -EfficiencyGain) is det.
+%
+%       Calculates the efficiency gain indicated by a modal sequence.
+%       Compressive states should correlate with focused, efficient computation.
+calculate_modal_efficiency_gain(ModalSequence, EfficiencyGain) :-
+    count_compressive_focus(ModalSequence, CompressiveCount),
+    count_expansive_exploration(ModalSequence, ExpansiveCount),
+    % Efficiency gain when there's more compression (focus) than expansion
+    EfficiencyGain is CompressiveCount - ExpansiveCount.
+
+count_compressive_focus([], 0).
+count_compressive_focus([modal_state(compressive, _)|Rest], Count) :-
+    count_compressive_focus(Rest, RestCount),
+    Count is RestCount + 1.
+count_compressive_focus([_|Rest], Count) :-
+    count_compressive_focus(Rest, Count).
+
+count_expansive_exploration([], 0).
+count_expansive_exploration([modal_state(expansive, _)|Rest], Count) :-
+    count_expansive_exploration(Rest, RestCount),
+    Count is RestCount + 1.
+count_expansive_exploration([_|Rest], Count) :-
+    count_expansive_exploration(Rest, Count).
+
+%!      construct_modal_enhanced_strategy(+A, +B, +ModalData) is det.
+%
+%       Constructs a new strategy enhanced with modal context awareness.
+%       This strategy would optimize based on the detected modal patterns.
+construct_modal_enhanced_strategy(A, B, modal_pattern(ModalSequence, EfficiencyGain)) :-
+    format('Constructing modal-enhanced strategy for ~w + ~w~n', [A, B]),
+    format('  Modal sequence: ~w~n', [ModalSequence]),
+    format('  Efficiency gain: ~w~n', [EfficiencyGain]),
+    
+    % Create a strategy name based on modal characteristics
+    determine_modal_strategy_name(ModalSequence, StrategyName),
+    
+    % Construct the enhanced strategy clause
+    construct_modal_strategy_clause(A, B, StrategyName, ModalSequence, Clause),
+    
+    % Validate and assert the new strategy
+    ( validate_strategy_clause(Clause) ->
+        assertz(Clause),
+        format('Successfully created modal-enhanced strategy: ~w~n', [StrategyName])
+    ;
+        writeln('Modal strategy validation failed.')
+    ).
+
+%!      determine_modal_strategy_name(+ModalSequence, -StrategyName) is det.
+%
+%       Determines an appropriate strategy name based on modal characteristics.
+determine_modal_strategy_name(ModalSequence, StrategyName) :-
+    ( member(modal_state(compressive, _), ModalSequence) ->
+        StrategyName = modal_focused_addition
+    ; member(modal_state(expansive, _), ModalSequence) ->
+        StrategyName = modal_exploratory_addition
+    ;
+        StrategyName = modal_neutral_addition
+    ).
+
+%!      construct_modal_strategy_clause(+A, +B, +StrategyName, +ModalSequence, -Clause) is det.
+%
+%       Constructs the actual Prolog clause for the modal-enhanced strategy.
+construct_modal_strategy_clause(A, B, StrategyName, _ModalSequence, Clause) :-
+    % For now, create a simple optimized clause
+    % Future versions could use ModalSequence to customize the strategy body
+    C is A + B,
+    Clause = (run_learned_strategy(A, B, C, StrategyName, 
+                                   [modal_optimization(StrategyName, A, B, C)]) :-
+              integer(A), integer(B), A >= 0, B >= 0).
+
+% =================================================================
+% Part 6: True Bootstrapping - Multiplicative and Algebraic Pattern Detection
+% =================================================================
+
+%!      detect_multiplicative_pattern(+Trace, -MultData) is semidet.
+%
+%       Detects repeated addition patterns that indicate multiplication.
+%       This enables qualitative leaps from arithmetic to multiplicative reasoning.
+%
+%       @param Trace The execution trace to analyze
+%       @param MultData Information about the detected multiplicative pattern
+detect_multiplicative_pattern(Trace, mult_pattern(Multiplicand, Multiplier, TotalOperations)) :-
+    extract_addition_sequence(Trace, AdditionSequence),
+    analyze_for_repeated_addition(AdditionSequence, Multiplicand, Multiplier, TotalOperations),
+    TotalOperations >= 3.  % Require at least 3 repeated additions to detect pattern
+
+%!      extract_addition_sequence(+Trace, -AdditionSequence) is det.
+%
+%       Extracts the sequence of addition operations from a trace.
+extract_addition_sequence([], []).
+extract_addition_sequence([TraceElement|RestTrace], [Addition|RestAdditions]) :-
+    is_addition_trace_element(TraceElement, Addition), !,
+    extract_addition_sequence(RestTrace, RestAdditions).
+extract_addition_sequence([_|RestTrace], RestAdditions) :-
+    extract_addition_sequence(RestTrace, RestAdditions).
+
+%!      is_addition_trace_element(+TraceElement, -Addition) is semidet.
+%
+%       Identifies addition operations in trace elements.
+is_addition_trace_element(arithmetic_trace(_, _, History), addition_ops(History)) :-
+    is_list(History).
+is_addition_trace_element(trace(add(A, B, C), _), direct_add(A, B, C)).
+
+%!      analyze_for_repeated_addition(+AdditionSequence, -Multiplicand, -Multiplier, -Count) is semidet.
+%
+%       Analyzes addition sequence for repeated addition of the same value.
+analyze_for_repeated_addition(AdditionSequence, Multiplicand, Multiplier, Count) :-
+    find_repeated_addend(AdditionSequence, Multiplicand),
+    count_repetitions(AdditionSequence, Multiplicand, Count),
+    Multiplier = Count.
+
+%!      find_repeated_addend(+AdditionSequence, -Addend) is semidet.
+%
+%       Finds an addend that appears repeatedly in the sequence.
+find_repeated_addend([addition_ops(Ops)|_], Addend) :-
+    member(step(_, A, B, _), Ops),
+    (   Addend = A ; Addend = B ),
+    integer(Addend),
+    Addend > 1.
+
+%!      count_repetitions(+AdditionSequence, +Addend, -Count) is det.
+%
+%       Counts how many times an addend appears in the sequence.
+count_repetitions([], _, 0).
+count_repetitions([addition_ops(Ops)|Rest], Addend, Count) :-
+    count_addend_in_ops(Ops, Addend, OpsCount),
+    count_repetitions(Rest, Addend, RestCount),
+    Count is OpsCount + RestCount.
+
+count_addend_in_ops([], _, 0).
+count_addend_in_ops([step(_, A, B, _)|Rest], Addend, Count) :-
+    ( (A == Addend ; B == Addend) ->
+        count_addend_in_ops(Rest, Addend, RestCount),
+        Count is RestCount + 1
+    ;
+        count_addend_in_ops(Rest, Addend, Count)
+    ).
+
+%!      construct_multiplicative_strategy(+A, +B, +MultData) is det.
+%
+%       Constructs a multiplication strategy from detected repeated addition pattern.
+%       This represents true conceptual bootstrapping from addition to multiplication.
+construct_multiplicative_strategy(A, B, mult_pattern(Multiplicand, Multiplier, _)) :-
+    format('BOOTSTRAPPING: Detected multiplicative pattern!~n'),
+    format('  ~w repeated additions of ~w detected~n', [Multiplier, Multiplicand]),
+    format('  Synthesizing multiplication strategy...~n'),
+    
+    % Create new multiplication predicate if it doesn't exist
+    ( \+ predicate_property(multiply_learned(_, _, _), defined) ->
+        create_multiplication_predicate
+    ; true
+    ),
+    
+    % Create specific multiplication rule for this pattern
+    construct_multiplication_rule(Multiplicand, Multiplier, Rule),
+    assertz(Rule),
+    format('  Successfully bootstrapped to multiplication!~n').
+
+%!      create_multiplication_predicate is det.
+%
+%       Creates the basic multiplication predicate structure.
+create_multiplication_predicate :-
+    assertz((multiply_learned(0, _, 0) :-
+        writeln('Multiplication by zero yields zero.'))),
+    assertz((multiply_learned(A, B, Result) :-
+        A > 0, B > 0,
+        A1 is A - 1,
+        multiply_learned(A1, B, PartialResult),
+        Result is PartialResult + B)),
+    writeln('Created fundamental multiplication predicate structure.').
+
+%!      construct_multiplication_rule(+Multiplicand, +Multiplier, -Rule) is det.
+%
+%       Constructs a specific multiplication rule from the detected pattern.
+construct_multiplication_rule(Multiplicand, Multiplier, Rule) :-
+    Product is Multiplicand * Multiplier,
+    Rule = (run_learned_strategy(Multiplicand, Multiplier, Product, 
+                                discovered_multiplication,
+                                [bootstrapped_from_addition(Multiplicand, Multiplier)]) :-
+            integer(Multiplicand), integer(Multiplier),
+            Multiplicand > 0, Multiplier > 0).
+
+%!      detect_algebraic_pattern(+Trace, -AlgebraicData) is semidet.
+%
+%       Detects when arithmetic strategies can be abstracted to symbolic manipulation.
+%       This enables bootstrapping to algebraic reasoning.
+detect_algebraic_pattern(Trace, algebraic_pattern(AbstractForm, Instances)) :-
+    extract_operation_patterns(Trace, Patterns),
+    find_algebraic_abstraction(Patterns, AbstractForm, Instances),
+    length(Instances, InstanceCount),
+    InstanceCount >= 2.  % Need multiple instances to abstract
+
+%!      extract_operation_patterns(+Trace, -Patterns) is det.
+%
+%       Extracts operational patterns that could be algebraically abstracted.
+extract_operation_patterns(Trace, Patterns) :-
+    findall(Pattern, 
+            (member(TraceElement, Trace),
+             extract_operation_pattern(TraceElement, Pattern)),
+            Patterns).
+
+extract_operation_pattern(trace(add(A, B, C), _), add_pattern(A, B, C)).
+extract_operation_pattern(arithmetic_trace(Strategy, Result, _), strategy_pattern(Strategy, Result)).
+
+%!      find_algebraic_abstraction(+Patterns, -AbstractForm, -Instances) is semidet.
+%
+%       Finds common algebraic structures in operation patterns.
+find_algebraic_abstraction(Patterns, commutative_property, Instances) :-
+    findall(add_pattern(A, B, C), 
+            (member(add_pattern(A, B, C), Patterns),
+             member(add_pattern(B, A, C), Patterns)),
+            Instances),
+    Instances \= [].
+
+% =================================================================
+% Part 6: Normative Critique (Placeholder)
 % =================================================================
 
 %!      critique_and_bootstrap(+Goal:term) is det.

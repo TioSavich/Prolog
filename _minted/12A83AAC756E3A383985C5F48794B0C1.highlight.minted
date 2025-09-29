@@ -1,0 +1,149 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Finite State Machine Engine}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module provides a common execution engine for all student reasoning}
+\PYG{c+cm}{ * strategies (sar\PYGZus{}*.pl and smr\PYGZus{}*.pl files). It eliminates code duplication}
+\PYG{c+cm}{ * by centralizing the state machine execution logic.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Each strategy file now only needs to define:}
+\PYG{c+cm}{ * 1. transition/3 rules (State, NextState, Interpretation)}
+\PYG{c+cm}{ * 2. initial\PYGZus{}state/2 (for the strategy setup)}
+\PYG{c+cm}{ * 3. accept\PYGZus{}state/1 (to identify terminal states)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author UMEDCA System}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{run\PYGZus{}fsm}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+    \PYG{l+s+sAtom}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{,}
+    \PYG{l+s+sAtom}{run\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{4}
+\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}fsm(+StrategyModule, +InitialState, +Parameters, \PYGZhy{}History) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Generic FSM execution engine that works with any strategy module.}
+\PYG{c+c1}{\PYGZpc{}       }
+\PYG{c+c1}{\PYGZpc{}       @param StrategyModule The module containing transition rules}
+\PYG{c+c1}{\PYGZpc{}       @param InitialState The starting state of the FSM}
+\PYG{c+c1}{\PYGZpc{}       @param Parameters Additional parameters needed by the strategy}
+\PYG{c+c1}{\PYGZpc{}       @param History The complete execution history}
+\PYG{n+nf}{run\PYGZus{}fsm}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{ReversedHistory}\PYG{p}{),}
+    \PYG{n+nf}{reverse}\PYG{p}{(}\PYG{n+nv}{ReversedHistory}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base(+StrategyModule, +InitialState, +Parameters, +Base, \PYGZhy{}History) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       FSM execution with a base parameter (for strategies that need base\PYGZhy{}10 operations).}
+\PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}loop\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{ReversedHistory}\PYG{p}{),}
+    \PYG{n+nf}{reverse}\PYG{p}{(}\PYG{n+nv}{ReversedHistory}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}strategy(+StrategyModule, +A, +B, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       High\PYGZhy{}level interface that handles the complete strategy execution}
+\PYG{c+c1}{\PYGZpc{}       including setup, execution, and result extraction.}
+\PYG{n+nf}{run\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Get the initial state from the strategy module}
+    \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{l+s+sAtom}{:}\PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{)),}
+    
+    \PYG{c+c1}{\PYGZpc{} Run the FSM}
+    \PYG{n+nf}{run\PYGZus{}fsm}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Extract result from final state}
+    \PYG{n+nf}{extract\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{StrategyModule}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Internal Implementation \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}fsm\PYGZus{}loop(+Module, +CurrentState, +Parameters, +AccHistory, \PYGZhy{}FinalHistory) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Main FSM execution loop without base parameter.}
+\PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{p}{,} \PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{AccHistory}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if this is an accept state}
+    \PYG{p}{(} \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{l+s+sAtom}{:}\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{c+c1}{\PYGZpc{} Terminal state reached}
+        \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{l+s+sAtom}{:}\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{FinalInterpretation}\PYG{p}{)),}
+        \PYG{n+nf}{create\PYGZus{}history\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{FinalInterpretation}\PYG{p}{,} \PYG{n+nv}{HistoryEntry}\PYG{p}{),}
+        \PYG{n+nv}{FinalHistory} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{]}
+    \PYG{p}{;}
+        \PYG{c+c1}{\PYGZpc{} Try to make a transition}
+        \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{l+s+sAtom}{:}\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{)),}
+        \PYG{n+nf}{create\PYGZus{}history\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{,} \PYG{n+nv}{HistoryEntry}\PYG{p}{),}
+        \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{],} \PYG{n+nv}{FinalHistory}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}fsm\PYGZus{}loop\PYGZus{}with\PYGZus{}base(+Module, +CurrentState, +Parameters, +Base, +AccHistory, \PYGZhy{}FinalHistory) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Main FSM execution loop with base parameter.}
+\PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}loop\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{p}{,} \PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{AccHistory}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if this is an accept state  }
+    \PYG{p}{(} \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{l+s+sAtom}{:}\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{c+c1}{\PYGZpc{} Terminal state reached}
+        \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{l+s+sAtom}{:}\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{FinalInterpretation}\PYG{p}{)),}
+        \PYG{n+nf}{create\PYGZus{}history\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{FinalInterpretation}\PYG{p}{,} \PYG{n+nv}{HistoryEntry}\PYG{p}{),}
+        \PYG{n+nv}{FinalHistory} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{]}
+    \PYG{p}{;}
+        \PYG{c+c1}{\PYGZpc{} Try to make a transition (with base parameter)}
+        \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{l+s+sAtom}{:}\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{)),}
+        \PYG{n+nf}{create\PYGZus{}history\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{,} \PYG{n+nv}{HistoryEntry}\PYG{p}{),}
+        \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}loop\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{],} \PYG{n+nv}{FinalHistory}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      create\PYGZus{}history\PYGZus{}entry(+State, +Interpretation, \PYGZhy{}HistoryEntry) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Creates a standardized history entry from state and interpretation.}
+\PYG{n+nf}{create\PYGZus{}history\PYGZus{}entry}\PYG{p}{(}\PYG{n+nv}{State}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{,} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nv}{StateName}\PYG{p}{,} \PYG{n+nv}{StateData}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}state\PYGZus{}info}\PYG{p}{(}\PYG{n+nv}{State}\PYG{p}{,} \PYG{n+nv}{StateName}\PYG{p}{,} \PYG{n+nv}{StateData}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}state\PYGZus{}info(+State, \PYGZhy{}StateName, \PYGZhy{}StateData) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts state name and data from state terms.}
+\PYG{n+nf}{extract\PYGZus{}state\PYGZus{}info}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{Data}\PYG{p}{),} \PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{Data}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+\PYG{n+nf}{extract\PYGZus{}state\PYGZus{}info}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{),} \PYG{n+nv}{Name}\PYG{p}{,} \PYG{p}{[])} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+\PYG{n+nf}{extract\PYGZus{}state\PYGZus{}info}\PYG{p}{(}\PYG{n+nv}{State}\PYG{p}{,} \PYG{n+nv}{State}\PYG{p}{,} \PYG{p}{[]).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result(+Module, +History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{n+nf}{extract\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(} \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Module}\PYG{l+s+sAtom}{:}\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}
+        \PYG{c+c1}{\PYGZpc{} Default: extract from last history entry}
+        \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{LastEntry}\PYG{p}{),}
+        \PYG{n+nf}{extract\PYGZus{}default\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{LastEntry}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}default\PYGZus{}result(+HistoryEntry, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Default result extraction from history entry.}
+\PYG{n+nf}{extract\PYGZus{}default\PYGZus{}result}\PYG{p}{(}\PYG{n+nf}{step}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{StateData}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(} \PYG{n+nv}{StateData} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{Result}\PYG{p}{|}\PYG{k}{\PYGZus{}}\PYG{p}{]} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{true}
+    \PYG{p}{;} \PYG{n+nv}{StateData} \PYG{o}{=} \PYG{n+nv}{Result} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{n+nv}{StateData}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Support for Cognitive Cost Integration \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      emit\PYGZus{}modal\PYGZus{}signal(+ModalContext) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Emits a modal context signal for embodied learning analysis.}
+\PYG{n+nf}{emit\PYGZus{}modal\PYGZus{}signal}\PYG{p}{(}\PYG{n+nv}{ModalContext}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{modal\PYGZus{}shift}\PYG{p}{),}
+    \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{ModalContext}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      emit\PYGZus{}cognitive\PYGZus{}state(+CognitiveState) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Emits a cognitive state signal for learning analysis.}
+\PYG{n+nf}{emit\PYGZus{}cognitive\PYGZus{}state}\PYG{p}{(}\PYG{n+nv}{CognitiveState}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Could be extended to emit specific cognitive markers}
+    \PYG{l+s+sAtom}{true}\PYG{p}{.}
+\end{MintedVerbatim}

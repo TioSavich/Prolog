@@ -1,0 +1,154 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Hermeneutic Calculator \PYGZhy{} Strategy Dispatcher}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module acts as a high\PYGZhy{}level dispatcher for the various cognitive}
+\PYG{c+cm}{ * strategy models implemented in the `sar\PYGZus{}*` and `smr\PYGZus{}*` modules. It provides}
+\PYG{c+cm}{ * a unified interface to execute a calculation using a specific, named}
+\PYG{c+cm}{ * strategy and to list the available strategies for each arithmetic operation.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This allows the user interface or other components to abstract away the}
+\PYG{c+cm}{ * details of individual strategy modules.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{hermeneutic\PYGZus{}calculator}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{calculate}\PYG{o}{/}\PYG{l+m+mi}{6}
+          \PYG{p}{,} \PYG{l+s+sAtom}{list\PYGZus{}strategies}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Addition Strategies}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}cobo}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}cobo\PYGZus{}add}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}chunking}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}chunking\PYGZus{}add}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}rmb}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}rmb\PYGZus{}add}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}rounding}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}rounding\PYGZus{}add}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Subtraction Strategies  }
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}cobo\PYGZus{}missing\PYGZus{}addend}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}cobo\PYGZus{}missing\PYGZus{}addend}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}cbbo\PYGZus{}take\PYGZus{}away}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}cbbo\PYGZus{}take\PYGZus{}away}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}decomposition}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}decomposition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}rounding}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}rounding\PYGZus{}sub}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}sliding}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}sliding}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}chunking\PYGZus{}a}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}chunking\PYGZus{}a}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}chunking\PYGZus{}b}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}chunking\PYGZus{}b}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}chunking\PYGZus{}c}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}chunking\PYGZus{}c}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Multiplication Strategies}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}c2c}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}c2c}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}cbo}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}cbo\PYGZus{}mult}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}commutative\PYGZus{}reasoning}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}commutative\PYGZus{}reasoning}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}dr}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}dr}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Division Strategies}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}cbo}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}cbo\PYGZus{}div}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}dealing\PYGZus{}by\PYGZus{}ones}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}dealing\PYGZus{}by\PYGZus{}ones}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}idp}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}idp}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}ucr}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}ucr}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Counting Automata}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{counting2}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}counting2}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{counting\PYGZus{}on\PYGZus{}back}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}counting\PYGZus{}on\PYGZus{}back}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Strategy Lists \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      list\PYGZus{}strategies(+Op:atom, \PYGZhy{}Strategies:list) is nondet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Provides a list of available strategy names for a given arithmetic}
+\PYG{c+c1}{\PYGZpc{}       operator.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Op The operator (`+`, `\PYGZhy{}`, `*`, `/`).}
+\PYG{c+c1}{\PYGZpc{}       @param Strategies A list of atoms representing the names of the}
+\PYG{c+c1}{\PYGZpc{}       strategies available for that operator.}
+\PYG{n+nf}{list\PYGZus{}strategies}\PYG{p}{(}\PYG{l+s+sAtom}{+}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{\PYGZsq{}COBO\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Chunking\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}RMB\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Rounding\PYGZsq{}}
+\PYG{p}{]).}
+\PYG{n+nf}{list\PYGZus{}strategies}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{\PYGZsq{}COBO (Missing Addend)\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}CBBO (Take Away)\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Decomposition\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Rounding\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Sliding\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Chunking A\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Chunking B\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Chunking C\PYGZsq{}}
+\PYG{p}{]).}
+\PYG{n+nf}{list\PYGZus{}strategies}\PYG{p}{(}\PYG{l+s+sAtom}{*}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{\PYGZsq{}C2C\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}CBO\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Commutative Reasoning\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}DR\PYGZsq{}}
+\PYG{p}{]).}
+\PYG{n+nf}{list\PYGZus{}strategies}\PYG{p}{(}\PYG{l+s+sAtom}{/}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{\PYGZsq{}CBO (Division)\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}Dealing by Ones\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}IDP\PYGZsq{}}\PYG{p}{,}
+    \PYG{l+s+sAtom}{\PYGZsq{}UCR\PYGZsq{}}
+\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Calculator Dispatch \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{c+c1}{\PYGZpc{}!      calculate(+Num1:integer, +Op:atom, +Num2:integer, +Strategy:atom, \PYGZhy{}Result:integer, \PYGZhy{}History:list) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes a calculation using a specified cognitive strategy.}
+\PYG{c+c1}{\PYGZpc{}       This predicate acts as a dispatcher, calling the appropriate}
+\PYG{c+c1}{\PYGZpc{}       `run\PYGZus{}*` predicate from the various strategy modules based on the}
+\PYG{c+c1}{\PYGZpc{}       `Strategy` name. It now captures and returns the execution trace.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Num1 The first operand.}
+\PYG{c+c1}{\PYGZpc{}       @param Op The arithmetic operator (`+`, `\PYGZhy{}`, `*`, `/`).}
+\PYG{c+c1}{\PYGZpc{}       @param Num2 The second operand.}
+\PYG{c+c1}{\PYGZpc{}       @param Strategy The name of the strategy to use (must match one from}
+\PYG{c+c1}{\PYGZpc{}       `list\PYGZus{}strategies/2`).}
+\PYG{c+c1}{\PYGZpc{}       @param Result The numerical result of the calculation. Fails if the}
+\PYG{c+c1}{\PYGZpc{}       strategy does not complete successfully.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of terms representing the execution trace of}
+\PYG{c+c1}{\PYGZpc{}       the chosen strategy.}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{l+s+sAtom}{+}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}COBO\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}cobo}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{l+s+sAtom}{+}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Chunking\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}chunking}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{l+s+sAtom}{+}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}RMB\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}rmb}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{l+s+sAtom}{+}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Rounding\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}rounding}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}COBO (Missing Addend)\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}cobo\PYGZus{}ma}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}CBBO (Take Away)\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}cbbo\PYGZus{}ta}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Decomposition\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}decomposition}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Rounding\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}sub\PYGZus{}rounding}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Sliding\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}sliding}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Chunking A\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}chunking\PYGZus{}a}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Chunking B\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}chunking\PYGZus{}b}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZhy{}}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Chunking C\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}chunking\PYGZus{}c}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{l+s+sAtom}{*}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}C2C\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}c2c}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{l+s+sAtom}{*}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}CBO\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}cbo\PYGZus{}mult}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{l+s+sAtom}{*}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Commutative Reasoning\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}commutative\PYGZus{}mult}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{l+s+sAtom}{*}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}DR\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}dr}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{l+s+sAtom}{/}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}CBO (Division)\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}cbo\PYGZus{}div}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{l+s+sAtom}{/}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Dealing by Ones\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}dealing\PYGZus{}by\PYGZus{}ones}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{l+s+sAtom}{/}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}IDP\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} A default Knowledge Base is provided for demonstration.}
+    \PYG{n+nv}{KB} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{40}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{5}\PYG{p}{,} \PYG{l+m+mi}{16}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{8}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{],}
+    \PYG{n+nf}{run\PYGZus{}idp}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{KB}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{E}\PYG{p}{,} \PYG{l+s+sAtom}{/}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}UCR\PYGZsq{}}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{run\PYGZus{}ucr}\PYG{p}{(}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{).}
+\end{MintedVerbatim}

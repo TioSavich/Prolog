@@ -17,7 +17,7 @@
  * 
  * 
  */
-:- module(reorganization_engine, [accommodate/1]).
+:- module(reorganization_engine, [accommodate/1, handle_normative_crisis/2, handle_incoherence/1]).
 
 :- use_module(object_level).
 :- use_module(reflective_monitor).
@@ -202,3 +202,137 @@ specialize_add_rule :-
 assert_and_log(Clause) :-
     assertz(Clause),
     log_event(asserted(Clause)).
+
+% --- Normative Crisis Handlers ---
+
+%!      handle_normative_crisis(+CrisisGoal:term, +Context:atom) is det.
+%
+%       Handles normative crises by shifting mathematical contexts to accommodate
+%       previously prohibited operations. This implements the dialectical
+%       expansion of mathematical understanding.
+%
+%       @param CrisisGoal The goal that violated current norms
+%       @param Context The context in which the violation occurred
+handle_normative_crisis(CrisisGoal, Context) :-
+    log_event(normative_crisis(CrisisGoal, Context)),
+    
+    % Determine appropriate context shift
+    propose_context_shift(Context, NewContext, CrisisGoal),
+    
+    % Perform the dialectical shift
+    writeln('--- Conceptual Bootstrapping: Context Expansion ---'),
+    format('Expanding context from ~w to ~w to accommodate ~w~n', [Context, NewContext, CrisisGoal]),
+    
+    % Update the current domain
+    set_domain_from_context(NewContext),
+    
+    % Introduce new vocabulary for the expanded context
+    introduce_vocabulary(NewContext, CrisisGoal),
+    
+    log_event(context_shift(Context, NewContext)).
+
+%!      propose_context_shift(+Context:atom, -NewContext:atom, +Goal:term) is det.
+%
+%       Proposes an appropriate context expansion based on the nature of the crisis.
+propose_context_shift(natural_numbers, integers, subtract(M, S, _)) :-
+    % When subtraction fails in natural numbers, expand to integers
+    grounded_arithmetic:smaller_than(M, S).
+
+propose_context_shift(integers, rationals, divide(_, _, _)).
+    % When division doesn't yield integers, expand to rationals
+
+propose_context_shift(Context, Context, _) :-
+    % Default: no expansion needed
+    true.
+
+%!      set_domain_from_context(+Context:atom) is det.
+%
+%       Maps context names back to domain symbols for incompatibility_semantics.
+set_domain_from_context(natural_numbers) :- set_domain(n).
+set_domain_from_context(integers) :- set_domain(z).
+set_domain_from_context(rationals) :- set_domain(q).
+
+%!      introduce_vocabulary(+Context:atom, +CrisisGoal:term) is det.
+%
+%       Introduces new mathematical vocabulary and operations for expanded contexts.
+introduce_vocabulary(integers, subtract(M, S, _)) :-
+    % Introduce negative numbers and debt representation
+    writeln('Introducing negative number vocabulary...'),
+    
+    % Add rule for subtraction that yields negative results
+    NewRule = (object_level:subtract(M, S, debt(R)) :-
+        grounded_arithmetic:smaller_than(M, S),
+        grounded_arithmetic:subtract_grounded(S, M, R)
+    ),
+    
+    assert_and_log(NewRule),
+    format('Introduced debt/1 representation for negative numbers.~n').
+
+introduce_vocabulary(rationals, divide(_, _, _)) :-
+    % Introduce rational number representation
+    writeln('Introducing rational number vocabulary...'),
+    
+    % Add rule for division that yields fractions
+    NewRule = (object_level:divide(Dividend, Divisor, fraction(Dividend, Divisor)) :-
+        \+ grounded_arithmetic:zero(Divisor)
+    ),
+    
+    assert_and_log(NewRule),
+    format('Introduced fraction/2 representation for rational numbers.~n').
+
+introduce_vocabulary(_, _) :-
+    % Default: no new vocabulary needed
+    true.
+
+%!      handle_incoherence(+Commitments:list) is det.
+%
+%       Handles logical incoherence by identifying and retracting conflicting
+%       beliefs. This implements belief revision in response to contradictions.
+%
+%       @param Commitments The set of commitments that form an incoherent set
+handle_incoherence(Commitments) :-
+    log_event(incoherence_detected(Commitments)),
+    
+    writeln('--- Belief Revision: Resolving Incoherence ---'),
+    format('Analyzing incoherent commitments: ~w~n', [Commitments]),
+    
+    % Find the most stressed (frequently failing) commitment
+    identify_stressed_commitment(Commitments, StressedCommitment),
+    
+    % Retract the problematic commitment
+    format('Retracting stressed commitment: ~w~n', [StressedCommitment]),
+    retract_commitment(StressedCommitment),
+    
+    log_event(commitment_retracted(StressedCommitment)).
+
+%!      identify_stressed_commitment(+Commitments:list, -StressedCommitment:term) is det.
+%
+%       Identifies the most stressed commitment using the reflective monitor's
+%       stress tracking system.
+identify_stressed_commitment([SingleCommitment], SingleCommitment) :- !.
+identify_stressed_commitment(Commitments, StressedCommitment) :-
+    % Use stress tracking to find the most problematic commitment
+    maplist(get_commitment_stress, Commitments, StressLevels),
+    pairs_keys_values(Pairs, StressLevels, Commitments),
+    keysort(Pairs, SortedPairs),
+    reverse(SortedPairs, [_-StressedCommitment|_]).
+
+%!      get_commitment_stress(+Commitment:term, -Stress:number) is det.
+%
+%       Gets the stress level of a commitment from the reflective monitor.
+get_commitment_stress(Commitment, Stress) :-
+    ( reflective_monitor:conceptual_stress(Commitment, Stress) ->
+        true
+    ;
+        Stress = 1  % Default stress level
+    ).
+
+%!      retract_commitment(+Commitment:term) is det.
+%
+%       Retracts a commitment from the knowledge base.
+retract_commitment(Commitment) :-
+    ( retract(object_level:Commitment) ->
+        true
+    ;
+        writeln('Warning: Could not retract commitment (may not exist)')
+    ).

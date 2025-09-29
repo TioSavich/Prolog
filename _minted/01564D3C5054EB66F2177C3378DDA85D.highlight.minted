@@ -1,0 +1,557 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} More Machine Learner (Protein Folding Analogy)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a machine learning system inspired by protein folding,}
+\PYG{c+cm}{ * where a system seeks a lower\PYGZhy{}energy, more efficient state. It learns new,}
+\PYG{c+cm}{ * more efficient arithmetic strategies by observing the execution traces of}
+\PYG{c+cm}{ * less efficient ones.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The core components are:}
+\PYG{c+cm}{ * 1.  **A Foundational Solver**: The most basic, inefficient way to solve a}
+\PYG{c+cm}{ *     problem (e.g., counting on by ones). This is the \PYGZdq{}unfolded\PYGZdq{} state.}
+\PYG{c+cm}{ * 2.  **A Strategy Hierarchy**: A dynamic knowledge base of `run\PYGZus{}learned\PYGZus{}strategy/5`}
+\PYG{c+cm}{ *     clauses. The system always tries the most \PYGZdq{}folded\PYGZdq{} (efficient) strategies first.}
+\PYG{c+cm}{ * 3.  **A Generative\PYGZhy{}Reflective Loop (`explore/1`)**:}
+\PYG{c+cm}{ *     \PYGZhy{} **Generative Phase**: Solves a problem using the current best strategy.}
+\PYG{c+cm}{ *     \PYGZhy{} **Reflective Phase**: Analyzes the execution trace of the solution,}
+\PYG{c+cm}{ *       looking for patterns that suggest a more efficient strategy (a \PYGZdq{}fold\PYGZdq{}).}
+\PYG{c+cm}{ * 4.  **Pattern Detection \PYGZam{} Construction**: Specific predicates that detect}
+\PYG{c+cm}{ *     patterns (e.g., commutativity, making a 10) and construct new, more}
+\PYG{c+cm}{ *     efficient strategy clauses. These new clauses are then asserted into}
+\PYG{c+cm}{ *     the knowledge base.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{more\PYGZus{}machine\PYGZus{}learner}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{critique\PYGZus{}and\PYGZus{}bootstrap}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+            \PYG{l+s+sAtom}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{,}
+            \PYG{l+s+sAtom}{solve}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{save\PYGZus{}knowledge}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{,}
+            \PYG{l+s+sAtom}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{o}{/}\PYG{l+m+mi}{1}
+          \PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Use the semantics engine for validation}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{proves}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{set\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{current\PYGZus{}domain}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{is\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{random}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Ensure operators are visible}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{1050}\PYG{p}{,} \PYG{l+s+sAtom}{xfy}\PYG{p}{,} \PYG{l+s+sAtom}{=\PYGZgt{}}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{500}\PYG{p}{,} \PYG{l+s+sAtom}{fx}\PYG{p}{,} \PYG{l+s+sAtom}{neg}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{op}\PYG{p}{(}\PYG{l+m+mi}{550}\PYG{p}{,} \PYG{l+s+sAtom}{xfy}\PYG{p}{,} \PYG{l+s+sAtom}{rdiv}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}learned\PYGZus{}strategy(?A, ?B, ?Result, ?StrategyName, ?Trace) is nondet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       A dynamic, multifile predicate that stores the collection of learned}
+\PYG{c+c1}{\PYGZpc{}       strategies. Each clause of this predicate represents a single, efficient}
+\PYG{c+c1}{\PYGZpc{}       strategy that the system has discovered and validated.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The `solve/4` predicate queries this predicate first, implementing a}
+\PYG{c+c1}{\PYGZpc{}       hierarchy where learned, efficient strategies are preferred over}
+\PYG{c+c1}{\PYGZpc{}       foundational, inefficient ones.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param A The first input number.}
+\PYG{c+c1}{\PYGZpc{}       @param B The second input number.}
+\PYG{c+c1}{\PYGZpc{}       @param Result The result of the calculation.}
+\PYG{c+c1}{\PYGZpc{}       @param StrategyName An atom identifying the learned strategy (e.g., `cob`, `rmb(10)`).}
+\PYG{c+c1}{\PYGZpc{}       @param Trace A structured term representing the efficient execution path.}
+\PYG{p}{:\PYGZhy{}} \PYG{l+s+sAtom}{dynamic} \PYG{l+s+sAtom}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mf}{5.}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 0: Initialization and Persistence}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{n+nf}{knowledge\PYGZus{}file}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}learned\PYGZus{}knowledge.pl\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Load persistent knowledge when this module is loaded.}
+\PYG{n+nf}{load\PYGZus{}knowledge} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{knowledge\PYGZus{}file}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{exists\PYGZus{}file}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{consult}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{),}
+        \PYG{n+nf}{findall}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{clause}\PYG{p}{(}\PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{,}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Clauses}\PYG{p}{),}
+        \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Clauses}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZti{}N[Learner Init] Successfully loaded \PYGZti{}w learned strategies.\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Count}\PYG{p}{])}
+    \PYG{p}{;}   \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZti{}N[Learner Init] Knowledge file not found. Starting fresh.\PYGZti{}n\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Ensure initialization runs after the predicate is defined}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{initialization}\PYG{p}{(}\PYG{l+s+sAtom}{load\PYGZus{}knowledge}\PYG{p}{,} \PYG{l+s+sAtom}{now}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      save\PYGZus{}knowledge is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Saves all currently learned strategies (clauses of the dynamic}
+\PYG{c+c1}{\PYGZpc{}       `run\PYGZus{}learned\PYGZus{}strategy/5` predicate) to the file specified by}
+\PYG{c+c1}{\PYGZpc{}       `knowledge\PYGZus{}file/1`. This allows for persistence of learning across sessions.}
+\PYG{n+nf}{save\PYGZus{}knowledge} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{knowledge\PYGZus{}file}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{),}
+    \PYG{n+nf}{setup\PYGZus{}call\PYGZus{}cleanup}\PYG{p}{(}
+        \PYG{n+nf}{open}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{,} \PYG{l+s+sAtom}{write}\PYG{p}{,} \PYG{n+nv}{Stream}\PYG{p}{),}
+        \PYG{p}{(}
+            \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}\PYGZpc{} Automatically generated knowledge base.\PYGZsq{}}\PYG{p}{),}
+            \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}:\PYGZhy{} op(550, xfy, rdiv).\PYGZsq{}}\PYG{p}{),}
+            \PYG{n+nf}{forall}\PYG{p}{(}\PYG{n+nf}{clause}\PYG{p}{(}\PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{),} \PYG{n+nv}{Body}\PYG{p}{),}
+                   \PYG{n+nf}{portray\PYGZus{}clause}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{p}{(}\PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{Body}\PYG{p}{)))}
+        \PYG{p}{),}
+        \PYG{n+nf}{close}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 1: The Unified Solver (Strategy Hierarchy)}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{}!      solve(+A, +B, \PYGZhy{}Result, \PYGZhy{}Trace) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Solves `A + B` using a strategy hierarchy.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       It first attempts to use a highly efficient, learned strategy by}
+\PYG{c+c1}{\PYGZpc{}       querying `run\PYGZus{}learned\PYGZus{}strategy/5`. If no applicable learned strategy}
+\PYG{c+c1}{\PYGZpc{}       is found, it falls back to the foundational, inefficient counting}
+\PYG{c+c1}{\PYGZpc{}       strategy (`solve\PYGZus{}foundationally/4`).}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param A The first addend.}
+\PYG{c+c1}{\PYGZpc{}       @param B The second addend.}
+\PYG{c+c1}{\PYGZpc{}       @param Result The numerical result.}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The execution trace produced by the winning strategy.}
+\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}
+        \PYG{n+nf}{solve\PYGZus{}foundationally}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 2: Reflection and Learning}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{}!      reflect\PYGZus{}and\PYGZus{}learn(+Result:dict) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       The core reflective learning trigger. It analyzes a computation\PYGZsq{}s}
+\PYG{c+c1}{\PYGZpc{}       result, which includes the goal and execution trace, to find}
+\PYG{c+c1}{\PYGZpc{}       opportunities for creating more efficient strategies.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Now enhanced to analyze embodied modal states and cognitive patterns.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Result A dict containing at least `goal` and `trace`.}
+\PYG{n+nf}{reflect\PYGZus{}and\PYGZus{}learn}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nv}{Result}\PYG{p}{.}\PYG{l+s+sAtom}{goal}\PYG{p}{,}
+    \PYG{n+nv}{Trace} \PYG{o}{=} \PYG{n+nv}{Result}\PYG{p}{.}\PYG{l+s+sAtom}{trace}\PYG{p}{,}
+    \PYG{c+c1}{\PYGZpc{} We only learn from addition, and only if we have a trace.}
+    \PYG{p}{(}   \PYG{n+nf}{nonvar}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{),} \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{p}{(}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}    (Reflecting on addition trace...)\PYGZsq{}}\PYG{p}{),}
+            \PYG{c+c1}{\PYGZpc{} Enhanced analysis: examine both syntactic and modal patterns}
+            \PYG{p}{(}   \PYG{n+nf}{detect\PYGZus{}cob\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}cob}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}rmb\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}rmb}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}doubles\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}doubles}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}multiplicative\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{MultData}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}multiplicative\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{MultData}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{n+nf}{detect\PYGZus{}modal\PYGZus{}efficiency\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{ModalData}\PYG{p}{),}
+                \PYG{n+nf}{construct\PYGZus{}modal\PYGZus{}enhanced\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{ModalData}\PYG{p}{)}
+            \PYG{p}{;}   \PYG{l+s+sAtom}{true} \PYG{c+c1}{\PYGZpc{} Succeed even if no new strategy is found}
+            \PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{p}{;}   \PYG{l+s+sAtom}{true} \PYG{c+c1}{\PYGZpc{} Succeed if not an addition goal or no trace}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 3: Foundational Abilities \PYGZam{} Trace Analysis}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 3.1 Foundational Ability: Counting \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{n+nf}{successor}\PYG{p}{(}\PYG{n+nv}{X}\PYG{p}{,} \PYG{n+nv}{Y}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{n+nv}{X}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{Y}\PYG{p}{))]).}
+
+\PYG{c+c1}{\PYGZpc{} solve\PYGZus{}foundationally(+A, +B, \PYGZhy{}Result, \PYGZhy{}Trace)}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} The most basic, \PYGZdq{}unfolded\PYGZdq{} strategy. It solves addition by counting on}
+\PYG{c+c1}{\PYGZpc{} from A, B times. This is deliberately inefficient to provide rich traces}
+\PYG{c+c1}{\PYGZpc{} for the reflective process to analyze.}
+\PYG{n+nf}{solve\PYGZus{}foundationally}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{is\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+    \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{B} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{count\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Steps}\PYG{p}{),}
+    \PYG{n+nv}{Trace} \PYG{o}{=} \PYG{l+s+sAtom}{trace}\PYG{p}{\PYGZob{}}\PYG{l+s+sAtom}{a\PYGZus{}start:}\PYG{n+nv}{A}\PYG{p}{,} \PYG{l+s+sAtom}{b\PYGZus{}start:}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nn}{strategy}\PYG{p}{:}\PYG{l+s+sAtom}{counting}\PYG{p}{,} \PYG{n+nn}{steps}\PYG{p}{:}\PYG{n+nv}{Steps}\PYG{p}{\PYGZcb{}.}
+
+\PYG{n+nf}{count\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{CurrentA}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{CurrentA}\PYG{p}{,} \PYG{p}{[])} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+\PYG{n+nf}{count\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{CurrentA}\PYG{p}{,} \PYG{n+nv}{CurrentB}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nv}{CurrentA}\PYG{p}{,} \PYG{n+nv}{NextA}\PYG{p}{)|}\PYG{n+nv}{Steps}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{CurrentB} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{NextB} \PYG{o}{is} \PYG{n+nv}{CurrentB} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{successor}\PYG{p}{(}\PYG{n+nv}{CurrentA}\PYG{p}{,} \PYG{n+nv}{NextA}\PYG{p}{),}
+    \PYG{n+nf}{count\PYGZus{}loop}\PYG{p}{(}\PYG{n+nv}{NextA}\PYG{p}{,} \PYG{n+nv}{NextB}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Steps}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 3.2 Trace Analysis Helpers \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+
+\PYG{n+nf}{count\PYGZus{}trace\PYGZus{}steps}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{strategy}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{counting}\PYG{p}{,} \PYG{l+s+sAtom}{doubles}\PYG{p}{,} \PYG{n+nf}{rmb}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)])}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{steps}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{strategy} \PYG{o}{=} \PYG{l+s+sAtom}{cob}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{p}{(} \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{inner\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{InnerTrace}\PYG{p}{),} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{steps}\PYG{p}{)}
+          \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nf}{count\PYGZus{}trace\PYGZus{}steps}\PYG{p}{(}\PYG{n+nv}{InnerTrace}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)}
+          \PYG{p}{;} \PYG{n+nv}{Count} \PYG{o}{=} \PYG{l+m+mi}{0}
+        \PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nv}{Count} \PYG{o}{=} \PYG{l+m+mi}{1}
+    \PYG{p}{).}
+
+\PYG{n+nf}{get\PYGZus{}calculation\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{.}\PYG{l+s+sAtom}{strategy}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{counting}\PYG{p}{,} \PYG{n+nf}{rmb}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{doubles}\PYG{p}{]).}
+\PYG{n+nf}{get\PYGZus{}calculation\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{CT}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{T}\PYG{p}{.}\PYG{l+s+sAtom}{strategy} \PYG{o}{=} \PYG{l+s+sAtom}{cob}\PYG{p}{,}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{inner\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{InnerT}\PYG{p}{),} \PYG{n+nv}{T}\PYG{p}{.}\PYG{l+s+sAtom}{steps}\PYG{p}{),}
+    \PYG{n+nf}{get\PYGZus{}calculation\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{InnerT}\PYG{p}{,} \PYG{n+nv}{CT}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 4: Pattern Detection \PYGZam{} Construction}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{} Detects if an inefficient counting strategy was used where commutativity (A+B = B+A) would have been more efficient.}
+\PYG{n+nf}{detect\PYGZus{}cob\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{l+s+sAtom}{cob\PYGZus{}data}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{strategy} \PYG{o}{=} \PYG{l+s+sAtom}{counting}\PYG{p}{,}
+    \PYG{n+nv}{A} \PYG{o}{=} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{a\PYGZus{}start}\PYG{p}{,} \PYG{n+nv}{B} \PYG{o}{=} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{b\PYGZus{}start}\PYG{p}{,}
+    \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),}
+    \PYG{n+nv}{A} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{B}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{} Constructs and validates a new \PYGZdq{}Counting On Bigger\PYGZdq{} (COB) strategy clause.}
+\PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}cob}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{cob}\PYG{p}{,}
+    \PYG{n+nv}{StrategyHead} \PYG{o}{=} \PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nv}{StrategyBody} \PYG{o}{=} \PYG{p}{(}
+        \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{B\PYGZus{}in}\PYG{p}{),}
+        \PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in} \PYG{o}{\PYGZgt{}=} \PYG{n+nv}{B\PYGZus{}in} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{n+nv}{Start} \PYG{o}{=} \PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Count} \PYG{o}{=} \PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Swap} \PYG{o}{=} \PYG{l+s+sAtom}{no\PYGZus{}swap} \PYG{p}{;} \PYG{n+nv}{Start} \PYG{o}{=} \PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Count} \PYG{o}{=} \PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Swap} \PYG{o}{=} \PYG{n+nf}{swapped}\PYG{p}{(}\PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}in}\PYG{p}{)),}
+        \PYG{p}{(}   \PYG{n+nv}{Swap} \PYG{o}{=} \PYG{n+nf}{swapped}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+            \PYG{p}{(}\PYG{n+nf}{proves}\PYG{p}{([}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}temp}\PYG{p}{))]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{n}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}temp}\PYG{p}{))])} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+            \PYG{p}{;} \PYG{l+s+sAtom}{true}
+        \PYG{p}{),}
+        \PYG{n+nf}{solve\PYGZus{}foundationally}\PYG{p}{(}\PYG{n+nv}{Start}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{InnerTrace}\PYG{p}{),}
+        \PYG{n+nv}{Trace} \PYG{o}{=} \PYG{l+s+sAtom}{trace}\PYG{p}{\PYGZob{}}\PYG{l+s+sAtom}{a\PYGZus{}start:}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{l+s+sAtom}{b\PYGZus{}start:}\PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nn}{strategy}\PYG{p}{:}\PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nn}{steps}\PYG{p}{:[}\PYG{n+nv}{Swap}\PYG{p}{,} \PYG{n+nf}{inner\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{InnerTrace}\PYG{p}{)]\PYGZcb{}}
+    \PYG{p}{),}
+    \PYG{n+nf}{validate\PYGZus{}and\PYGZus{}assert}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyHead}\PYG{p}{,} \PYG{n+nv}{StrategyBody}\PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{} Detects if the counting trace shows a pattern of \PYGZdq{}making a ten\PYGZdq{}.}
+\PYG{n+nf}{detect\PYGZus{}rmb\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{TraceWrapper}\PYG{p}{,} \PYG{l+s+sAtom}{rmb\PYGZus{}data}\PYG{p}{\PYGZob{}}\PYG{n+nn}{k}\PYG{p}{:}\PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nn}{base}\PYG{p}{:}\PYG{n+nv}{Base}\PYG{p}{\PYGZcb{})} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}calculation\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{TraceWrapper}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{strategy} \PYG{o}{=} \PYG{l+s+sAtom}{counting}\PYG{p}{,}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nv}{A} \PYG{o}{=} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{a\PYGZus{}start}\PYG{p}{,} \PYG{n+nv}{B} \PYG{o}{=} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{b\PYGZus{}start}\PYG{p}{,}
+    \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),}
+    \PYG{n+nv}{A} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{A} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{K} \PYG{o}{is} \PYG{n+nv}{Base} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B} \PYG{o}{\PYGZgt{}=} \PYG{n+nv}{K}\PYG{p}{,}
+    \PYG{n+nf}{nth1}\PYG{p}{(}\PYG{n+nv}{K}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{steps}\PYG{p}{,} \PYG{n+nv}{Step}\PYG{p}{),}
+    \PYG{n+nv}{Step} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Constructs and validates a new \PYGZdq{}Rearranging to Make Bases\PYGZdq{} (RMB) strategy.}
+\PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}rmb}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{n+nv}{RMB\PYGZus{}Data}\PYG{p}{.}\PYG{l+s+sAtom}{base}\PYG{p}{,}
+    \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{n+nf}{rmb}\PYG{p}{(}\PYG{n+nv}{Base}\PYG{p}{),}
+    \PYG{n+nv}{StrategyHead} \PYG{o}{=} \PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nv}{StrategyBody} \PYG{o}{=} \PYG{p}{(}
+        \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{B\PYGZus{}in}\PYG{p}{),}
+        \PYG{n+nv}{A\PYGZus{}in} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}in} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{K\PYGZus{}runtime} \PYG{o}{is} \PYG{n+nv}{Base} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}in} \PYG{o}{\PYGZgt{}=} \PYG{n+nv}{K\PYGZus{}runtime}\PYG{p}{,}
+        \PYG{n+nv}{B\PYGZus{}new\PYGZus{}runtime} \PYG{o}{is} \PYG{n+nv}{B\PYGZus{}in} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{K\PYGZus{}runtime}\PYG{p}{,}
+        \PYG{n+nv}{Result} \PYG{o}{is} \PYG{n+nv}{Base} \PYG{o}{+} \PYG{n+nv}{B\PYGZus{}new\PYGZus{}runtime}\PYG{p}{,}
+        \PYG{n+nv}{Trace} \PYG{o}{=} \PYG{l+s+sAtom}{trace}\PYG{p}{\PYGZob{}}\PYG{l+s+sAtom}{a\PYGZus{}start:}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{l+s+sAtom}{b\PYGZus{}start:}\PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nn}{strategy}\PYG{p}{:}\PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nn}{steps}\PYG{p}{:[}\PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{),} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)]\PYGZcb{}}
+    \PYG{p}{),}
+    \PYG{n+nf}{validate\PYGZus{}and\PYGZus{}assert}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyHead}\PYG{p}{,} \PYG{n+nv}{StrategyBody}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Detects if a problem was a \PYGZdq{}doubles\PYGZdq{} fact that was solved less efficiently.}
+\PYG{n+nf}{detect\PYGZus{}doubles\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{TraceWrapper}\PYG{p}{,} \PYG{l+s+sAtom}{doubles\PYGZus{}data}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}calculation\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{TraceWrapper}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{strategy}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{counting}\PYG{p}{,} \PYG{n+nf}{rmb}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)]),}
+    \PYG{n+nv}{A} \PYG{o}{=} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{a\PYGZus{}start}\PYG{p}{,} \PYG{n+nv}{B} \PYG{o}{=} \PYG{n+nv}{Trace}\PYG{p}{.}\PYG{l+s+sAtom}{b\PYGZus{}start}\PYG{p}{,}
+    \PYG{n+nv}{A} \PYG{o}{==} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Constructs and validates a new \PYGZdq{}Doubles\PYGZdq{} strategy (rote knowledge).}
+\PYG{n+nf}{construct\PYGZus{}and\PYGZus{}validate\PYGZus{}doubles}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{doubles}\PYG{p}{,}
+    \PYG{n+nv}{StrategyHead} \PYG{o}{=} \PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+    \PYG{n+nv}{StrategyBody} \PYG{o}{=} \PYG{p}{(}
+        \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{),} \PYG{n+nv}{A\PYGZus{}in} \PYG{o}{==} \PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,}
+        \PYG{n+nv}{Result} \PYG{o}{is} \PYG{n+nv}{A\PYGZus{}in} \PYG{o}{*} \PYG{l+m+mi}{2}\PYG{p}{,}
+        \PYG{n+nv}{Trace} \PYG{o}{=} \PYG{l+s+sAtom}{trace}\PYG{p}{\PYGZob{}}\PYG{l+s+sAtom}{a\PYGZus{}start:}\PYG{n+nv}{A\PYGZus{}in}\PYG{p}{,} \PYG{l+s+sAtom}{b\PYGZus{}start:}\PYG{n+nv}{B\PYGZus{}in}\PYG{p}{,} \PYG{n+nn}{strategy}\PYG{p}{:}\PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nn}{steps}\PYG{p}{:[}\PYG{n+nf}{rote}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{)]\PYGZcb{}}
+    \PYG{p}{),}
+    \PYG{n+nf}{validate\PYGZus{}and\PYGZus{}assert}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyHead}\PYG{p}{,} \PYG{n+nv}{StrategyBody}\PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} Validation Helper \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{} Ensures a newly constructed strategy is sound before asserting it.}
+\PYG{n+nf}{validate\PYGZus{}and\PYGZus{}assert}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyHead}\PYG{p}{,} \PYG{n+nv}{StrategyBody}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{copy\PYGZus{}term}\PYG{p}{((}\PYG{n+nv}{StrategyHead}\PYG{p}{,} \PYG{n+nv}{StrategyBody}\PYG{p}{),} \PYG{p}{(}\PYG{n+nv}{ValidationHead}\PYG{p}{,} \PYG{n+nv}{ValidationBody}\PYG{p}{)),}
+    \PYG{n+nf}{arg}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{ValidationHead}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{),}
+    \PYG{n+nf}{arg}\PYG{p}{(}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{n+nv}{ValidationHead}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),}
+    \PYG{n+nf}{arg}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{n+nv}{ValidationHead}\PYG{p}{,} \PYG{n+nv}{CalculatedResult}\PYG{p}{),}
+    \PYG{n+nf}{arg}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{n+nv}{ValidationHead}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{),}
+
+    \PYG{p}{(}   \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{ValidationBody}\PYG{p}{),}
+        \PYG{n+nf}{proves}\PYG{p}{([]} \PYG{l+s+sAtom}{=\PYGZgt{}} \PYG{p}{[}\PYG{n+nf}{o}\PYG{p}{(}\PYG{n+nf}{plus}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{CalculatedResult}\PYG{p}{))])}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{p}{(}   \PYG{n+nf}{clause}\PYG{p}{(}\PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{)}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  (Strategy \PYGZti{}w already known)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StrategyName}\PYG{p}{])}
+        \PYG{p}{;}   \PYG{n+nf}{assertz}\PYG{p}{((}\PYG{n+nv}{StrategyHead} \PYG{p}{:\PYGZhy{}} \PYG{n+nv}{StrategyBody}\PYG{p}{)),}
+            \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  \PYGZhy{}\PYGZgt{} New Strategy Asserted: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StrategyName}\PYG{p}{])}
+        \PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}ERROR: Strategy validation failed. Not asserted.\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 5: Embodied Modal Logic Pattern Detection}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{}!      detect\PYGZus{}modal\PYGZus{}efficiency\PYGZus{}pattern(+Trace, \PYGZhy{}ModalData) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Detects patterns in embodied modal states that indicate cognitive}
+\PYG{c+c1}{\PYGZpc{}       efficiency opportunities. Looks for correlations between modal}
+\PYG{c+c1}{\PYGZpc{}       contexts and computational outcomes.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The execution trace containing modal signals}
+\PYG{c+c1}{\PYGZpc{}       @param ModalData Extracted modal pattern information}
+\PYG{n+nf}{detect\PYGZus{}modal\PYGZus{}efficiency\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nf}{modal\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{EfficiencyGain}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}modal\PYGZus{}sequence}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{ModalSequence}\PYG{p}{),}
+    \PYG{n+nv}{ModalSequence} \PYG{l+s+sAtom}{\PYGZbs{}=} \PYG{p}{[],}
+    \PYG{n+nf}{calculate\PYGZus{}modal\PYGZus{}efficiency\PYGZus{}gain}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{EfficiencyGain}\PYG{p}{),}
+    \PYG{n+nv}{EfficiencyGain} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{0.}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}modal\PYGZus{}sequence(+Trace, \PYGZhy{}ModalSequence) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the sequence of modal contexts from an execution trace.}
+\PYG{n+nf}{extract\PYGZus{}modal\PYGZus{}sequence}\PYG{p}{([],} \PYG{p}{[]).}
+\PYG{n+nf}{extract\PYGZus{}modal\PYGZus{}sequence}\PYG{p}{([}\PYG{n+nv}{TraceElement}\PYG{p}{|}\PYG{n+nv}{RestTrace}\PYG{p}{],} \PYG{p}{[}\PYG{n+nv}{Modal}\PYG{p}{|}\PYG{n+nv}{RestModals}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{is\PYGZus{}modal\PYGZus{}trace\PYGZus{}element}\PYG{p}{(}\PYG{n+nv}{TraceElement}\PYG{p}{,} \PYG{n+nv}{Modal}\PYG{p}{),} \PYG{p}{!,}
+    \PYG{n+nf}{extract\PYGZus{}modal\PYGZus{}sequence}\PYG{p}{(}\PYG{n+nv}{RestTrace}\PYG{p}{,} \PYG{n+nv}{RestModals}\PYG{p}{).}
+\PYG{n+nf}{extract\PYGZus{}modal\PYGZus{}sequence}\PYG{p}{([}\PYG{k}{\PYGZus{}}\PYG{p}{|}\PYG{n+nv}{RestTrace}\PYG{p}{],} \PYG{n+nv}{RestModals}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}modal\PYGZus{}sequence}\PYG{p}{(}\PYG{n+nv}{RestTrace}\PYG{p}{,} \PYG{n+nv}{RestModals}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      is\PYGZus{}modal\PYGZus{}trace\PYGZus{}element(+TraceElement, \PYGZhy{}Modal) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Identifies modal context elements in trace entries.}
+\PYG{n+nf}{is\PYGZus{}modal\PYGZus{}trace\PYGZus{}element}\PYG{p}{(}\PYG{n+nf}{modal\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{ModalGoal}\PYG{p}{,} \PYG{n+nv}{Context}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{modal\PYGZus{}state}\PYG{p}{(}\PYG{n+nv}{Context}\PYG{p}{,} \PYG{n+nv}{ModalGoal}\PYG{p}{)).}
+\PYG{n+nf}{is\PYGZus{}modal\PYGZus{}trace\PYGZus{}element}\PYG{p}{(}\PYG{n+nf}{cognitive\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{modal\PYGZus{}shift}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{modal\PYGZus{}transition}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      calculate\PYGZus{}modal\PYGZus{}efficiency\PYGZus{}gain(+ModalSequence, \PYGZhy{}EfficiencyGain) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Calculates the efficiency gain indicated by a modal sequence.}
+\PYG{c+c1}{\PYGZpc{}       Compressive states should correlate with focused, efficient computation.}
+\PYG{n+nf}{calculate\PYGZus{}modal\PYGZus{}efficiency\PYGZus{}gain}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{EfficiencyGain}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{count\PYGZus{}compressive\PYGZus{}focus}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{CompressiveCount}\PYG{p}{),}
+    \PYG{n+nf}{count\PYGZus{}expansive\PYGZus{}exploration}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{ExpansiveCount}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Efficiency gain when there\PYGZsq{}s more compression (focus) than expansion}
+    \PYG{n+nv}{EfficiencyGain} \PYG{o}{is} \PYG{n+nv}{CompressiveCount} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{ExpansiveCount}\PYG{p}{.}
+
+\PYG{n+nf}{count\PYGZus{}compressive\PYGZus{}focus}\PYG{p}{([],} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{count\PYGZus{}compressive\PYGZus{}focus}\PYG{p}{([}\PYG{n+nf}{modal\PYGZus{}state}\PYG{p}{(}\PYG{l+s+sAtom}{compressive}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{count\PYGZus{}compressive\PYGZus{}focus}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{RestCount}\PYG{p}{),}
+    \PYG{n+nv}{Count} \PYG{o}{is} \PYG{n+nv}{RestCount} \PYG{o}{+} \PYG{l+m+mf}{1.}
+\PYG{n+nf}{count\PYGZus{}compressive\PYGZus{}focus}\PYG{p}{([}\PYG{k}{\PYGZus{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{count\PYGZus{}compressive\PYGZus{}focus}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{).}
+
+\PYG{n+nf}{count\PYGZus{}expansive\PYGZus{}exploration}\PYG{p}{([],} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{count\PYGZus{}expansive\PYGZus{}exploration}\PYG{p}{([}\PYG{n+nf}{modal\PYGZus{}state}\PYG{p}{(}\PYG{l+s+sAtom}{expansive}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{count\PYGZus{}expansive\PYGZus{}exploration}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{RestCount}\PYG{p}{),}
+    \PYG{n+nv}{Count} \PYG{o}{is} \PYG{n+nv}{RestCount} \PYG{o}{+} \PYG{l+m+mf}{1.}
+\PYG{n+nf}{count\PYGZus{}expansive\PYGZus{}exploration}\PYG{p}{([}\PYG{k}{\PYGZus{}}\PYG{p}{|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{count\PYGZus{}expansive\PYGZus{}exploration}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      construct\PYGZus{}modal\PYGZus{}enhanced\PYGZus{}strategy(+A, +B, +ModalData) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Constructs a new strategy enhanced with modal context awareness.}
+\PYG{c+c1}{\PYGZpc{}       This strategy would optimize based on the detected modal patterns.}
+\PYG{n+nf}{construct\PYGZus{}modal\PYGZus{}enhanced\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nf}{modal\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{EfficiencyGain}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Constructing modal\PYGZhy{}enhanced strategy for \PYGZti{}w + \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Modal sequence: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{ModalSequence}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Efficiency gain: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{EfficiencyGain}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Create a strategy name based on modal characteristics}
+    \PYG{n+nf}{determine\PYGZus{}modal\PYGZus{}strategy\PYGZus{}name}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Construct the enhanced strategy clause}
+    \PYG{n+nf}{construct\PYGZus{}modal\PYGZus{}strategy\PYGZus{}clause}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{Clause}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Validate and assert the new strategy}
+    \PYG{p}{(} \PYG{n+nf}{validate\PYGZus{}strategy\PYGZus{}clause}\PYG{p}{(}\PYG{n+nv}{Clause}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nv}{Clause}\PYG{p}{),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Successfully created modal\PYGZhy{}enhanced strategy: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{StrategyName}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Modal strategy validation failed.\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      determine\PYGZus{}modal\PYGZus{}strategy\PYGZus{}name(+ModalSequence, \PYGZhy{}StrategyName) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Determines an appropriate strategy name based on modal characteristics.}
+\PYG{n+nf}{determine\PYGZus{}modal\PYGZus{}strategy\PYGZus{}name}\PYG{p}{(}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(} \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{modal\PYGZus{}state}\PYG{p}{(}\PYG{l+s+sAtom}{compressive}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{ModalSequence}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{modal\PYGZus{}focused\PYGZus{}addition}
+    \PYG{p}{;} \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{modal\PYGZus{}state}\PYG{p}{(}\PYG{l+s+sAtom}{expansive}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{ModalSequence}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{modal\PYGZus{}exploratory\PYGZus{}addition}
+    \PYG{p}{;}
+        \PYG{n+nv}{StrategyName} \PYG{o}{=} \PYG{l+s+sAtom}{modal\PYGZus{}neutral\PYGZus{}addition}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      construct\PYGZus{}modal\PYGZus{}strategy\PYGZus{}clause(+A, +B, +StrategyName, +ModalSequence, \PYGZhy{}Clause) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Constructs the actual Prolog clause for the modal\PYGZhy{}enhanced strategy.}
+\PYG{n+nf}{construct\PYGZus{}modal\PYGZus{}strategy\PYGZus{}clause}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{ModalSequence}\PYG{p}{,} \PYG{n+nv}{Clause}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} For now, create a simple optimized clause}
+    \PYG{c+c1}{\PYGZpc{} Future versions could use ModalSequence to customize the strategy body}
+    \PYG{n+nv}{C} \PYG{o}{is} \PYG{n+nv}{A} \PYG{o}{+} \PYG{n+nv}{B}\PYG{p}{,}
+    \PYG{n+nv}{Clause} \PYG{o}{=} \PYG{p}{(}\PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{,} \PYG{n+nv}{StrategyName}\PYG{p}{,} 
+                                   \PYG{p}{[}\PYG{n+nf}{modal\PYGZus{}optimization}\PYG{p}{(}\PYG{n+nv}{StrategyName}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+              \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{A} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{B} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 6: True Bootstrapping \PYGZhy{} Multiplicative and Algebraic Pattern Detection}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{}!      detect\PYGZus{}multiplicative\PYGZus{}pattern(+Trace, \PYGZhy{}MultData) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Detects repeated addition patterns that indicate multiplication.}
+\PYG{c+c1}{\PYGZpc{}       This enables qualitative leaps from arithmetic to multiplicative reasoning.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Trace The execution trace to analyze}
+\PYG{c+c1}{\PYGZpc{}       @param MultData Information about the detected multiplicative pattern}
+\PYG{n+nf}{detect\PYGZus{}multiplicative\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nf}{mult\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{TotalOperations}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}addition\PYGZus{}sequence}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{AdditionSequence}\PYG{p}{),}
+    \PYG{n+nf}{analyze\PYGZus{}for\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{AdditionSequence}\PYG{p}{,} \PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{TotalOperations}\PYG{p}{),}
+    \PYG{n+nv}{TotalOperations} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mf}{3.}  \PYG{c+c1}{\PYGZpc{} Require at least 3 repeated additions to detect pattern}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}addition\PYGZus{}sequence(+Trace, \PYGZhy{}AdditionSequence) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the sequence of addition operations from a trace.}
+\PYG{n+nf}{extract\PYGZus{}addition\PYGZus{}sequence}\PYG{p}{([],} \PYG{p}{[]).}
+\PYG{n+nf}{extract\PYGZus{}addition\PYGZus{}sequence}\PYG{p}{([}\PYG{n+nv}{TraceElement}\PYG{p}{|}\PYG{n+nv}{RestTrace}\PYG{p}{],} \PYG{p}{[}\PYG{n+nv}{Addition}\PYG{p}{|}\PYG{n+nv}{RestAdditions}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{is\PYGZus{}addition\PYGZus{}trace\PYGZus{}element}\PYG{p}{(}\PYG{n+nv}{TraceElement}\PYG{p}{,} \PYG{n+nv}{Addition}\PYG{p}{),} \PYG{p}{!,}
+    \PYG{n+nf}{extract\PYGZus{}addition\PYGZus{}sequence}\PYG{p}{(}\PYG{n+nv}{RestTrace}\PYG{p}{,} \PYG{n+nv}{RestAdditions}\PYG{p}{).}
+\PYG{n+nf}{extract\PYGZus{}addition\PYGZus{}sequence}\PYG{p}{([}\PYG{k}{\PYGZus{}}\PYG{p}{|}\PYG{n+nv}{RestTrace}\PYG{p}{],} \PYG{n+nv}{RestAdditions}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}addition\PYGZus{}sequence}\PYG{p}{(}\PYG{n+nv}{RestTrace}\PYG{p}{,} \PYG{n+nv}{RestAdditions}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      is\PYGZus{}addition\PYGZus{}trace\PYGZus{}element(+TraceElement, \PYGZhy{}Addition) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Identifies addition operations in trace elements.}
+\PYG{n+nf}{is\PYGZus{}addition\PYGZus{}trace\PYGZus{}element}\PYG{p}{(}\PYG{n+nf}{arithmetic\PYGZus{}trace}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),} \PYG{n+nf}{addition\PYGZus{}ops}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{is\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{).}
+\PYG{n+nf}{is\PYGZus{}addition\PYGZus{}trace\PYGZus{}element}\PYG{p}{(}\PYG{n+nf}{trace}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{direct\PYGZus{}add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      analyze\PYGZus{}for\PYGZus{}repeated\PYGZus{}addition(+AdditionSequence, \PYGZhy{}Multiplicand, \PYGZhy{}Multiplier, \PYGZhy{}Count) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Analyzes addition sequence for repeated addition of the same value.}
+\PYG{n+nf}{analyze\PYGZus{}for\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{AdditionSequence}\PYG{p}{,} \PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{find\PYGZus{}repeated\PYGZus{}addend}\PYG{p}{(}\PYG{n+nv}{AdditionSequence}\PYG{p}{,} \PYG{n+nv}{Multiplicand}\PYG{p}{),}
+    \PYG{n+nf}{count\PYGZus{}repetitions}\PYG{p}{(}\PYG{n+nv}{AdditionSequence}\PYG{p}{,} \PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{),}
+    \PYG{n+nv}{Multiplier} \PYG{o}{=} \PYG{n+nv}{Count}\PYG{p}{.}
+
+\PYG{c+c1}{\PYGZpc{}!      find\PYGZus{}repeated\PYGZus{}addend(+AdditionSequence, \PYGZhy{}Addend) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Finds an addend that appears repeatedly in the sequence.}
+\PYG{n+nf}{find\PYGZus{}repeated\PYGZus{}addend}\PYG{p}{([}\PYG{n+nf}{addition\PYGZus{}ops}\PYG{p}{(}\PYG{n+nv}{Ops}\PYG{p}{)|}\PYG{k}{\PYGZus{}}\PYG{p}{],} \PYG{n+nv}{Addend}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{step}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Ops}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nv}{Addend} \PYG{o}{=} \PYG{n+nv}{A} \PYG{p}{;} \PYG{n+nv}{Addend} \PYG{o}{=} \PYG{n+nv}{B} \PYG{p}{),}
+    \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{Addend}\PYG{p}{),}
+    \PYG{n+nv}{Addend} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{1.}
+
+\PYG{c+c1}{\PYGZpc{}!      count\PYGZus{}repetitions(+AdditionSequence, +Addend, \PYGZhy{}Count) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Counts how many times an addend appears in the sequence.}
+\PYG{n+nf}{count\PYGZus{}repetitions}\PYG{p}{([],} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{count\PYGZus{}repetitions}\PYG{p}{([}\PYG{n+nf}{addition\PYGZus{}ops}\PYG{p}{(}\PYG{n+nv}{Ops}\PYG{p}{)|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{Addend}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{count\PYGZus{}addend\PYGZus{}in\PYGZus{}ops}\PYG{p}{(}\PYG{n+nv}{Ops}\PYG{p}{,} \PYG{n+nv}{Addend}\PYG{p}{,} \PYG{n+nv}{OpsCount}\PYG{p}{),}
+    \PYG{n+nf}{count\PYGZus{}repetitions}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{Addend}\PYG{p}{,} \PYG{n+nv}{RestCount}\PYG{p}{),}
+    \PYG{n+nv}{Count} \PYG{o}{is} \PYG{n+nv}{OpsCount} \PYG{o}{+} \PYG{n+nv}{RestCount}\PYG{p}{.}
+
+\PYG{n+nf}{count\PYGZus{}addend\PYGZus{}in\PYGZus{}ops}\PYG{p}{([],} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{count\PYGZus{}addend\PYGZus{}in\PYGZus{}ops}\PYG{p}{([}\PYG{n+nf}{step}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)|}\PYG{n+nv}{Rest}\PYG{p}{],} \PYG{n+nv}{Addend}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(} \PYG{p}{(}\PYG{n+nv}{A} \PYG{o}{==} \PYG{n+nv}{Addend} \PYG{p}{;} \PYG{n+nv}{B} \PYG{o}{==} \PYG{n+nv}{Addend}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{count\PYGZus{}addend\PYGZus{}in\PYGZus{}ops}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{Addend}\PYG{p}{,} \PYG{n+nv}{RestCount}\PYG{p}{),}
+        \PYG{n+nv}{Count} \PYG{o}{is} \PYG{n+nv}{RestCount} \PYG{o}{+} \PYG{l+m+mi}{1}
+    \PYG{p}{;}
+        \PYG{n+nf}{count\PYGZus{}addend\PYGZus{}in\PYGZus{}ops}\PYG{p}{(}\PYG{n+nv}{Rest}\PYG{p}{,} \PYG{n+nv}{Addend}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      construct\PYGZus{}multiplicative\PYGZus{}strategy(+A, +B, +MultData) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Constructs a multiplication strategy from detected repeated addition pattern.}
+\PYG{c+c1}{\PYGZpc{}       This represents true conceptual bootstrapping from addition to multiplication.}
+\PYG{n+nf}{construct\PYGZus{}multiplicative\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nf}{mult\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}BOOTSTRAPPING: Detected multiplicative pattern!\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  \PYGZti{}w repeated additions of \PYGZti{}w detected\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{Multiplicand}\PYG{p}{]),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Synthesizing multiplication strategy...\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Create new multiplication predicate if it doesn\PYGZsq{}t exist}
+    \PYG{p}{(} \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{predicate\PYGZus{}property}\PYG{p}{(}\PYG{n+nf}{multiply\PYGZus{}learned}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{defined}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{create\PYGZus{}multiplication\PYGZus{}predicate}
+    \PYG{p}{;} \PYG{l+s+sAtom}{true}
+    \PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Create specific multiplication rule for this pattern}
+    \PYG{n+nf}{construct\PYGZus{}multiplication\PYGZus{}rule}\PYG{p}{(}\PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{Rule}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nv}{Rule}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Successfully bootstrapped to multiplication!\PYGZti{}n\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      create\PYGZus{}multiplication\PYGZus{}predicate is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Creates the basic multiplication predicate structure.}
+\PYG{n+nf}{create\PYGZus{}multiplication\PYGZus{}predicate} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{assertz}\PYG{p}{((}\PYG{n+nf}{multiply\PYGZus{}learned}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+        \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Multiplication by zero yields zero.\PYGZsq{}}\PYG{p}{))),}
+    \PYG{n+nf}{assertz}\PYG{p}{((}\PYG{n+nf}{multiply\PYGZus{}learned}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+        \PYG{n+nv}{A} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{B} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+        \PYG{n+nv}{A1} \PYG{o}{is} \PYG{n+nv}{A} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+        \PYG{n+nf}{multiply\PYGZus{}learned}\PYG{p}{(}\PYG{n+nv}{A1}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{PartialResult}\PYG{p}{),}
+        \PYG{n+nv}{Result} \PYG{o}{is} \PYG{n+nv}{PartialResult} \PYG{o}{+} \PYG{n+nv}{B}\PYG{p}{)),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Created fundamental multiplication predicate structure.\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      construct\PYGZus{}multiplication\PYGZus{}rule(+Multiplicand, +Multiplier, \PYGZhy{}Rule) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Constructs a specific multiplication rule from the detected pattern.}
+\PYG{n+nf}{construct\PYGZus{}multiplication\PYGZus{}rule}\PYG{p}{(}\PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{Rule}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{Product} \PYG{o}{is} \PYG{n+nv}{Multiplicand} \PYG{o}{*} \PYG{n+nv}{Multiplier}\PYG{p}{,}
+    \PYG{n+nv}{Rule} \PYG{o}{=} \PYG{p}{(}\PYG{n+nf}{run\PYGZus{}learned\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{,} \PYG{n+nv}{Product}\PYG{p}{,} 
+                                \PYG{l+s+sAtom}{discovered\PYGZus{}multiplication}\PYG{p}{,}
+                                \PYG{p}{[}\PYG{n+nf}{bootstrapped\PYGZus{}from\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{Multiplicand}\PYG{p}{,} \PYG{n+nv}{Multiplier}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
+            \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{Multiplicand}\PYG{p}{),} \PYG{n+nf}{integer}\PYG{p}{(}\PYG{n+nv}{Multiplier}\PYG{p}{),}
+            \PYG{n+nv}{Multiplicand} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{Multiplier} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      detect\PYGZus{}algebraic\PYGZus{}pattern(+Trace, \PYGZhy{}AlgebraicData) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Detects when arithmetic strategies can be abstracted to symbolic manipulation.}
+\PYG{c+c1}{\PYGZpc{}       This enables bootstrapping to algebraic reasoning.}
+\PYG{n+nf}{detect\PYGZus{}algebraic\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nf}{algebraic\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{AbstractForm}\PYG{p}{,} \PYG{n+nv}{Instances}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}operation\PYGZus{}patterns}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Patterns}\PYG{p}{),}
+    \PYG{n+nf}{find\PYGZus{}algebraic\PYGZus{}abstraction}\PYG{p}{(}\PYG{n+nv}{Patterns}\PYG{p}{,} \PYG{n+nv}{AbstractForm}\PYG{p}{,} \PYG{n+nv}{Instances}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Instances}\PYG{p}{,} \PYG{n+nv}{InstanceCount}\PYG{p}{),}
+    \PYG{n+nv}{InstanceCount} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mf}{2.}  \PYG{c+c1}{\PYGZpc{} Need multiple instances to abstract}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}operation\PYGZus{}patterns(+Trace, \PYGZhy{}Patterns) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts operational patterns that could be algebraically abstracted.}
+\PYG{n+nf}{extract\PYGZus{}operation\PYGZus{}patterns}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{,} \PYG{n+nv}{Patterns}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{Pattern}\PYG{p}{,} 
+            \PYG{p}{(}\PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{TraceElement}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+             \PYG{n+nf}{extract\PYGZus{}operation\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{TraceElement}\PYG{p}{,} \PYG{n+nv}{Pattern}\PYG{p}{)),}
+            \PYG{n+nv}{Patterns}\PYG{p}{).}
+
+\PYG{n+nf}{extract\PYGZus{}operation\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nf}{trace}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{add\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{)).}
+\PYG{n+nf}{extract\PYGZus{}operation\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nf}{arithmetic\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nf}{strategy\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      find\PYGZus{}algebraic\PYGZus{}abstraction(+Patterns, \PYGZhy{}AbstractForm, \PYGZhy{}Instances) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Finds common algebraic structures in operation patterns.}
+\PYG{n+nf}{find\PYGZus{}algebraic\PYGZus{}abstraction}\PYG{p}{(}\PYG{n+nv}{Patterns}\PYG{p}{,} \PYG{l+s+sAtom}{commutative\PYGZus{}property}\PYG{p}{,} \PYG{n+nv}{Instances}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nf}{add\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),} 
+            \PYG{p}{(}\PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{add\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),} \PYG{n+nv}{Patterns}\PYG{p}{),}
+             \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nf}{add\PYGZus{}pattern}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{C}\PYG{p}{),} \PYG{n+nv}{Patterns}\PYG{p}{)),}
+            \PYG{n+nv}{Instances}\PYG{p}{),}
+    \PYG{n+nv}{Instances} \PYG{l+s+sAtom}{\PYGZbs{}=} \PYG{p}{[].}
+
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+\PYG{c+c1}{\PYGZpc{} Part 6: Normative Critique (Placeholder)}
+\PYG{c+c1}{\PYGZpc{} =================================================================}
+
+\PYG{c+c1}{\PYGZpc{}!      critique\PYGZus{}and\PYGZus{}bootstrap(+Goal:term) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Placeholder for a future capability where the system can analyze}
+\PYG{c+c1}{\PYGZpc{}       a given normative rule (e.g., a subtraction problem that challenges}
+\PYG{c+c1}{\PYGZpc{}       its current knowledge) and potentially learn from it.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param Goal The goal representing the normative rule to critique.}
+\PYG{n+nf}{critique\PYGZus{}and\PYGZus{}bootstrap}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Normative Critique Placeholder.\PYGZsq{}}\PYG{p}{).}
+\end{MintedVerbatim}

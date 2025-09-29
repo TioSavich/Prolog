@@ -1,4 +1,4 @@
-This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2025.8.2)  29 SEP 2025 05:32
+This is LuaHBTeX, Version 1.22.0 (TeX Live 2025)  (format=lualatex 2025.8.2)  29 SEP 2025 12:25
  restricted system commands enabled.
 **concatenated_code.tex
 (./concatenated_code.tex
@@ -442,112 +442,111 @@ LaTeX Font Info:    External font `cmex10' loaded for size
 \pydata@fh@0=\write6
 
 \openout6 = _99A8CB5D65BFE986A8D0726B33D47FA3.data.minted
-runsystem(latexminted config  --timestamp 20250929053242 99A8CB5D65BFE986A8D0726
+runsystem(latexminted config  --timestamp 20250929122559 99A8CB5D65BFE986A8D0726
 B33D47FA3)...executed.
  (./_99A8CB5D65BFE986A8D0726B33D47FA3.config.minted)
-runsystem(latexminted cleanconfig  --timestamp 20250929053242 99A8CB5D65BFE986A8
+runsystem(latexminted cleanconfig  --timestamp 20250929122559 99A8CB5D65BFE986A8
 D0726B33D47FA3)...executed.
 
 (./_minted/default.style.minted)
-(./_minted/90A229E46173E22A3C764F7247DBD172.highlight.minted
-LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 39.
-
+(./_minted/12A83AAC756E3A383985C5F48794B0C1.highlight.minted
 
 [3]
 
 [4]
+LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
+(Font)              Font shape `TU/lmtt/b/n' tried instead on input line 124.
+) (./_minted/897442D5D545627F9E181FDCCB10CD0D.highlight.minted
 
 [5]
 
 [6]
 
-[7]) (./_minted/8EDB0B5ACD5C8741820D3FF0F5BEEE0E.highlight.minted
+[7]) (./_minted/40AFD07ABC2FD91CD38A670A41B3EDD8.highlight.minted
 
-[8]) (./_minted/98A768242D1C02747C0A0662CFF386BD.highlight.minted
+[8]
 
 [9]
 
-[10]) (./_minted/55E0F3C96AFFF90A7F78361072F6920B.highlight.minted
+[10]) (./_minted/AC1A385C61FEAB4AD58D583D1E65D323.highlight.minted
 
 [11]
 
-[12]) (./_minted/AD47BAF03F75E1229BA38D90CF23E69F.highlight.minted
+[12]) (./_minted/298712DAECB18DB294523BDDCEBAB9AD.highlight.minted
 
 [13]
 
-[14]
+[14]) (./_minted/12A83AAC756E3A383985C5F48794B0C1.highlight.minted
 
 [15]
 
 [16]
 
-[17]
+[17]) (./_minted/897442D5D545627F9E181FDCCB10CD0D.highlight.minted
 
 [18]
 
-[19]
+[19]) (./_minted/40AFD07ABC2FD91CD38A670A41B3EDD8.highlight.minted
 
 [20]
 
 [21]
 
-[22]
+[22]) (./_minted/A295470670700A7EB6A0B15A1B777B57.highlight.minted
 
-[23]) (./_minted/46D31016488218228F43AC6AAF494775.highlight.minted
+[23]
 
 [24]
 
-[25]
+[25]) (./_minted/C78FFB521394F070C01A064AC87AFFB1.highlight.minted
 
-[26]) (./_minted/6D2AEA6C1852F950B84E517FB9853322.highlight.minted
+[26]
 
 [27]
 
 [28]
 
-[29]) (./_minted/4E5ED81F3A29C870ADF3D90D1D54D041.highlight.minted
+[29]
 
-[30]) (./_minted/FD1C198922F14CABA0E2C3ACCC944716.highlight.minted)
-(./_minted/E0D331343B2E4C5708C4E0840E3759E8.highlight.minted
+[30]
 
 [31]
 
-[32]) (./_minted/BB76BD94EF3D56F62C69FB22C6713ECB.highlight.minted
+[32]
 
-[33]) (./_minted/3BE3ACD3872E6D1FEE4E332871C6962C.highlight.minted
+[33]
 
 [34]
 
-[35]) (./_minted/1202DC915C894E2A7C91123B6F602FB0.highlight.minted
+[35]
 
 [36]
 
 [37]
 
-[38]
+[38]) (./_minted/46D31016488218228F43AC6AAF494775.highlight.minted
 
 [39]
 
-[40]
+[40]) (./_minted/6D2AEA6C1852F950B84E517FB9853322.highlight.minted
 
-[41]) (./_minted/8BC0B83F2BF669ACA0EC54688378A565.highlight.minted
+[41]
 
-[42]) (./_minted/492728D1FACC88FA281E60EF1BED94A4.highlight.minted
+[42]
 
 [43]
 
-[44]) (./_minted/1169BD21D839DEEBBD869B682751B3FB.highlight.minted
+[44]) (./_minted/BC506FCB0F54D9947909A6B3F177A620.highlight.minted
 
-[45]
+[45]) (./_minted/BB76BD94EF3D56F62C69FB22C6713ECB.highlight.minted
 
-[46]
+[46]) (./_minted/4013673356437A0FD76A599C1B75E2E2.highlight.minted
 
 [47]
 
-[48]) (./_minted/393D91B955B89BB36A598D8CB59615F6.highlight.minted
+[48]
 
-[49]) (./_minted/BE641634C977A9E7E009AD59358F2925.highlight.minted
+[49]) (./_minted/01564D3C5054EB66F2177C3378DDA85D.highlight.minted
 
 [50]
 
@@ -561,22 +560,21 @@ LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
 
 [55]
 
-[56]) (./_minted/ECD303DFABFBD3B0744431D2C09BDF18.highlight.minted
+[56]
 
-[57]) (./_minted/4D51DF3C93EA67DDC9B3DA5B7CD6E234.highlight.minted)
-(./_minted/9CA5377AEF3C61955273BA6FEA62176F.highlight.minted
+[57]
 
-[58]) (./_minted/AC5C6A0FB63F080F636F2ADC6DBF16C0.highlight.minted
+[58]) (./_minted/A39DA327ADD5DAA8ECD9328FD49B4FBA.highlight.minted
 
 [59]
 
-[60]
+[60]) (./_minted/492728D1FACC88FA281E60EF1BED94A4.highlight.minted
 
 [61]
 
-[62]) (./_minted/93FB1D78A9D736FBC1BDF86F54211991.highlight.minted
+[62]
 
-[63]
+[63]) (./_minted/01736F93A48A3FDD9A5780C15C666BAD.highlight.minted
 
 [64]
 
@@ -584,143 +582,268 @@ LaTeX Font Info:    Font shape `TU/lmtt/bx/n' in size <10> not available
 
 [66]
 
-[67]) (./_minted/F2DED4DB403B5B985D359F187A1DBDD4.highlight.minted
+[67]
 
-[68]
+[68]) (./_minted/393D91B955B89BB36A598D8CB59615F6.highlight.minted
 
 [69]
 
-[70]) (./_minted/799E1AA91182B61538FBA73E6F53A278.highlight.minted
+[70]) (./_minted/ECD303DFABFBD3B0744431D2C09BDF18.highlight.minted
 
-[71]
+[71]) (./_minted/E0132D7057BB5F8153BA96A65B8BB0F0.highlight.minted
 
-[72]) (./_minted/979F7C1519B8430619C019CCA3872383.highlight.minted
+[72]
 
-[73]
+[73]) (./_minted/08472F53888CC9726A7BB21C0AFF894A.highlight.minted
 
-[74]) (./_minted/A8371D041D24BE2A307C405A4A3AF360.highlight.minted
+[74]
 
 [75]
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
 
-[76]) (./_minted/373A2DA5F1FDAD71623B27D7F3C105C1.highlight.minted
 
-[77]
+[76
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+]
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
 
-[78]) (./_minted/A7F825B9C2075BBA6BD488E17CCBC0CC.highlight.minted
 
-[79]
+[77
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+]
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
 
-[80]) (./_minted/3D3D3F57F1FE0EEE7B72565416D81231.highlight.minted
+
+[78
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+]
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✗ (U+2717) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✗ (U+2717) in font [lmmono10-regular]:!
+Missing character: There is no ✗ (U+2717) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+) (./_minted/4D51DF3C93EA67DDC9B3DA5B7CD6E234.highlight.minted
+
+[79
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✗ (U+2717) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+Missing character: There is no ✗ (U+2717) in font [lmmono10-regular]:!
+Missing character: There is no ✗ (U+2717) in font [lmmono10-regular]:!
+Missing character: There is no ✓ (U+2713) in font [lmmono10-regular]:!
+]) (./_minted/C35EF9783017F711ADB72301E3781CDF.highlight.minted
+
+[80]) (./_minted/AC5C6A0FB63F080F636F2ADC6DBF16C0.highlight.minted
 
 [81]
 
-[82]) (./_minted/4DE32F4521B86FE9FC4C891414DFC4FC.highlight.minted
+[82]
 
 [83]
 
-[84]) (./_minted/AE4B4C77896C9EE9C6E939D5D1729A0C.highlight.minted
+[84]) (./_minted/93FB1D78A9D736FBC1BDF86F54211991.highlight.minted
 
 [85]
 
-[86]) (./_minted/916933993A98001237B98583F11677C4.highlight.minted
+[86]
 
 [87]
 
-[88]) (./_minted/A5CD93466C5E0C525E57BFB4F28DB5F4.highlight.minted
+[88]
 
-[89]
+[89]) (./_minted/54B2FB62F4D6C38E596308D159B6CCAB.highlight.minted
 
-[90]) (./_minted/40FA5B51D8722A2AD7520F27BE28879E.highlight.minted
+[90]
 
 [91]
 
-[92]) (./_minted/7EE4A49874DB61A5A385B3F4490A683B.highlight.minted
+[92]) (./_minted/FF9D48F427411C1E0B311E86E52499E6.highlight.minted
 
 [93]
 
-[94]) (./_minted/7CB6ED25575E5510A4D3E81A32A78693.highlight.minted
+[94]
 
-[95]
+[95]) (./_minted/100FCCBF29FEB75014D1CD5B86242877.highlight.minted
 
-[96]) (./_minted/95A8B155F3637AA625A0946844A4C194.highlight.minted
+[96]
 
 [97]
 
-[98]) (./_minted/BD60BB8D1852DA271908C7F8487274BB.highlight.minted
+[98]
 
-[99]) (./_minted/027CDFE1C344F2715AA2E237D180CC81.highlight.minted
+[99]) (./_minted/5314E5E778B0641EE8E2B52FB739C897.highlight.minted
 
 [100]
 
-[101]) (./_minted/026A745AEAE8B8CFA339347E714E8E17.highlight.minted
+[101]
 
 [102]
 
-[103]) (./_minted/29E223CEB8D9E58F1481976F1397C249.highlight.minted
+[103]) (./_minted/008C591C8DAC7CB5C14C0D650EB22E4F.highlight.minted
 
 [104]
 
-[105]) (./_minted/826ED421F91D3B1CDA18894D27C20857.highlight.minted
+[105]
 
-[106]) (./_minted/9B771A1BA243D01C65BBE66AD053B9FF.highlight.minted
+[106]
 
-[107]
+[107]) (./_minted/C2B109BA87625B85F2CA05854E8F8475.highlight.minted
 
-[108]) (./_minted/33A225EF852F51189C95200C93896F58.highlight.minted
+[108]
 
-[109]
+[109]) (./_minted/5B39B15A9452E1098422F401305F8621.highlight.minted
 
 [110]
 
-[111]) (./_minted/686C224CEA8A4859318D90260378A376.highlight.minted)
-(./_minted/04DA82D741DA92DC009A82D035033A07.highlight.minted
+[111]
 
-[112]
+[112]) (./_minted/8E50A9C583130EA743D896E5AF0656A6.highlight.minted
 
-[113]) (./_minted/1C568AECA05471B9A7C655E62E1F7A03.highlight.minted
+[113]
 
 [114]
 
 [115]
 
-[116]
+[116]) (./_minted/96FE0068987C5D422BA89C5F81C61253.highlight.minted
 
 [117]
 
 [118]
 
-[119]
+[119]) (./_minted/7E0A670B3AECEE486397EAAB48578827.highlight.minted
 
 [120]
 
 [121]
 
-[122]
+[122]) (./_minted/D195F95D29B0DC8E778A080BBF3E26BF.highlight.minted
 
-[123]) (./_minted/929D534D77A944180B6EEF806B9CEDC4.highlight.minted
+[123]
 
 [124]
 
-[125]
+[125]) (./_minted/DDBBCF6A38472BF61A047254713271B2.highlight.minted
 
 [126]
 
 [127]
 
-[128]
+[128]) (./_minted/9DA19DBB9CD87D9E8A35F0FA5853E860.highlight.minted
 
 [129]
 
-[130]) (./_minted/B0AD5FA8298BDCC096B7CAA5ED78C342.highlight.minted
+[130]
 
-[131]) (./_minted/B4F3C4DB3AF8D7DC3F9C7CE14F854D80.highlight.minted
+[131]
+
+[132]) (./_minted/1484FE1B0CB23ED1A95249AE21A8B9D7.highlight.minted
+
+[133]
+
+[134]) (./_minted/415EF6CC2851294105DC9346FA66A5CE.highlight.minted
+
+[135]
+
+[136]
+
+[137]
+
+[138]) (./_minted/ED254FF37205CE8C08EAC679D4CF4E78.highlight.minted
+
+[139]) (./_minted/CC57AAC824AAD2FE03E5D498EF6CA69A.highlight.minted
+
+[140]
+
+[141]
+
+[142]
+
+[143]) (./_minted/3ADE08B411CF6AECE3ED0B5A37EAE18C.highlight.minted
+
+[144]
+
+[145]
+
+[146]) (./_minted/D7806D0FC7FAAD66406D8C43A1A253D4.highlight.minted
+
+[147]
+
+[148]) (./_minted/4314B0A8FA9D246AD483EB090FD1380D.highlight.minted
+
+[149]
+
+[150]
+
+[151]
+
+[152]) (./_minted/33A225EF852F51189C95200C93896F58.highlight.minted
+
+[153]
+
+[154]
+
+[155]) (./_minted/686C224CEA8A4859318D90260378A376.highlight.minted)
+(./_minted/04DA82D741DA92DC009A82D035033A07.highlight.minted
+
+[156]
+
+[157]) (./_minted/1C568AECA05471B9A7C655E62E1F7A03.highlight.minted
+
+[158]
+
+[159]
+
+[160]
+
+[161]
+
+[162]
+
+[163]
+
+[164]
+
+[165]
+
+[166]
+
+[167]) (./_minted/929D534D77A944180B6EEF806B9CEDC4.highlight.minted
+
+[168]
+
+[169]
+
+[170]
+
+[171]
+
+[172]
+
+[173]
+
+[174]) (./_minted/B0AD5FA8298BDCC096B7CAA5ED78C342.highlight.minted
+
+[175]) (./_minted/B4F3C4DB3AF8D7DC3F9C7CE14F854D80.highlight.minted
 Missing character: There is no 🚀 (U+1F680) in font [lmmono10-regular]:!
 Missing character: There is no ❌ (U+274C) in font [lmmono10-regular]:!
 Missing character: There is no ❌ (U+274C) in font [lmmono10-regular]:!
 
 
-[132
+[176
 Missing character: There is no 🚀 (U+1F680) in font [lmmono10-regular]:!
+Missing character: There is no ❌ (U+274C) in font [lmmono10-regular]:!
 Missing character: There is no ❌ (U+274C) in font [lmmono10-regular]:!
 ]
 Missing character: There is no 🔎 (U+1F50E) in font [lmmono10-regular]:!
@@ -735,8 +858,7 @@ Missing character: There is no 🔧 (U+1F527) in font [lmmono10-regular]:!
 Missing character: There is no 📋 (U+1F4CB) in font [lmmono10-regular]:!
 ) (./_minted/D0DBE1726BB008834AF0A6E05388EC5D.highlight.minted
 
-[133
-Missing character: There is no ❌ (U+274C) in font [lmmono10-regular]:!
+[177
 Missing character: There is no 🔎 (U+1F50E) in font [lmmono10-regular]:!
 Missing character: There is no 🛑 (U+1F6D1) in font [lmmono10-regular]:!
 Missing character: There is no 📡 (U+1F4E1) in font [lmmono10-regular]:!
@@ -749,120 +871,115 @@ Missing character: There is no 🔧 (U+1F527) in font [lmmono10-regular]:!
 Missing character: There is no 📋 (U+1F4CB) in font [lmmono10-regular]:!
 ]
 
-[134]
+[178]
 
-[135]
+[179]
 
-[136]) (./_minted/11F4168CAE511A46D42A438911354C1E.highlight.minted
+[180]) (./_minted/11F4168CAE511A46D42A438911354C1E.highlight.minted
 
-[137]
+[181]
 
-[138]) (./_minted/8F542C38CE6C2341D431ADA3416848D7.highlight.minted
+[182]) (./_minted/8F542C38CE6C2341D431ADA3416848D7.highlight.minted
 
-[139]
+[183]
 
-[140]) (./_minted/3C9C4F333835D365E313191CA6758F58.highlight.minted
+[184]) (./_minted/3C9C4F333835D365E313191CA6758F58.highlight.minted
 
-[141]
+[185]) (./_minted/35548EEAB9FBF69588945C73B5637294.highlight.minted
 
-[142]) (./_minted/E0D331343B2E4C5708C4E0840E3759E8.highlight.minted
+[186]
 
-[143]) (./_minted/35548EEAB9FBF69588945C73B5637294.highlight.minted
+[187]) (./_minted/2FE26E59E77EEE26303E77B48C1F5B04.highlight.minted
 
-[144]) (./_minted/2FE26E59E77EEE26303E77B48C1F5B04.highlight.minted
+[188]
 
-[145]
+[189]
 
-[146]
+[190]
 
-[147]
+[191]
 
-[148]
+[192]) (./_minted/BC7B69350CFFDCABEE663BB7972D0543.highlight.minted
 
-[149]
+[193]
 
-[150]) (./_minted/BC7B69350CFFDCABEE663BB7972D0543.highlight.minted
+[194]
 
-[151]
+[195]) (./_minted/A151548CCE0EF9F490233BFD1D6283FD.highlight.minted
 
-[152]
+[196]
 
-[153]) (./_minted/A151548CCE0EF9F490233BFD1D6283FD.highlight.minted
+[197]
 
-[154]
+[198]) (./_minted/6D2AEA6C1852F950B84E517FB9853322.highlight.minted
 
-[155]) (./_minted/6D2AEA6C1852F950B84E517FB9853322.highlight.minted
+[199]
 
-[156]
+[200]
 
-[157]
+[201]) (./_minted/AC1A385C61FEAB4AD58D583D1E65D323.highlight.minted
 
-[158]
+[202]
 
-[159]) (./_minted/FD1C198922F14CABA0E2C3ACCC944716.highlight.minted)
-(./_minted/1202DC915C894E2A7C91123B6F602FB0.highlight.minted
+[203]
 
-[160]
+[204]) (./_minted/01564D3C5054EB66F2177C3378DDA85D.highlight.minted
 
-[161]
+[205]
 
-[162]
+[206]
 
-[163]
+[207]
 
-[164]) (./_minted/55E0F3C96AFFF90A7F78361072F6920B.highlight.minted
+[208]
 
-[165]
+[209]
 
-[166]
+[210]
 
-[167]) (./_minted/98A768242D1C02747C0A0662CFF386BD.highlight.minted
+[211]
 
-[168]
+[212]
 
-[169]) (./_minted/1169BD21D839DEEBBD869B682751B3FB.highlight.minted
+[213]) (./_minted/4CA78C85619C747B20D69317E18E2A98.highlight.minted
 
-[170]
+[214]
 
-[171]
+[215]
 
-[172]) (./_minted/25C80561930CE8581FB1044AC763A754.highlight.minted
+[216]
 
-[173]
+[217])
 
-[174]
-
-[175])
-
-[176] (./concatenated_code.aux)
+[218] (./concatenated_code.aux)
  ***********
 LaTeX2e <2025-06-01> patch level 1
 L3 programming layer <2025-07-20>
  ***********
 Package rerunfilecheck Info: File `concatenated_code.out' has not changed.
-(rerunfilecheck)             Checksum: 610F94FD189D6C1676B874784BF7398F;11841.
+(rerunfilecheck)             Checksum: F9791B6B277D546E85C1AE89F7B4B251;11900.
 )
 
 Here is how much of LuaTeX's memory you used:
- 14839 strings out of 470118
+ 14875 strings out of 470118
  125083,953878 words of node,token memory allocated
  426 words of node memory still in use:
    3 hlist, 1 vlist, 1 rule, 2 glue, 3 kern, 1 glyph, 4 attribute, 52 glue_spec,
  4 attribute_list, 1 write nodes
-   avail lists: 1:1,2:5166,3:704,4:1710,5:748,6:191,7:9122,8:1,9:1154,10:3,11:21
+   avail lists: 1:1,2:5092,3:596,4:1444,5:643,6:161,7:10976,8:1,9:962,10:8,11:41
 6,12:1
- 42397 multiletter control sequences out of 65536+600000
+ 42396 multiletter control sequences out of 65536+600000
  43 fonts using 3073959 bytes
  85i,7n,88p,1230b,815s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </Users/tio/Library/Fonts/lmmonolt10-bold.otf></Users/tio/Library/Fonts/lmmono10
 -regular.otf></Users/tio/Library/Fonts/lmmono10-italic.otf></Users/tio/Library/F
-onts/lmroman10-regular.otf></Users/tio/Library/Fonts/lmroman10-bold.otf></Users/
+onts/lmroman10-bold.otf></Users/tio/Library/Fonts/lmroman10-regular.otf></Users/
 tio/Library/Fonts/lmroman12-bold.otf></Users/tio/Library/Fonts/lmroman12-regular
 .otf></Users/tio/Library/Fonts/lmroman17-regular.otf>
-Output written on concatenated_code.pdf (176 pages, 660678 bytes).
+Output written on concatenated_code.pdf (218 pages, 768805 bytes).
 
-PDF statistics: 1185 PDF objects out of 1200 (max. 8388607)
- 973 compressed objects within 10 object streams
- 253 named destinations out of 1000 (max. 131072)
+PDF statistics: 1363 PDF objects out of 1440 (max. 8388607)
+ 1107 compressed objects within 12 object streams
+ 296 named destinations out of 1000 (max. 131072)
  601 words of extra memory for PDF output out of 10000 (max. 100000000)
 

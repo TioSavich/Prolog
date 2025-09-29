@@ -1,0 +1,104 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Division Strategy: Using Commutative Reasoning (Repeated Addition)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a division strategy based on the concept of}
+\PYG{c+cm}{ * commutative reasoning, modeled as a finite state machine using the FSM engine.}
+\PYG{c+cm}{ * It solves a partitive division problem (E items into G groups) by reframing it as a}
+\PYG{c+cm}{ * missing factor multiplication problem: `? * G = E`.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Assistant}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}ucr}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}ucr}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{c+c1}{\PYGZpc{} FSM Engine Interface}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{accept\PYGZus{}state}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} 
+            \PYG{l+s+sAtom}{final\PYGZus{}interpretation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} 
+            \PYG{l+s+sAtom}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}ucr(+E:integer, +G:integer, \PYGZhy{}FinalQuotient:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Using Commutative Reasoning\PYGZsq{} division strategy for E / G.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the}
+\PYG{c+c1}{\PYGZpc{}       process of solving a division problem by finding the missing factor}
+\PYG{c+c1}{\PYGZpc{}       through repeated addition. It traces the entire execution, providing}
+\PYG{c+c1}{\PYGZpc{}       a step\PYGZhy{}by\PYGZhy{}step history of how the quotient is built up.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param E The Dividend (Total number of items).}
+\PYG{c+c1}{\PYGZpc{}       @param G The Divisor (Number of groups).}
+\PYG{c+c1}{\PYGZpc{}       @param FinalQuotient The result of the division (items per group).}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/4` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{n+nf}{run\PYGZus{}ucr}\PYG{p}{(}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{FinalQuotient}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}start}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),}
+    \PYG{n+nv}{Parameters} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{],}
+    \PYG{n+nv}{ModalCosts} \PYG{o}{=} \PYG{p}{[}
+        \PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}commutative\PYGZus{}reasoning\PYGZus{}division}\PYG{p}{),}
+        \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{systematic\PYGZus{}repeated\PYGZus{}addition\PYGZus{}for\PYGZus{}division}\PYG{p}{)),}
+        \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{finding\PYGZus{}missing\PYGZus{}factor\PYGZus{}through\PYGZus{}iteration}\PYG{p}{))}
+    \PYG{p}{],}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{n+nv}{ModalCosts}\PYG{p}{),}
+    
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}ucr}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{FinalQuotient}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} transition/4 defines the FSM engine transitions with modal logic integration.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}start, identify the problem parameters.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}start}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{],} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}initialize}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{l+s+sAtom}{identifying\PYGZus{}division\PYGZus{}problem\PYGZus{}parameters}\PYG{p}{),}
+    \PYG{n+nv}{Interp} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}Identify total items and number of groups.\PYGZsq{}}\PYG{p}{,}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{state\PYGZus{}change}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}initialize, begin the iterative process.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}initialize}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{],} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}iterate}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{initializing\PYGZus{}systematic\PYGZus{}distribution\PYGZus{}process}\PYG{p}{)),}
+    \PYG{n+nv}{Interp} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}Initialize distribution total and count per group.\PYGZsq{}}\PYG{p}{,}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{initialization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}iterate, perform one round of distribution (repeated addition).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}iterate}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{],} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{,} \PYG{n+nv}{NewQ}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{NewT} \PYG{o}{is} \PYG{n+nv}{T} \PYG{o}{+} \PYG{n+nv}{G}\PYG{p}{,}
+    \PYG{n+nv}{NewQ} \PYG{o}{is} \PYG{n+nv}{Q} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{executing\PYGZus{}repeated\PYGZus{}addition\PYGZus{}step}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Distribute round \PYGZti{}w. Total distributed: \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NewQ}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{iteration}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}check, compare the accumulated total to the target total.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{],} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}iterate}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{T} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{E}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{checking\PYGZus{}progress\PYGZus{}against\PYGZus{}target}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Check: T (\PYGZti{}w) \PYGZlt{} E (\PYGZti{}w); continue distributing.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{comparison}\PYG{p}{).}
+    
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{],} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{target\PYGZus{}total\PYGZus{}reached\PYGZus{}successfully}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Check: T (\PYGZti{}w) == E (\PYGZti{}w); total reached.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{completion}\PYG{p}{).}
+    
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{],} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{T} \PYG{o}{\PYGZgt{}} \PYG{n+nv}{E}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Error: Accumulated total (\PYGZti{}w) exceeded E (\PYGZti{}w).\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Accept state predicate for FSM engine}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Final interpretation predicate}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Division complete. \PYGZti{}w / \PYGZti{}w = \PYGZti{}w through repeated addition.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{E}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Extract result from FSM engine history}
+\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{FinalQuotient}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{p}{[],} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nv}{FinalQuotient} \PYG{o}{=} \PYG{n+nv}{Q}\PYG{p}{.}
+\end{MintedVerbatim}

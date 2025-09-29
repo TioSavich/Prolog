@@ -24,10 +24,16 @@
  * 
  */
 :- module(smr_mult_commutative_reasoning,
-          [ run_commutative_mult/4
+          [ run_commutative_mult/4,
+            % FSM Engine Interface
+            setup_strategy/4, transition/3, transition/4,
+            accept_state/1, final_interpretation/2, extract_result_from_history/2
           ]).
 
 :- use_module(library(lists)).
+:- use_module(fsm_engine, [run_fsm_with_base/5]).
+:- use_module(grounded_arithmetic, [incur_cost/1]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_commutative_mult(+A:integer, +B:integer, -FinalTotal:integer, -History:list) is det.
 %
@@ -46,27 +52,59 @@
 %       machine's execution path and the interpretation of each step.
 
 run_commutative_mult(A, B, FinalTotal, History) :-
-    Groups = A,
-    Items = B,
-    InitialState = state(q_init_calc, Groups, Items, 0, Groups),
-    InitialHistoryEntry = step(q_start, 0, 0, 0, 'Start'),
+    incur_cost(strategy_selection),
+    setup_strategy(A, B, InitialState, Parameters),
+    Base = 10,
+    run_fsm_with_base(smr_mult_commutative_reasoning, InitialState, Parameters, Base, History),
+    extract_result_from_history(History, FinalTotal).
 
-    run(InitialState, [InitialHistoryEntry], ReversedHistory),
-    reverse(ReversedHistory, History),
-
-    (last(History, step(q_accept, _, _, Total, _)) -> FinalTotal = Total ; FinalTotal = 'error').
+setup_strategy(A, B, InitialState, Parameters) :-
+    % Initialize: Groups=A, Items=B, Total=0, Counter=A
+    InitialState = state(q_init_calc, A, B, 0, A),
+    Parameters = [A, B],
+    s(exp_poss(initiating_commutative_reasoning_multiplication)),
+    incur_cost(inference).
 
 % run/3 is the main recursive loop of the state machine.
-run(state(q_accept, _, _, Total, _), Acc, FinalHistory) :-
-    format(string(Interpretation), 'Calculation complete. Result = ~w.', [Total]),
-    HistoryEntry = step(q_accept, 0, 0, Total, Interpretation),
-    FinalHistory = [HistoryEntry | Acc].
+% FSM Engine transitions
 
-run(CurrentState, Acc, FinalHistory) :-
-    transition(CurrentState, NextState, Interpretation),
-    CurrentState = state(Name, Gs, Items, Total, _),
-    HistoryEntry = step(Name, Gs, Items, Total, Interpretation),
-    run(NextState, [HistoryEntry | Acc], FinalHistory).
+transition(q_init_calc, q_loop_calc, initialize_calculation) :-
+    s(comp_nec(transitioning_to_iterative_calculation)), incur_cost(state_change).
+
+transition(q_loop_calc, q_loop_calc, add_items_iteration) :-
+    s(exp_poss(continuing_repeated_addition_iteration)), incur_cost(iteration).
+
+transition(q_loop_calc, q_accept, complete_multiplication) :-
+    s(comp_nec(finalizing_commutative_multiplication)), incur_cost(completion).
+
+% Complete state transitions
+transition(state(q_init_calc, Gs, Items, _, _), _, state(q_loop_calc, Gs, Items, 0, Gs),
+           'Initializing iterative calculation.') :-
+    s(exp_poss(initializing_repeated_addition_phase)), incur_cost(initialization).
+
+transition(state(q_loop_calc, Gs, Items, Total, Counter), _, state(q_loop_calc, Gs, Items, NewTotal, NewCounter), Interp) :-
+    Counter > 0,
+    s(comp_nec(applying_embodied_repeated_addition)),
+    NewTotal is Total + Items, NewCounter is Counter - 1,
+    format(atom(Interp), 'Iterate: Added ~w. Total = ~w.', [Items, NewTotal]),
+    incur_cost(addition_iteration).
+
+transition(state(q_loop_calc, Gs, Items, Total, 0), _, state(q_accept, Gs, Items, Total, 0),
+           'Counter reached zero. Calculation complete.') :-
+    s(exp_poss(completing_repeated_addition_strategy)), incur_cost(strategy_completion).
+
+accept_state(state(q_accept, _, _, _, _)).
+
+final_interpretation(state(q_accept, _, _, Total, _), Interpretation) :-
+    format(atom(Interpretation), 'Calculation complete. Result = ~w.', [Total]).
+
+extract_result_from_history(History, Result) :-
+    last(History, LastStep),
+    (LastStep = step(state(q_accept, _, _, Total, _), _, _) ->
+        Result = Total
+    ;
+        Result = 'error'
+    ).
 
 % transition/3 defines the logic for moving from one state to the next.
 

@@ -1,0 +1,188 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Multiplication Strategy: Coordinating Two Counts (C2C)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a foundational multiplication strategy, \PYGZdq{}Coordinating}
+\PYG{c+cm}{ * Two Counts\PYGZdq{} (C2C), modeled as a finite state machine. This strategy}
+\PYG{c+cm}{ * represents a direct modeling approach where a student literally counts every}
+\PYG{c+cm}{ * single item across all groups.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The cognitive process involves two simultaneous counting acts:}
+\PYG{c+cm}{ * 1.  Tracking the number of items counted within the current group.}
+\PYG{c+cm}{ * 2.  Tracking which group is currently being counted.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This is a direct simulation of `N * S` where the total is found by}
+\PYG{c+cm}{ * counting `1` for each item, `S` times for each of the `N` groups.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state is represented by the term:}
+\PYG{c+cm}{ * `state(Name, GroupsDone, ItemInGroup, Total, NumGroups, GroupSize)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(Name, GroupsDone, ItemInGroup, Total, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}c2c}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}c2c}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{c+c1}{\PYGZpc{} FSM Engine Interface}
+            \PYG{l+s+sAtom}{setup\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{accept\PYGZus{}state}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+            \PYG{l+s+sAtom}{final\PYGZus{}interpretation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+            \PYG{l+s+sAtom}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}c2c(+N:integer, +S:integer, \PYGZhy{}FinalTotal:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Coordinating Two Counts\PYGZsq{} multiplication strategy for N * S.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the}
+\PYG{c+c1}{\PYGZpc{}       C2C strategy. It simulates a student counting every item, one by one,}
+\PYG{c+c1}{\PYGZpc{}       across all `N` groups of size `S`. It traces the entire execution,}
+\PYG{c+c1}{\PYGZpc{}       providing a step\PYGZhy{}by\PYGZhy{}step history of the two coordinated counts.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param N The number of groups.}
+\PYG{c+c1}{\PYGZpc{}       @param S The size of each group (number of items).}
+\PYG{c+c1}{\PYGZpc{}       @param FinalTotal The resulting product of N * S.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/5` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}c2c(+N:integer, +S:integer, \PYGZhy{}FinalTotal:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Coordinating Two Counts\PYGZsq{} multiplication strategy for N * S}
+\PYG{c+c1}{\PYGZpc{}       using the FSM engine with modal logic integration.}
+\PYG{n+nf}{run\PYGZus{}c2c}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{FinalTotal}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Emit cognitive cost for strategy initiation}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{strategy\PYGZus{}selection}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Use the FSM engine to run this strategy}
+    \PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{),}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}c2c}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{FinalTotal}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      setup\PYGZus{}strategy(+N, +S, \PYGZhy{}InitialState, \PYGZhy{}Parameters) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Sets up the initial state for the C2C multiplication strategy.}
+\PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Initialize state: GroupsDone=0, ItemInGroup=0, Total=0, NumGroups=N, GroupSize=S}
+    \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),}
+    \PYG{n+nv}{Parameters} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal for strategy initiation}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}coordinating\PYGZus{}two\PYGZus{}counts\PYGZus{}multiplication}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+StateNum, \PYGZhy{}NextStateNum, \PYGZhy{}Action) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       State transitions for C2C multiplication FSM.}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{l+s+sAtom}{initialize\PYGZus{}counters}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}to\PYGZus{}group\PYGZus{}checking}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{state\PYGZus{}change}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{l+s+sAtom}{start\PYGZus{}group\PYGZus{}counting}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}item\PYGZus{}counting\PYGZus{}in\PYGZus{}group}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{group\PYGZus{}initiation}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{l+s+sAtom}{complete\PYGZus{}all\PYGZus{}groups}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{finalizing\PYGZus{}multiplication\PYGZus{}computation}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{completion}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{l+s+sAtom}{count\PYGZus{}next\PYGZus{}item}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{continuing\PYGZus{}item\PYGZus{}enumeration}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{counting}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}next\PYGZus{}group}\PYG{p}{,} \PYG{l+s+sAtom}{finish\PYGZus{}current\PYGZus{}group}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}group\PYGZus{}counting\PYGZus{}phase}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{group\PYGZus{}completion}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}next\PYGZus{}group}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{l+s+sAtom}{advance\PYGZus{}to\PYGZus{}next\PYGZus{}group}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{progressing\PYGZus{}to\PYGZus{}subsequent\PYGZus{}group}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{group\PYGZus{}transition}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+State, +Base, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Complete state transitions with full state tracking and modal integration.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, proceed to check the group counter.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initializing\PYGZus{}group\PYGZus{}and\PYGZus{}item\PYGZus{}counters}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Inputs: \PYGZti{}w groups of \PYGZti{}w. Initialize counters.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{initialization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}check\PYGZus{}G, decide whether to count another group or finish.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{G} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{N}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{verifying\PYGZus{}group\PYGZus{}counting\PYGZus{}continuation}\PYG{p}{)),}
+    \PYG{n+nv}{G1} \PYG{o}{is} \PYG{n+nv}{G} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}G \PYGZlt{} N. Starting Group \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{G1}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{group\PYGZus{}check}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{l+s+sAtom}{\PYGZsq{}G = N. All groups counted.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}all\PYGZus{}group\PYGZus{}enumeration}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{completion\PYGZus{}check}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}count\PYGZus{}items, count one item and increment the total. Loop until the group is full.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{I}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{NewI}\PYG{p}{,} \PYG{n+nv}{NewT}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{I} \PYG{o}{\PYGZlt{}} \PYG{n+nv}{S}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{applying\PYGZus{}embodied\PYGZus{}counting\PYGZus{}increment}\PYG{p}{)),}
+    \PYG{n+nv}{NewI} \PYG{o}{is} \PYG{n+nv}{I} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nv}{NewT} \PYG{o}{is} \PYG{n+nv}{T} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nv}{G1} \PYG{o}{is} \PYG{n+nv}{G} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Count: \PYGZti{}w. (Item \PYGZti{}w in Group \PYGZti{}w).\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NewT}\PYG{p}{,} \PYG{n+nv}{NewI}\PYG{p}{,} \PYG{n+nv}{G1}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{item\PYGZus{}counting}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} When the current group is fully counted, move to the next group.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}count\PYGZus{}items}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}next\PYGZus{}group}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{concluding\PYGZus{}current\PYGZus{}group\PYGZus{}enumeration}\PYG{p}{)),}
+    \PYG{n+nv}{G1} \PYG{o}{is} \PYG{n+nv}{G} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Group \PYGZti{}w finished.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{G1}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{group\PYGZus{}finalization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}next\PYGZus{}group, increment the group counter and reset the item counter, then loop back.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}next\PYGZus{}group}\PYG{p}{,} \PYG{n+nv}{G}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}G}\PYG{p}{,} \PYG{n+nv}{NewG}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{l+s+sAtom}{\PYGZsq{}Increment G. Reset I.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}to\PYGZus{}subsequent\PYGZus{}group\PYGZus{}state}\PYG{p}{)),}
+    \PYG{n+nv}{NewG} \PYG{o}{is} \PYG{n+nv}{G} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{group\PYGZus{}increment}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      accept\PYGZus{}state(+State) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Defines the accept states for the FSM.}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      final\PYGZus{}interpretation(+State, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Provides final interpretation of the computation.}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}All groups counted. Result = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result\PYGZus{}from\PYGZus{}history(+History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{LastStep}\PYG{p}{),}
+    \PYG{p}{(}\PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{n+nv}{T}
+    \PYG{p}{;}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{).}
+\end{MintedVerbatim}

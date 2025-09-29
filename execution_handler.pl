@@ -82,10 +82,10 @@ reflect_on_success(Goal, Trace) :-
 %       Catches errors from the meta-interpreter and initiates the
 %       reorganization process.
 %
-%       This predicate specifically handles `perturbation(resource_exhaustion)`.
-%       Upon catching this error, it logs the event, invokes the
-%       `reorganization_engine`, and then recursively retries the original
-%       goal with the same limit.
+%       This predicate handles multiple types of perturbations:
+%       - perturbation(resource_exhaustion): Computational efficiency crisis
+%       - perturbation(normative_crisis(Goal, Context)): Mathematical norm violation
+%       - perturbation(incoherence(Commitments)): Logical contradiction
 %
 %       @param Error The error term thrown by `catch/3`.
 %       @param Goal The original goal that was being attempted.
@@ -99,6 +99,22 @@ handle_perturbation(perturbation(resource_exhaustion), Goal, Trace, Limit) :-
     Result = _{goal:Goal, trace:NormalizedTrace},
     reflect_and_learn(Result),
     writeln('Reorganization complete. Retrying goal...'),
+    run_computation(Goal, Limit).
+
+handle_perturbation(perturbation(normative_crisis(CrisisGoal, Context)), Goal, Trace, Limit) :-
+    format('Normative crisis detected: ~w violates norms of ~w context.~n', [CrisisGoal, Context]),
+    writeln('Initiating context shift reorganization...'),
+    % Handle normative crisis through context expansion
+    reorganization_engine:handle_normative_crisis(CrisisGoal, Context),
+    writeln('Context shift complete. Retrying goal...'),
+    run_computation(Goal, Limit).
+
+handle_perturbation(perturbation(incoherence(Commitments)), Goal, Trace, Limit) :-
+    format('Logical incoherence detected in commitments: ~w~n', [Commitments]),
+    writeln('Initiating incoherence resolution...'),
+    % Handle logical incoherence through belief revision
+    reorganization_engine:handle_incoherence(Commitments),
+    writeln('Incoherence resolution complete. Retrying goal...'),
     run_computation(Goal, Limit).
 
 handle_perturbation(Error, _, _, _) :-

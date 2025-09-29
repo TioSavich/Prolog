@@ -1,0 +1,167 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Subtraction Strategy: Decomposition (Standard Algorithm)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements the standard \PYGZdq{}decomposition\PYGZdq{} or \PYGZdq{}borrowing\PYGZdq{}}
+\PYG{c+cm}{ * algorithm for subtraction, modeled as a finite state machine.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1. Decompose both the minuend (M) and subtrahend (S) into tens and ones.}
+\PYG{c+cm}{ * 2. Subtract the tens components.}
+\PYG{c+cm}{ * 3. Check if the ones component of M is sufficient to subtract the ones}
+\PYG{c+cm}{ *    component of S.}
+\PYG{c+cm}{ * 4. If not, \PYGZdq{}borrow\PYGZdq{} or \PYGZdq{}decompose\PYGZdq{} a ten from M\PYGZsq{}s tens component, adding}
+\PYG{c+cm}{ *    it to M\PYGZsq{}s ones component. This is the key step of the algorithm.}
+\PYG{c+cm}{ * 5. Subtract the ones components.}
+\PYG{c+cm}{ * 6. Recombine the resulting tens and ones to get the final answer.}
+\PYG{c+cm}{ * 7. The strategy fails if S \PYGZgt{} M.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state is represented by the term:}
+\PYG{c+cm}{ * `state(StateName, Result\PYGZus{}Tens, Result\PYGZus{}Ones, Subtrahend\PYGZus{}Tens, Subtrahend\PYGZus{}Ones)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(StateName, Result\PYGZus{}Tens, Result\PYGZus{}Ones, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}decomposition}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}decomposition}\PYG{o}{/}\PYG{l+m+mi}{4}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{greater\PYGZus{}than}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} 
+                                  \PYG{l+s+sAtom}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{subtract\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} 
+                                  \PYG{l+s+sAtom}{add\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{multiply\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}utils}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{base\PYGZus{}decompose\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+s+sAtom}{base\PYGZus{}recompose\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}decomposition(+M:integer, +S:integer, \PYGZhy{}FinalResult:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Decomposition\PYGZsq{} (borrowing) subtraction strategy for M \PYGZhy{} S.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the}
+\PYG{c+c1}{\PYGZpc{}       standard schoolbook subtraction algorithm. It first checks if the}
+\PYG{c+c1}{\PYGZpc{}       subtraction is possible (M \PYGZgt{}= S). If so, it decomposes both numbers}
+\PYG{c+c1}{\PYGZpc{}       and performs the subtraction column by column, handling borrowing}
+\PYG{c+c1}{\PYGZpc{}       when necessary. It traces the entire execution.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param M The Minuend, the number to subtract from.}
+\PYG{c+c1}{\PYGZpc{}       @param S The Subtrahend, the number to subtract.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalResult The resulting difference (M \PYGZhy{} S). If S \PYGZgt{} M, this}
+\PYG{c+c1}{\PYGZpc{}       will be the atom `\PYGZsq{}error\PYGZsq{}`.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/4` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{n+nf}{run\PYGZus{}decomposition}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{FinalResult}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Convert inputs to recollection structures}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{),}
+    
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal: entering decomposition arithmetic context (compressive necessity)}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{checking\PYGZus{}subtraction\PYGZus{}validity}\PYG{p}{)),}
+    
+    \PYG{p}{(}\PYG{n+nf}{greater\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{History} \PYG{o}{=} \PYG{p}{[}\PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+s+sAtom}{\PYGZsq{}Error: Subtrahend \PYGZgt{} Minuend.\PYGZsq{}}\PYG{p}{)],}
+        \PYG{n+nv}{FinalResult} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{;}
+        \PYG{c+c1}{\PYGZpc{} Decompose both M and S into tens and ones using grounded operations}
+        \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{decomposing\PYGZus{}numbers\PYGZus{}into\PYGZus{}base\PYGZus{}components}\PYG{p}{)),}
+        
+        \PYG{n+nf}{base\PYGZus{}decompose\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),}
+        \PYG{n+nf}{base\PYGZus{}decompose\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),}
+        
+        \PYG{c+c1}{\PYGZpc{} Convert back to integers for state representation (keeping interface compatible)}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T}\PYG{p}{),}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{),}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}T}\PYG{p}{),}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}O}\PYG{p}{),}
+
+        \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),}
+
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{InitialInterpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Inputs: M=\PYGZti{}w, S=\PYGZti{}w. Decompose M (\PYGZti{}wT+\PYGZti{}wO) and S (\PYGZti{}wT+\PYGZti{}wO).\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{]),}
+        \PYG{n+nv}{InitialHistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}start}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{M\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{InitialInterpretation}\PYG{p}{),}
+
+        \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{InitialHistoryEntry}\PYG{p}{],} \PYG{n+nv}{ReversedHistory}\PYG{p}{),}
+        \PYG{n+nf}{reverse}\PYG{p}{(}\PYG{n+nv}{ReversedHistory}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+
+        \PYG{p}{(}\PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{RT}\PYG{p}{,} \PYG{n+nv}{RO}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+            \PYG{c+c1}{\PYGZpc{} Recompose result using grounded arithmetic}
+            \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{RT}\PYG{p}{,} \PYG{n+nv}{RT\PYGZus{}Rec}\PYG{p}{),}
+            \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{RO}\PYG{p}{,} \PYG{n+nv}{RO\PYGZus{}Rec}\PYG{p}{),}
+            \PYG{n+nf}{base\PYGZus{}recompose\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{RT\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{RO\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{FinalResult\PYGZus{}Rec}\PYG{p}{),}
+            \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{FinalResult\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{FinalResult}\PYG{p}{)}
+        \PYG{p}{;}
+            \PYG{n+nv}{FinalResult} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}computation\PYGZus{}error\PYGZsq{}}
+        \PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} run/4 is the main recursive loop of the state machine.}
+\PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{AccHistory}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{base\PYGZus{}recompose\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Result\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Result\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Accept. Final Result: \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Result}\PYG{p}{]),}
+    \PYG{n+nv}{HistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nv}{FinalHistory} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{].}
+
+\PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{AccHistory}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nv}{CurrentState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nv}{HistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{AccHistory}\PYG{p}{],} \PYG{n+nv}{FinalHistory}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} transition/4 defines the logic for moving from one state to the next.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, proceed to subtract the tens column.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}Proceed to subtract bases.\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}sub\PYGZus{}bases, subtract the tens and move to check the ones column.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{New\PYGZus{}R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}T}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{subtracting\PYGZus{}base\PYGZus{}components}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Subtract Bases: \PYGZti{}wT \PYGZhy{} \PYGZti{}wT = \PYGZti{}wT.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{R\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}T}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}check\PYGZus{}ones, determine if borrowing is needed.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{greater\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} R\PYGZus{}O \PYGZgt{}= S\PYGZus{}O in grounded terms}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{sufficient\PYGZus{}ones\PYGZus{}for\PYGZus{}subtraction}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Sufficient Ones (\PYGZti{}w \PYGZgt{}= \PYGZti{}w). Proceed.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{R\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{]).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}check\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}decompose}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{greater\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} R\PYGZus{}O \PYGZlt{} S\PYGZus{}O in grounded terms}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{need\PYGZus{}decomposition\PYGZus{}for\PYGZus{}subtraction}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Insufficient Ones (\PYGZti{}w \PYGZlt{} \PYGZti{}w). Need decomposition.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{R\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}decompose, perform the \PYGZdq{}borrow\PYGZdq{} from the tens column.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}decompose}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{One\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{One\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} R\PYGZus{}T \PYGZgt{} 0 is implicit in successful subtraction}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{New\PYGZus{}R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}T}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{New\PYGZus{}R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{decomposing\PYGZus{}ten\PYGZus{}into\PYGZus{}ones}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Decomposed 1 Ten. New state: \PYGZti{}wT, \PYGZti{}wO.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{New\PYGZus{}R\PYGZus{}T}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}sub\PYGZus{}ones, subtract the ones column and transition to the final accept state.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}T\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{R\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{New\PYGZus{}R\PYGZus{}O\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{subtracting\PYGZus{}ones\PYGZus{}components}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Subtract Ones: \PYGZti{}wO \PYGZhy{} \PYGZti{}wO = \PYGZti{}wO.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{R\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}O}\PYG{p}{,} \PYG{n+nv}{New\PYGZus{}R\PYGZus{}O}\PYG{p}{]).}
+\end{MintedVerbatim}

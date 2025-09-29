@@ -1,0 +1,207 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Division Strategy: Conversion to Groups Other than Bases (CBO)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a sophisticated division strategy, sometimes called}
+\PYG{c+cm}{ * \PYGZdq{}Conversion to Groups Other than Bases,\PYGZdq{} modeled as a finite state machine.}
+\PYG{c+cm}{ * It solves a division problem (T / S) by leveraging knowledge of a counting}
+\PYG{c+cm}{ * base (e.g., 10).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1.  Decompose the total (T) into a number of bases (TB) and ones (TO).}
+\PYG{c+cm}{ * 2.  Analyze the base itself: determine how many groups of size S can be}
+\PYG{c+cm}{ *     made from one base, and what the remainder is. (e.g., \PYGZdq{}how many 4s in 10?\PYGZdq{}).}
+\PYG{c+cm}{ * 3.  Use this knowledge to quickly calculate the quotient and remainder that}
+\PYG{c+cm}{ *     result from the \PYGZdq{}bases\PYGZdq{} part of the total (TB).}
+\PYG{c+cm}{ * 4.  Combine the remainder from the bases with the original \PYGZdq{}ones\PYGZdq{} part (TO).}
+\PYG{c+cm}{ * 5.  Process this combined final remainder to see how many more groups of}
+\PYG{c+cm}{ *     size S can be made.}
+\PYG{c+cm}{ * 6.  Sum the quotients from the base and remainder parts to get the final answer.}
+\PYG{c+cm}{ * 7.  The strategy fails if the divisor (S) is not positive.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state is represented by the term:}
+\PYG{c+cm}{ * `state(Name, T\PYGZus{}Bases, T\PYGZus{}Ones, Quotient, Remainder, S\PYGZus{}in\PYGZus{}Base, Rem\PYGZus{}in\PYGZus{}Base, Total, Divisor)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(Name, Quotient, Remainder, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}cbo}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}cbo\PYGZus{}div}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{,}
+            \PYG{c+c1}{\PYGZpc{} FSM Engine Interface}
+            \PYG{l+s+sAtom}{setup\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{accept\PYGZus{}state}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+            \PYG{l+s+sAtom}{final\PYGZus{}interpretation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+            \PYG{l+s+sAtom}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}cbo\PYGZus{}div(+T:integer, +S:integer, +Base:integer, \PYGZhy{}FinalQuotient:integer, \PYGZhy{}FinalRemainder:integer) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Conversion to Groups Other than Bases\PYGZsq{} division strategy}
+\PYG{c+c1}{\PYGZpc{}       for T / S, using the specified Base.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the CBO}
+\PYG{c+c1}{\PYGZpc{}       division strategy. It first checks for a positive divisor. If valid, it}
+\PYG{c+c1}{\PYGZpc{}       decomposes the dividend `T` and uses knowledge about the `Base` to find}
+\PYG{c+c1}{\PYGZpc{}       the quotient and remainder. It traces the entire execution.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param T The Dividend (Total).}
+\PYG{c+c1}{\PYGZpc{}       @param S The Divisor (Size of groups).}
+\PYG{c+c1}{\PYGZpc{}       @param Base The numerical base to use for decomposition (e.g., 10).}
+\PYG{c+c1}{\PYGZpc{}       @param FinalQuotient The quotient of the division.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalRemainder The remainder of the division. If S is not}
+\PYG{c+c1}{\PYGZpc{}       positive, this will be the atom `\PYGZsq{}error\PYGZsq{}`.}
+
+\PYG{n+nf}{run\PYGZus{}cbo\PYGZus{}div}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{FinalQuotient}\PYG{p}{,} \PYG{n+nv}{FinalRemainder}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use the FSM engine to run this strategy}
+    \PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{),}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}div\PYGZus{}cbo}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{FinalQuotient}\PYG{p}{,} \PYG{n+nv}{FinalRemainder}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      setup\PYGZus{}strategy(+T, +S, \PYGZhy{}InitialState, \PYGZhy{}Parameters) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Sets up the initial state for the CBO division strategy.}
+\PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if division is valid}
+    \PYG{p}{(}\PYG{n+nv}{S} \PYG{o}{=\PYGZlt{}} \PYG{l+m+mi}{0} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nv}{Parameters} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal for strategy initiation}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}cbo\PYGZus{}division\PYGZus{}strategy}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+StateNum, \PYGZhy{}NextStateNum, \PYGZhy{}Action) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       State transitions for CBO division FSM.}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}decompose}\PYG{p}{,} \PYG{l+s+sAtom}{decompose\PYGZus{}dividend}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}to\PYGZus{}decomposition}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{state\PYGZus{}change}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}decompose}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}analyze\PYGZus{}base}\PYG{p}{,} \PYG{l+s+sAtom}{analyze\PYGZus{}base\PYGZus{}divisibility}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{analyzing\PYGZus{}base\PYGZus{}for\PYGZus{}group\PYGZus{}formation}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{analysis}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}analyze\PYGZus{}base}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}bases}\PYG{p}{,} \PYG{l+s+sAtom}{process\PYGZus{}base\PYGZus{}groups}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{processing\PYGZus{}base\PYGZus{}components}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{computation}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}bases}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}combine\PYGZus{}R}\PYG{p}{,} \PYG{l+s+sAtom}{combine\PYGZus{}remainders}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{combining\PYGZus{}remainder\PYGZus{}components}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{combination}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}combine\PYGZus{}R}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}R}\PYG{p}{,} \PYG{l+s+sAtom}{process\PYGZus{}final\PYGZus{}remainder}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{processing\PYGZus{}combined\PYGZus{}remainder}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{remainder\PYGZus{}processing}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}R}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{l+s+sAtom}{finalize\PYGZus{}division}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{finalizing\PYGZus{}cbo\PYGZus{}division\PYGZus{}result}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{finalization}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+s+sAtom}{maintain\PYGZus{}error}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}state\PYGZus{}is\PYGZus{}absorbing}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}handling}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+State, +Base, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Complete state transitions with full state tracking.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, decompose T and proceed to analyze the base.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{n+nv}{Base}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}decompose}\PYG{p}{,} \PYG{n+nv}{NewTB}\PYG{p}{,} \PYG{n+nv}{NewTO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{decomposing\PYGZus{}dividend\PYGZus{}into\PYGZus{}base\PYGZus{}components}\PYG{p}{)),}
+    \PYG{n+nv}{NewTB} \PYG{o}{is} \PYG{n+nv}{T} \PYG{o}{//} \PYG{n+nv}{Base}\PYG{p}{,}
+    \PYG{n+nv}{NewTO} \PYG{o}{is} \PYG{n+nv}{T} \PYG{o}{mod} \PYG{n+nv}{Base}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Initialize: \PYGZti{}w/\PYGZti{}w. Decompose T: \PYGZti{}w Bases + \PYGZti{}w Ones.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{NewTB}\PYG{p}{,} \PYG{n+nv}{NewTO}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{decomposition}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}decompose, prepare for base analysis}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}decompose}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}analyze\PYGZus{}base}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{l+s+sAtom}{\PYGZsq{}Preparing base analysis.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{preparing\PYGZus{}base\PYGZus{}divisibility\PYGZus{}analysis}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{preparation}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}analyze\PYGZus{}base, determine how many groups of S fit in one Base.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}analyze\PYGZus{}base}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{n+nv}{Base}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{calculating\PYGZus{}base\PYGZus{}group\PYGZus{}capacity}\PYG{p}{)),}
+    \PYG{n+nv}{SiB} \PYG{o}{is} \PYG{n+nv}{Base} \PYG{o}{//} \PYG{n+nv}{S}\PYG{p}{,}
+    \PYG{n+nv}{RiB} \PYG{o}{is} \PYG{n+nv}{Base} \PYG{o}{mod} \PYG{n+nv}{S}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Analyze Base: One Base (\PYGZti{}w) = \PYGZti{}w group(s) of \PYGZti{}w + Remainder \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{base\PYGZus{}analysis}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}process\PYGZus{}bases, calculate the quotient and remainder from the \PYGZdq{}bases\PYGZdq{} part of T.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}combine\PYGZus{}R}\PYG{p}{,} \PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{NewQ}\PYG{p}{,} \PYG{n+nv}{NewR}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{processing\PYGZus{}base\PYGZus{}component\PYGZus{}groups}\PYG{p}{)),}
+    \PYG{n+nv}{NewQ} \PYG{o}{is} \PYG{n+nv}{TB} \PYG{o}{*} \PYG{n+nv}{SiB}\PYG{p}{,}
+    \PYG{n+nv}{NewR} \PYG{o}{is} \PYG{n+nv}{TB} \PYG{o}{*} \PYG{n+nv}{RiB}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Process \PYGZti{}w Bases: Yields \PYGZti{}w groups and \PYGZti{}w remainder.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{TB}\PYG{p}{,} \PYG{n+nv}{NewQ}\PYG{p}{,} \PYG{n+nv}{NewR}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{base\PYGZus{}processing}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}combine\PYGZus{}R, add the remainder from the bases to the original ones part of T.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}combine\PYGZus{}R}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}R}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{NewR}\PYG{p}{,} \PYG{n+nv}{SiB}\PYG{p}{,} \PYG{n+nv}{RiB}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{combining\PYGZus{}base\PYGZus{}and\PYGZus{}ones\PYGZus{}remainders}\PYG{p}{)),}
+    \PYG{n+nv}{NewR} \PYG{o}{is} \PYG{n+nv}{R} \PYG{o}{+} \PYG{n+nv}{TO}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Combine Remainders: \PYGZti{}w (from Bases) + \PYGZti{}w (from Ones) = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{R}\PYG{p}{,} \PYG{n+nv}{TO}\PYG{p}{,} \PYG{n+nv}{NewR}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{remainder\PYGZus{}combination}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}process\PYGZus{}R, find the quotient and remainder from the combined remainder, then accept.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}process\PYGZus{}R}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Q}\PYG{p}{,} \PYG{n+nv}{R}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{NewQ}\PYG{p}{,} \PYG{n+nv}{NewR}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{finalizing\PYGZus{}remainder\PYGZus{}processing}\PYG{p}{)),}
+    \PYG{n+nv}{Q\PYGZus{}from\PYGZus{}R} \PYG{o}{is} \PYG{n+nv}{R} \PYG{o}{//} \PYG{n+nv}{S}\PYG{p}{,}
+    \PYG{n+nv}{NewR} \PYG{o}{is} \PYG{n+nv}{R} \PYG{o}{mod} \PYG{n+nv}{S}\PYG{p}{,}
+    \PYG{n+nv}{NewQ} \PYG{o}{is} \PYG{n+nv}{Q} \PYG{o}{+} \PYG{n+nv}{Q\PYGZus{}from\PYGZus{}R}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Process Remainder: Yields \PYGZti{}w additional group(s).\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Q\PYGZus{}from\PYGZus{}R}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{final\PYGZus{}processing}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}Error: Invalid divisor.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}state\PYGZus{}persistence}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}maintenance}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      accept\PYGZus{}state(+State) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Defines accepting states for the FSM.}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      final\PYGZus{}interpretation(+State, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Provides final interpretation of the computation.}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Successfully computed division: Quotient=\PYGZti{}w, Remainder=\PYGZti{}w via CBO strategy\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{]).}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Error: CBO division failed \PYGZhy{} invalid divisor\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result\PYGZus{}from\PYGZus{}history(+History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{LastStep}\PYG{p}{),}
+    \PYG{p}{(}\PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}
+        \PYG{n+nv}{Quotient} \PYG{o}{=} \PYG{l+s+sAtom}{error}\PYG{p}{,}
+        \PYG{n+nv}{Remainder} \PYG{o}{=} \PYG{l+s+sAtom}{error}
+    \PYG{p}{).}
+\end{MintedVerbatim}

@@ -22,10 +22,24 @@
  * 
  */
 :- module(sar_add_chunking,
-          [ run_chunking/4
+          [ run_chunking/4,
+            % FSM Engine Interface
+            setup_strategy/4,
+            transition/3,
+            transition/4,
+            accept_state/1,
+            final_interpretation/2,
+            extract_result_from_history/2
           ]).
 
 :- use_module(library(lists)).
+:- use_module(fsm_engine).
+:- use_module(grounded_arithmetic, [greater_than/2, smaller_than/2, equal_to/2,
+                                  integer_to_recollection/2, recollection_to_integer/2, 
+                                  add_grounded/3, subtract_grounded/3, successor/2,
+                                  zero/1, incur_cost/1]).
+:- use_module(grounded_utils, [base_decompose_grounded/4, base_recompose_grounded/4]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_chunking(+A:integer, +B:integer, -FinalSum:integer, -History:list) is det.
 %
@@ -42,63 +56,80 @@
 %       machine's execution path and the interpretation of each step.
 
 run_chunking(A, B, FinalSum, History) :-
+    % Use the FSM engine to run this strategy
+    setup_strategy(A, B, InitialState, Parameters),
     Base = 10,
-    % Initial state (q_init): Decompose B and set the initial sum.
-    Sum is A,
+    run_fsm_with_base(sar_add_chunking, InitialState, Parameters, Base, History),
+    extract_result_from_history(History, FinalSum).
+
+%!      setup_strategy(+A, +B, -InitialState, -Parameters) is det.
+%
+%       Sets up the initial state for the chunking strategy.
+setup_strategy(A, B, InitialState, Parameters) :-    
+    % For now, use built-in arithmetic but add modal signals and cost tracking
+    % This will be converted to full grounded arithmetic in a future iteration
+    Base = 10,
     BasesRemaining is (B // Base) * Base,
     OnesRemaining is B mod Base,
+    
+    % Initial state
+    InitialState = state(q_init, A, BasesRemaining, OnesRemaining, 0, 0, 0),
+    Parameters = [A, B, Base],
+    
+    % Emit modal signal for strategy initiation
+    s(exp_poss(initiating_chunking_strategy)),
+    incur_cost(inference).
 
-    format(string(InitialInterpretation), 'Initialize Sum to ~w. Decompose B: ~w + ~w.', [A, BasesRemaining, OnesRemaining]),
-    InitialHistoryEntry = step(q_start, A, 0, 0, 0, InitialInterpretation),
+%!      transition(+CurrentState, -NextState, -Interpretation) is det.
+%       transition(+CurrentState, +Base, -NextState, -Interpretation) is det.
+%
+%       State transition rules for the chunking strategy.
 
-    InitialState = state(q_init, Sum, BasesRemaining, OnesRemaining, 0, 0, 0),
-
-    % Run the state machine.
-    run(InitialState, Base, [InitialHistoryEntry], ReversedHistory),
-    reverse(ReversedHistory, History),
-
-    % Extract the final sum from the last history entry.
-    (last(History, step(_, FinalSum, _, _, _, _)) -> true ; FinalSum = A).
-
-% run/4 is the main loop of the state machine. It stops at the q_accept state.
-run(state(q_accept, Sum, BR, OR, K, _IS, _TB), _Base, Acc, FinalHistory) :-
-    HistoryEntry = step(q_accept, Sum, BR, OR, K, 'Execution finished.'),
-    FinalHistory = [HistoryEntry | Acc].
-
-run(CurrentState, Base, Acc, FinalHistory) :-
-    transition(CurrentState, Base, NextState, Interpretation),
-    CurrentState = state(Name, Sum, BR, OR, K, _, _),
-    HistoryEntry = step(Name, Sum, BR, OR, K, Interpretation),
-    run(NextState, Base, [HistoryEntry | Acc], FinalHistory).
-
-% transition/4 defines the state transitions of the finite state machine.
+% Version without base parameter (for FSM engine compatibility)
+transition(CurrentState, NextState, Interpretation) :-
+    transition(CurrentState, 10, NextState, Interpretation).
 
 % From q_init, always proceed to add the base chunk.
 transition(state(q_init, Sum, BR, OR, K, IS, TB), _Base, state(q_add_base_chunk, Sum, BR, OR, K, IS, TB),
-           'Proceed to add base chunk.').
+           'Proceed to add base chunk.') :-
+    s(exp_poss(beginning_base_chunk_addition)),
+    incur_cost(inference).
 
 % From q_add_base_chunk:
 % If there are bases remaining, add them all at once.
 transition(state(q_add_base_chunk, Sum, BR, OR, _K, _IS, _TB), _Base, state(q_init_ones_chunk, NewSum, 0, OR, 0, 0, 0), Interpretation) :-
     BR > 0,
     NewSum is Sum + BR,
+    s(comp_nec(adding_complete_base_chunk)),
+    incur_cost(unit_count),
     format(string(Interpretation), 'Add Base Chunk (+~w). Sum = ~w.', [BR, NewSum]).
+
 % If there are no bases, move on.
 transition(state(q_add_base_chunk, Sum, 0, OR, _K, _IS, _TB), _Base, state(q_init_ones_chunk, Sum, 0, OR, 0, 0, 0),
-           'No bases to add.').
+           'No bases to add.') :-
+    s(exp_poss(skipping_empty_base_chunk)),
+    incur_cost(inference).
 
 % From q_init_ones_chunk:
 % If there are ones to add, start the strategic chunking process.
 transition(state(q_init_ones_chunk, Sum, BR, OR, K, _IS, _TB), _Base, state(q_init_K, Sum, BR, OR, K, Sum, TargetBase), Interpretation) :-
     OR > 0,
-    format(string(Interpretation), 'Begin strategic chunking of remaining ones (~w).', [OR]),
-    (Sum > 0, Sum mod 10 =\= 0 -> TargetBase is ((Sum // 10) + 1) * 10 ; TargetBase is Sum).
+    % Calculate target base using built-in arithmetic (to be converted later)
+    calculate_next_base_grounded(Sum, TargetBase),
+    s(exp_poss(beginning_strategic_ones_chunking)),
+    incur_cost(inference),
+    format(string(Interpretation), 'Begin strategic chunking of remaining ones (~w).', [OR]).
+
 % If no ones are left, the process is finished.
 transition(state(q_init_ones_chunk, Sum, _, 0, _, _, _), _Base, state(q_accept, Sum, 0, 0, 0, 0, 0),
-           'All ones added. Accepting.').
+           'All ones added. Accepting.') :-
+    s(comp_nec(completing_chunking_strategy)),
+    incur_cost(inference).
 
 % From q_init_K, calculate the value K needed to reach the next base.
 transition(state(q_init_K, Sum, BR, OR, _, IS, TB), _Base, state(q_loop_K, Sum, BR, OR, 0, IS, TB), Interpretation) :-
+    s(exp_poss(calculating_distance_to_target_base)),
+    incur_cost(inference),
     format(string(Interpretation), 'Calculating K: Counting from ~w to ~w.', [Sum, TB]).
 
 % From q_loop_K, count up from the current sum to the target base to find K.
@@ -106,10 +137,15 @@ transition(state(q_loop_K, Sum, BR, OR, K, IS, TB), _Base, state(q_loop_K, Sum, 
     IS < TB,
     NewIS is IS + 1,
     NewK is K + 1,
+    s(comp_nec(counting_units_to_target)),
+    incur_cost(unit_count),
     format(string(Interpretation), 'Counting Up: ~w, K=~w', [NewIS, NewK]).
+
 % Once the target base is reached, the value of K is known.
 transition(state(q_loop_K, Sum, BR, OR, K, IS, TB), _Base, state(q_add_ones_chunk, Sum, BR, OR, K, IS, TB), Interpretation) :-
     IS >= TB,
+    s(exp_poss(target_distance_calculated)),
+    incur_cost(inference),
     format(string(Interpretation), 'K needed to reach base is ~w.', [K]).
 
 % From q_add_ones_chunk:
@@ -118,9 +154,43 @@ transition(state(q_add_ones_chunk, Sum, BR, OR, K, _IS, _TB), _Base, state(q_ini
     OR >= K, K > 0,
     NewSum is Sum + K,
     NewOR is OR - K,
+    s(exp_poss(adding_strategic_chunk_to_reach_base)),
+    incur_cost(unit_count),
     format(string(Interpretation), 'Add Strategic Chunk (+~w) to make base. Sum = ~w.', [K, NewSum]).
+
 % Otherwise, add all remaining ones. This happens if K is too large or 0.
 transition(state(q_add_ones_chunk, Sum, BR, OR, K, _IS, _TB), _Base, state(q_init_ones_chunk, NewSum, BR, 0, 0, 0, 0), Interpretation) :-
     (OR < K ; K =< 0), OR > 0,
     NewSum is Sum + OR,
+    s(comp_nec(adding_remaining_ones)),
+    incur_cost(unit_count),
     format(string(Interpretation), 'Add Remaining Chunk (+~w). Sum = ~w.', [OR, NewSum]).
+
+%!      calculate_next_base_grounded(+Sum, -TargetBase) is det.
+%
+%       Calculates the next multiple of 10 using the same logic as before.
+calculate_next_base_grounded(Sum, TargetBase) :-
+    % For now, keep the arithmetic calculation but mark it for future conversion
+    (Sum > 0, Sum mod 10 =\= 0 -> TargetBase is ((Sum // 10) + 1) * 10 ; TargetBase is Sum).
+
+%!      accept_state(+State) is semidet.
+%
+%       Identifies terminal states.
+accept_state(state(q_accept, _, _, _, _, _, _)).
+
+%!      final_interpretation(+State, -Interpretation) is det.
+%
+%       Provides final interpretation for terminal states.
+final_interpretation(state(q_accept, Sum, _, _, _, _, _), Interpretation) :-
+    format(string(Interpretation), 'Chunking Complete. Final sum: ~w.', [Sum]).
+
+%!      extract_result_from_history(+History, -Result) is det.
+%
+%       Extracts the final result from the execution history.
+extract_result_from_history(History, Result) :-
+    last(History, LastStep),
+    (LastStep = step(state(q_accept, Sum, _, _, _, _, _), _, _) ->
+        Result = Sum
+    ;
+        Result = 'error'
+    ).

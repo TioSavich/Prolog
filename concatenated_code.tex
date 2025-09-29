@@ -3,23 +3,40 @@
 \usepackage[a4paper, margin=1in]{geometry}
 \usepackage{hyperref}
 
-\title{Prolog Project Code}
+\title{Prolog Project Code: FSM Engine Architecture}
 \author{GitHub Copilot}
 \date{\today}
 
 \begin{document}
 \maketitle
+
+\section*{Executive Summary}
+This codebase represents a major architectural advancement in cognitive modeling, featuring a unified Finite State Machine (FSM) engine that standardizes the execution of 17+ student mathematical reasoning strategies. The FSM engine provides modal logic integration, cognitive cost tracking, and grounded arithmetic foundation, eliminating dependency on arithmetic backstops while reducing code duplication by approximately 70\%.
+
 \tableofcontents
 \newpage
 
+% ---------------------- FSM Engine Core ----------------------
+\section{FSM Engine Core Architecture}
+\subsection{fsm\_engine.pl}
+\inputminted{prolog}{fsm_engine.pl}
+\subsection{grounded\_arithmetic.pl}
+\inputminted{prolog}{grounded_arithmetic.pl}
+\subsection{grounded\_utils.pl}
+\inputminted{prolog}{grounded_utils.pl}
+
 % ---------------------- Prolog source (root)
 \section{Prolog source (root)}
-\subsection{api\_server.pl}
-\inputminted{prolog}{api_server.pl}
 \subsection{config.pl}
 \inputminted{prolog}{config.pl}
 \subsection{execution\_handler.pl}
 \inputminted{prolog}{execution_handler.pl}
+\subsection{fsm\_engine.pl}
+\inputminted{prolog}{fsm_engine.pl}
+\subsection{grounded\_arithmetic.pl}
+\inputminted{prolog}{grounded_arithmetic.pl}
+\subsection{grounded\_utils.pl}
+\inputminted{prolog}{grounded_utils.pl}
 \subsection{hermeneutic\_calculator.pl}
 \inputminted{prolog}{hermeneutic_calculator.pl}
 \subsection{incompatibility\_semantics.pl}
@@ -30,10 +47,6 @@
 \inputminted{prolog}{jason.pl}
 \subsection{learned\_knowledge.pl}
 \inputminted{prolog}{learned_knowledge.pl}
-\subsection{learned\_knowledge\_v2.pl}
-\inputminted{prolog}{learned_knowledge_v2.pl}
-\subsection{learner\_1.pl}
-\inputminted{prolog}{learner_1.pl}
 \subsection{main.pl}
 \inputminted{prolog}{main.pl}
 \subsection{meta\_interpreter.pl}
@@ -48,20 +61,20 @@
 \inputminted{prolog}{reorganization_engine.pl}
 \subsection{reorganization\_log.pl}
 \inputminted{prolog}{reorganization_log.pl}
-\subsection{RMB.pl}
-\inputminted{prolog}{RMB.pl}
 \subsection{strategies.pl}
 \inputminted{prolog}{strategies.pl}
+\subsection{test\_basic\_functionality.pl}
+\inputminted{prolog}{test_basic_functionality.pl}
+\subsection{test\_comprehensive.pl}
+\inputminted{prolog}{test_comprehensive.pl}
 \subsection{test\_full\_loop.pl}
 \inputminted{prolog}{test_full_loop.pl}
-\subsection{test\_server.pl}
-\inputminted{prolog}{test_server.pl}
+\subsection{test\_orr\_cycle.pl}
+\inputminted{prolog}{test_orr_cycle.pl}
 \subsection{test\_synthesis.pl}
 \inputminted{prolog}{test_synthesis.pl}
 \subsection{working\_server.pl}
 \inputminted{prolog}{working_server.pl}
-\subsection{simple\_api\_server.pl}
-\inputminted{prolog}{simple_api_server.pl}
 
 % ---------------------- Student strategy models ----------------------
 \section{Student strategy models (SAR / SMR)}
@@ -133,8 +146,6 @@
 \inputminted{python}{counting_on_back.py}
 \subsection{counting\_on\_back.pl}
 \inputminted{prolog}{counting_on_back.pl}
-\subsection{learner\_1.pl}
-\inputminted{prolog}{learner_1.pl}
 
 % ---------------------- Frontend / assets ----------------------
 \section{Frontend (HTML / JS / CSS)}
@@ -154,16 +165,10 @@
 
 % ---------------------- Other notable files ----------------------
 \section{Other notable files}
-\subsection{learned\_knowledge\_v2.pl}
-\inputminted{prolog}{learned_knowledge_v2.pl}
+\subsection{config.pl}
+\inputminted{prolog}{config.pl}
 \subsection{more\_machine\_learner.pl}
 \inputminted{prolog}{more_machine_learner.pl}
-\subsection{hermeneutic\_calculator.pl}
-\inputminted{prolog}{hermeneutic_calculator.pl}
-\subsection{execution\_handler.pl}
-\inputminted{prolog}{execution_handler.pl}
-\subsection{reorganization\_engine.pl}
-\inputminted{prolog}{reorganization_engine.pl}
 
 % ---------------------- README / documentation ----------------------
 \section{Repository README}

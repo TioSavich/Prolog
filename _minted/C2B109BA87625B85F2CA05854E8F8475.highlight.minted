@@ -1,0 +1,149 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Subtraction Strategy: Chunking Backwards by Place Value}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a \PYGZdq{}chunking\PYGZdq{} strategy for subtraction, modeled as a}
+\PYG{c+cm}{ * finite state machine. The strategy involves subtracting the subtrahend (S)}
+\PYG{c+cm}{ * from the minuend (M) in parts, based on place value (hundreds, tens, ones).}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1. Identify the largest place\PYGZhy{}value chunk of the remaining subtrahend (S).}
+\PYG{c+cm}{ *    For example, if S is 234, the first chunk is 200.}
+\PYG{c+cm}{ * 2. Subtract this chunk from the current value (which starts at M).}
+\PYG{c+cm}{ * 3. Repeat the process with the remainder of S. For S=234, the next chunk}
+\PYG{c+cm}{ *    would be 30, then 4.}
+\PYG{c+cm}{ * 4. The process ends when the entire subtrahend has been subtracted.}
+\PYG{c+cm}{ * 5. The strategy fails if the subtrahend is larger than the minuend.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state of the automaton is represented by the term:}
+\PYG{c+cm}{ * `state(Name, CurrentValue, S\PYGZus{}Remaining, Chunk)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(Name, CurrentValue, S\PYGZus{}Remaining, Chunk, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}chunking\PYGZus{}a}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}chunking\PYGZus{}a}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{c+c1}{\PYGZpc{} FSM Engine Interface}
+            \PYG{l+s+sAtom}{setup\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{accept\PYGZus{}state}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+            \PYG{l+s+sAtom}{final\PYGZus{}interpretation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+            \PYG{l+s+sAtom}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{clpfd}\PYG{p}{)).} \PYG{c+c1}{\PYGZpc{} For log/2}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}chunking\PYGZus{}a(+M:integer, +S:integer, \PYGZhy{}FinalResult:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Chunking Backwards by Place Value\PYGZsq{} subtraction strategy for M \PYGZhy{} S.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the}
+\PYG{c+c1}{\PYGZpc{}       chunking strategy. It first checks if the subtraction is possible (M \PYGZgt{}= S).}
+\PYG{c+c1}{\PYGZpc{}       If so, it repeatedly identifies the largest place\PYGZhy{}value component of the}
+\PYG{c+c1}{\PYGZpc{}       remaining subtrahend and subtracts it from the minuend. It traces}
+\PYG{c+c1}{\PYGZpc{}       the entire execution, providing a step\PYGZhy{}by\PYGZhy{}step history.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param M The Minuend, the number to subtract from.}
+\PYG{c+c1}{\PYGZpc{}       @param S The Subtrahend, the number to subtract in chunks.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalResult The resulting difference (M \PYGZhy{} S). If S \PYGZgt{} M, this}
+\PYG{c+c1}{\PYGZpc{}       will be the atom `\PYGZsq{}error\PYGZsq{}`.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/5` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{n+nf}{run\PYGZus{}chunking\PYGZus{}a}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{FinalResult}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use the FSM engine to run this strategy}
+    \PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{),}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}chunking\PYGZus{}a}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{FinalResult}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      setup\PYGZus{}strategy(+M, +S, \PYGZhy{}InitialState, \PYGZhy{}Parameters) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Sets up the initial state for the chunking subtraction strategy.}
+\PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if subtraction is valid}
+    \PYG{p}{(}\PYG{n+nv}{S} \PYG{o}{\PYGZgt{}} \PYG{n+nv}{M} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nv}{Parameters} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal for strategy initiation}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}chunking\PYGZus{}subtraction\PYGZus{}strategy}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+CurrentState, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}       transition(+CurrentState, +Base, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       State transition rules for the chunking subtraction strategy.}
+
+\PYG{c+c1}{\PYGZpc{} Version without base parameter (for FSM engine compatibility)}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, proceed to identify the first chunk.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}identify\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{setting\PYGZus{}initial\PYGZus{}values\PYGZus{}for\PYGZus{}chunking}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Set CurrentValue=\PYGZti{}w. S\PYGZus{}Remaining=\PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}identify\PYGZus{}chunk, determine the next chunk of S to subtract.}
+\PYG{c+c1}{\PYGZpc{} The chunk is the largest part of S based on place value (e.g., hundreds, tens).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}identify\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rem}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}subtract\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rem}\PYG{p}{,} \PYG{n+nv}{Chunk}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{S\PYGZus{}Rem} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{Power} \PYG{o}{is} \PYG{n+nf}{floor}\PYG{p}{(}\PYG{n+nf}{log}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}Rem}\PYG{p}{)} \PYG{o}{/} \PYG{n+nf}{log}\PYG{p}{(}\PYG{n+nv}{Base}\PYG{p}{)),}
+    \PYG{n+nv}{PowerValue} \PYG{o}{is} \PYG{n+nv}{Base}\PYG{l+s+sAtom}{\PYGZca{}}\PYG{n+nv}{Power}\PYG{p}{,}
+    \PYG{n+nv}{Chunk} \PYG{o}{is} \PYG{n+nf}{floor}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}Rem} \PYG{o}{/} \PYG{n+nv}{PowerValue}\PYG{p}{)} \PYG{o}{*} \PYG{n+nv}{PowerValue}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{identifying\PYGZus{}largest\PYGZus{}place\PYGZus{}value\PYGZus{}chunk}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Identified chunk to subtract: \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Chunk}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} If no subtrahend remains, the process is finished.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}identify\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}S fully subtracted.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}chunking\PYGZus{}subtraction}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}subtract\PYGZus{}chunk, perform the subtraction and loop back to identify the next chunk.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}subtract\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rem}\PYG{p}{,} \PYG{n+nv}{Chunk}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}identify\PYGZus{}chunk}\PYG{p}{,} \PYG{n+nv}{NewCV}\PYG{p}{,} \PYG{n+nv}{NewSRem}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{NewCV} \PYG{o}{is} \PYG{n+nv}{CV} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Chunk}\PYG{p}{,}
+    \PYG{n+nv}{NewSRem} \PYG{o}{is} \PYG{n+nv}{S\PYGZus{}Rem} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Chunk}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{subtracting\PYGZus{}identified\PYGZus{}chunk}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Subtracted \PYGZti{}w. New Value=\PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Chunk}\PYG{p}{,} \PYG{n+nv}{NewCV}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      accept\PYGZus{}state(+State) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Identifies terminal states.}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      final\PYGZus{}interpretation(+State, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Provides final interpretation for terminal states.}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Chunking subtraction complete. Result: \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{CV}\PYG{p}{]).}
+
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Chunking subtraction failed: Subtrahend \PYGZgt{} Minuend.\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result\PYGZus{}from\PYGZus{}history(+History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{LastStep}\PYG{p}{),}
+    \PYG{p}{(}\PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{n+nv}{CV}
+    \PYG{p}{;} \PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{;}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{).}
+\end{MintedVerbatim}

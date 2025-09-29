@@ -1,33 +1,30 @@
 /** <module> Student Division Strategy: Dealing by Ones
  *
  * This module implements a basic "dealing" or "sharing one by one" strategy
- * for division (T / N), modeled as a finite state machine. It simulates
- * distributing a total number of items (T) one at a time into a number of
- * groups (N) until the items run out.
+ * for division (T / N), modeled as a finite state machine using the FSM engine.
+ * It simulates distributing a total number of items (T) one at a time into a 
+ * number of groups (N) until the items run out.
  *
- * The process is as follows:
- * 1. Initialize N empty groups.
- * 2. Deal one item from the total T to the first group.
- * 3. Deal one item to the second group, and so on, cycling through the groups.
- * 4. Continue until all T items have been dealt.
- * 5. The quotient is the number of items in any one group (assuming fair sharing,
- *    i.e., the remainder is 0). This model does not explicitly calculate a remainder.
- * 6. The strategy fails if the number of groups (N) is not positive.
- *
- * The state is represented by the term:
- * `state(Name, RemainingItems, Groups, CurrentGroupIndex)`
- *
- * The history of execution is captured as a list of steps:
- * `step(Name, RemainingItems, Groups, Interpretation)`
- *
- * 
- * 
+ * @author Assistant
+ * @license MIT
  */
+
 :- module(smr_div_dealing_by_ones,
-          [ run_dealing_by_ones/4
+          [ run_dealing_by_ones/4,
+            % FSM Engine Interface
+            transition/4,
+            accept_state/1, 
+            final_interpretation/2, 
+            extract_result_from_history/2
           ]).
 
 :- use_module(library(lists)).
+:- use_module(fsm_engine, [run_fsm_with_base/5]).
+:- use_module(grounded_arithmetic, [incur_cost/1]).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
+
+%! run_dealing_by_ones(+T:int, +N:int, -FinalQuotient:int, -History:list) is det.
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_dealing_by_ones(+T:integer, +N:integer, -FinalQuotient:integer, -History:list) is det.
 %
@@ -48,42 +45,36 @@
 
 run_dealing_by_ones(T, N, FinalQuotient, History) :-
     (N =< 0, T > 0 ->
-        History = [step(q_error, T, [], 'Error: Cannot divide by N.')],
+        History = [step(state(q_error, T, [], 0), [], 'Error: Cannot divide by N.')],
         FinalQuotient = 'error'
     ;
         % Create a list of N zeros to represent the groups.
         length(Groups, N),
         maplist(=(0), Groups),
         InitialState = state(q_init, T, Groups, 0),
-
-        run(InitialState, N, [], ReversedHistory),
-        reverse(ReversedHistory, History),
-
-        (last(History, step(q_accept, _, FinalGroups, _)), nth0(0, FinalGroups, FinalQuotient) -> true ; FinalQuotient = 'error')
+        Parameters = [T, N],
+        ModalCosts = [
+            s(initiating_dealing_by_ones_division),
+            s(comp_nec(systematic_dealing_process_for_division)),
+            s(exp_poss(fair_distribution_of_items_into_groups))
+        ],
+        incur_cost(ModalCosts),
+        
+        run_fsm_with_base(smr_div_dealing_by_ones, InitialState, Parameters, _, History),
+        extract_result_from_history(History, FinalQuotient)
     ).
 
-% run/4 is the main recursive loop of the state machine.
-run(state(q_accept, 0, Groups, _), _, Acc, FinalHistory) :-
-    (nth0(0, Groups, R) -> Result = R ; Result = 0),
-    format(string(Interpretation), 'Dealing complete. Result: ~w per group.', [Result]),
-    HistoryEntry = step(q_accept, 0, Groups, Interpretation),
-    FinalHistory = [HistoryEntry | Acc].
-
-run(CurrentState, N, Acc, FinalHistory) :-
-    transition(CurrentState, N, NextState, Interpretation),
-    CurrentState = state(Name, Rem, Gs, _),
-    HistoryEntry = step(Name, Rem, Gs, Interpretation),
-    run(NextState, N, [HistoryEntry | Acc], FinalHistory).
-
-% transition/4 defines the logic for moving from one state to the next.
+% transition/4 defines the FSM engine transitions with modal logic integration.
 
 % From q_init, proceed to the main dealing loop.
-transition(state(q_init, T, Gs, Idx), _, state(q_loop_deal, T, Gs, Idx), Interp) :-
+transition(state(q_init, T, Gs, Idx), [T, N], state(q_loop_deal, T, Gs, Idx), Interp) :-
     length(Gs, N),
-    format(string(Interp), 'Initialize: ~w items to deal into ~w groups.', [T, N]).
+    s(initializing_dealing_by_ones_division),
+    format(string(Interp), 'Initialize: ~w items to deal into ~w groups.', [T, N]),
+    incur_cost(initialization).
 
 % In q_loop_deal, deal one item to the current group and cycle to the next.
-transition(state(q_loop_deal, Rem, Gs, Idx), N, state(q_loop_deal, NewRem, NewGs, NewIdx), Interp) :-
+transition(state(q_loop_deal, Rem, Gs, Idx), [T, N], state(q_loop_deal, NewRem, NewGs, NewIdx), Interp) :-
     Rem > 0,
     NewRem is Rem - 1,
     % Increment value in the list at the current group index.
@@ -91,6 +82,25 @@ transition(state(q_loop_deal, Rem, Gs, Idx), N, state(q_loop_deal, NewRem, NewGs
     NewVal is OldVal + 1,
     nth0(Idx, NewGs, NewVal, Rest),
     NewIdx is (Idx + 1) mod N,
-    format(string(Interp), 'Dealt 1 item to Group ~w.', [Idx+1]).
+    s(comp_nec(dealing_one_item_systematically)),
+    format(string(Interp), 'Dealt 1 item to Group ~w.', [Idx+1]),
+    incur_cost(iteration).
+    
 % If no items remain, transition to the accept state.
-transition(state(q_loop_deal, 0, Gs, Idx), _, state(q_accept, 0, Gs, Idx), 'Dealing complete.').
+transition(state(q_loop_deal, 0, Gs, Idx), [T, N], state(q_accept, 0, Gs, Idx), Interp) :-
+    s(exp_poss(complete_fair_distribution_achieved)),
+    Interp = 'Dealing complete.',
+    incur_cost(completion).
+
+% Accept state predicate for FSM engine
+accept_state(state(q_accept, 0, _, _)).
+
+% Final interpretation predicate
+final_interpretation(state(q_accept, 0, Groups, _), Interpretation) :-
+    (nth0(0, Groups, Result) -> true ; Result = 0),
+    format(string(Interpretation), 'Division complete. Result: ~w per group.', [Result]).
+
+% Extract result from FSM engine history
+extract_result_from_history(History, FinalQuotient) :-
+    last(History, step(state(q_accept, 0, FinalGroups, _), [], _)),
+    (nth0(0, FinalGroups, FinalQuotient) -> true ; FinalQuotient = 0).

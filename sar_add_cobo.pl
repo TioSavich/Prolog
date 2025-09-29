@@ -24,6 +24,9 @@
           ]).
 
 :- use_module(library(lists)).
+:- use_module(grounded_arithmetic).
+:- use_module(grounded_utils).
+:- use_module(incompatibility_semantics, [s/1, comp_nec/1, exp_poss/1]).
 
 %!      run_cobo(+A:integer, +B:integer, -FinalSum:integer, -History:list) is det.
 %
@@ -41,10 +44,19 @@
 %       machine's execution path and the interpretation of each step.
 
 run_cobo(A, B, FinalSum, History) :-
-    Base = 10,
-    % Initial state: Decompose B into base and one counters.
-    BaseCounter is B // Base,
-    OneCounter is B mod Base,
+    % Emit cognitive cost for the overall strategy setup
+    incur_cost(inference),
+    
+    % Convert inputs to recollection format for grounded arithmetic
+    integer_to_recollection(A, RecA),
+    integer_to_recollection(B, RecB),
+    
+    % Decompose B into base-10 components without using arithmetic
+    decompose_base10(RecB, RecBases, RecOnes),
+    
+    % Convert back to integers for compatibility with existing state machine
+    recollection_to_integer(RecBases, BaseCounter),
+    recollection_to_integer(RecOnes, OneCounter),
 
     InitialState = state(q_initialize, A, BaseCounter, OneCounter),
 
@@ -53,7 +65,7 @@ run_cobo(A, B, FinalSum, History) :-
     InitialHistoryEntry = step(q_start, A, BaseCounter, OneCounter, InitialInterpretation),
 
     % Run the state machine.
-    run(InitialState, Base, [InitialHistoryEntry], ReversedHistory),
+    run(InitialState, [InitialHistoryEntry], ReversedHistory),
 
     % Reverse the history for correct chronological order.
     reverse(ReversedHistory, History),
@@ -62,46 +74,86 @@ run_cobo(A, B, FinalSum, History) :-
     (last(History, step(_, FinalSum, _, _, _)) -> true ; FinalSum = A).
 
 
-% run/4 is the main recursive loop of the state machine.
+% run/3 is the main recursive loop of the state machine.
 % It drives the state transitions until the accept state is reached.
 
 % Base case: Stop when the machine reaches the 'q_accept' state.
-run(state(q_accept, Sum, BC, OC), _Base, AccHistory, FinalHistory) :-
+run(state(q_accept, Sum, BC, OC), AccHistory, FinalHistory) :-
+    incur_cost(inference),
     Interpretation = 'All ones added. Accept.',
     HistoryEntry = step(q_accept, Sum, BC, OC, Interpretation),
     FinalHistory = [HistoryEntry | AccHistory].
 
 % Recursive step: Perform one transition and continue.
-run(CurrentState, Base, AccHistory, FinalHistory) :-
-    transition(CurrentState, Base, NextState, Interpretation),
+run(CurrentState, AccHistory, FinalHistory) :-
+    transition(CurrentState, NextState, Interpretation),
     CurrentState = state(Name, Sum, BC, OC),
     HistoryEntry = step(Name, Sum, BC, OC, Interpretation),
-    run(NextState, Base, [HistoryEntry | AccHistory], FinalHistory).
+    run(NextState, [HistoryEntry | AccHistory], FinalHistory).
 
-% transition/4 defines the logic for moving from one state to the next.
+% transition/3 defines the logic for moving from one state to the next.
 
 % From q_initialize, always transition to q_add_bases to start counting.
-transition(state(q_initialize, Sum, BaseCounter, OneCounter), _Base, state(q_add_bases, Sum, BaseCounter, OneCounter), Interpretation) :-
+transition(state(q_initialize, Sum, BaseCounter, OneCounter), state(q_add_bases, Sum, BaseCounter, OneCounter), Interpretation) :-
+    incur_cost(inference),
+    % Emit modal signal: entering focused counting mode (compressive necessity)
+    incur_cost(modal_shift),
+    s(comp_nec(focus_on_bases)),
     Interpretation = 'Begin counting on by bases.'.
 
 % Loop in q_add_bases, counting on by one base (10) at a time.
-transition(state(q_add_bases, Sum, BaseCounter, OneCounter), Base, state(q_add_bases, NewSum, NewBaseCounter, OneCounter), Interpretation) :-
-    BaseCounter > 0,
-    NewSum is Sum + Base,
-    NewBaseCounter is BaseCounter - 1,
+transition(state(q_add_bases, Sum, BaseCounter, OneCounter), state(q_add_bases, NewSum, NewBaseCounter, OneCounter), Interpretation) :-
+    % Check if BaseCounter > 0 using grounded comparison
+    integer_to_recollection(BaseCounter, RecBaseCounter),
+    \+ is_zero_grounded(RecBaseCounter),
+    
+    % Add 10 to Sum using grounded arithmetic
+    incur_cost(slide_step),
+    integer_to_recollection(Sum, RecSum),
+    integer_to_recollection(10, RecTen),
+    add_grounded(RecSum, RecTen, RecNewSum),
+    recollection_to_integer(RecNewSum, NewSum),
+    
+    % Subtract 1 from BaseCounter using grounded arithmetic
+    incur_cost(unit_count),
+    integer_to_recollection(1, RecOne),
+    subtract_grounded(RecBaseCounter, RecOne, RecNewBaseCounter),
+    recollection_to_integer(RecNewBaseCounter, NewBaseCounter),
+    
     format(string(Interpretation), 'Count on by base: ~w -> ~w.', [Sum, NewSum]).
 
 % When all bases are added, transition from q_add_bases to q_add_ones.
-transition(state(q_add_bases, Sum, 0, OneCounter), _Base, state(q_add_ones, Sum, 0, OneCounter), Interpretation) :-
+transition(state(q_add_bases, Sum, BaseCounter, OneCounter), state(q_add_ones, Sum, BaseCounter, OneCounter), Interpretation) :-
+    integer_to_recollection(BaseCounter, RecBaseCounter),
+    is_zero_grounded(RecBaseCounter),
+    incur_cost(inference),
+    % Emit modal signal: transitioning to more fine-grained counting (expansive possibility)
+    incur_cost(modal_shift),
+    s(exp_poss(shift_to_ones)),
     Interpretation = 'All bases added. Transition to adding ones.'.
 
 % Loop in q_add_ones, counting on by one at a time.
-transition(state(q_add_ones, Sum, BaseCounter, OneCounter), _Base, state(q_add_ones, NewSum, BaseCounter, NewOneCounter), Interpretation) :-
-    OneCounter > 0,
-    NewSum is Sum + 1,
-    NewOneCounter is OneCounter - 1,
+transition(state(q_add_ones, Sum, BaseCounter, OneCounter), state(q_add_ones, NewSum, BaseCounter, NewOneCounter), Interpretation) :-
+    % Check if OneCounter > 0 using grounded comparison
+    integer_to_recollection(OneCounter, RecOneCounter),
+    \+ is_zero_grounded(RecOneCounter),
+    
+    % Add 1 to Sum using grounded arithmetic
+    incur_cost(unit_count),
+    integer_to_recollection(Sum, RecSum),
+    integer_to_recollection(1, RecOne),
+    add_grounded(RecSum, RecOne, RecNewSum),
+    recollection_to_integer(RecNewSum, NewSum),
+    
+    % Subtract 1 from OneCounter using grounded arithmetic
+    subtract_grounded(RecOneCounter, RecOne, RecNewOneCounter),
+    recollection_to_integer(RecNewOneCounter, NewOneCounter),
+    
     format(string(Interpretation), 'Count on by one: ~w -> ~w.', [Sum, NewSum]).
 
 % When all ones are added, transition from q_add_ones to the final accept state.
-transition(state(q_add_ones, Sum, BaseCounter, 0), _Base, state(q_accept, Sum, BaseCounter, 0), Interpretation) :-
+transition(state(q_add_ones, Sum, BaseCounter, OneCounter), state(q_accept, Sum, BaseCounter, OneCounter), Interpretation) :-
+    integer_to_recollection(OneCounter, RecOneCounter),
+    is_zero_grounded(RecOneCounter),
+    incur_cost(inference),
     Interpretation = 'All ones added. Final sum reached.'.

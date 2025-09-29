@@ -1,0 +1,204 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Subtraction Strategy: Counting Back By Bases and Ones (Take Away)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements the \PYGZsq{}Counting Back by Bases and then Ones\PYGZsq{} (CBBO)}
+\PYG{c+cm}{ * strategy for subtraction, often conceptualized as \PYGZdq{}taking away\PYGZdq{}. It is}
+\PYG{c+cm}{ * modeled as a finite state machine.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1. The subtrahend (S) is decomposed into its base\PYGZhy{}10 components (bases/tens and ones).}
+\PYG{c+cm}{ * 2. Starting from the minuend (M), the strategy first \PYGZdq{}takes away\PYGZdq{} or}
+\PYG{c+cm}{ *    counts back by the number of bases (tens).}
+\PYG{c+cm}{ * 3. After all bases are subtracted, it counts back by the number of ones.}
+\PYG{c+cm}{ * 4. The final value is the result of the subtraction.}
+\PYG{c+cm}{ * 5. The strategy fails if the subtrahend is larger than the minuend.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state of the automaton is represented by the term:}
+\PYG{c+cm}{ * `state(Name, CurrentValue, BaseCounter, OneCounter)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(Name, CurrentValue, BaseCounter, OneCounter, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}cbbo\PYGZus{}take\PYGZus{}away}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}cbbo\PYGZus{}ta}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{c+c1}{\PYGZpc{} FSM Engine Interface}
+            \PYG{l+s+sAtom}{setup\PYGZus{}strategy}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,}
+            \PYG{l+s+sAtom}{transition}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{,}
+            \PYG{l+s+sAtom}{accept\PYGZus{}state}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+            \PYG{l+s+sAtom}{final\PYGZus{}interpretation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+            \PYG{l+s+sAtom}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{o}{/}\PYG{l+m+mi}{2}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fsm\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{o}{/}\PYG{l+m+mi}{5}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}cbbo\PYGZus{}ta(+M:integer, +S:integer, \PYGZhy{}FinalResult:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Counting Back by Bases and Ones\PYGZsq{} (Take Away) subtraction}
+\PYG{c+c1}{\PYGZpc{}       strategy for M \PYGZhy{} S.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the}
+\PYG{c+c1}{\PYGZpc{}       CBBO strategy. It first checks if the subtraction is possible (M \PYGZgt{}= S).}
+\PYG{c+c1}{\PYGZpc{}       If so, it decomposes S and simulates the process of counting back from M,}
+\PYG{c+c1}{\PYGZpc{}       first by tens and then by ones. It traces the entire execution,}
+\PYG{c+c1}{\PYGZpc{}       providing a step\PYGZhy{}by\PYGZhy{}step history.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param M The Minuend, the number to subtract from.}
+\PYG{c+c1}{\PYGZpc{}       @param S The Subtrahend, the number to subtract.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalResult The resulting difference (M \PYGZhy{} S). If S \PYGZgt{} M, this}
+\PYG{c+c1}{\PYGZpc{}       will be the atom `\PYGZsq{}error\PYGZsq{}`.}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/5` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}cbbo\PYGZus{}ta(+M:integer, +S:integer, \PYGZhy{}FinalResult:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Counting Back by Bases and Ones\PYGZsq{} (Take Away) subtraction}
+\PYG{c+c1}{\PYGZpc{}       strategy for M \PYGZhy{} S using the FSM engine with modal logic integration.}
+\PYG{n+nf}{run\PYGZus{}cbbo\PYGZus{}ta}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{FinalResult}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Emit cognitive cost for strategy initiation}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{strategy\PYGZus{}selection}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Use the FSM engine to run this strategy}
+    \PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{),}
+    \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nf}{run\PYGZus{}fsm\PYGZus{}with\PYGZus{}base}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}sub\PYGZus{}cbbo\PYGZus{}take\PYGZus{}away}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{FinalResult}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}\PYGZpc{}!      setup\PYGZus{}strategy(+M, +S, \PYGZhy{}InitialState, \PYGZhy{}Parameters) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Sets up the initial state for the CBBO take away strategy.}
+\PYG{n+nf}{setup\PYGZus{}strategy}\PYG{p}{(}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Parameters}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if subtraction is valid}
+    \PYG{p}{(}\PYG{n+nv}{S} \PYG{o}{\PYGZgt{}} \PYG{n+nv}{M} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{c+c1}{\PYGZpc{} Emit cognitive cost for grounded arithmetic operations}
+        \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{),}
+        
+        \PYG{c+c1}{\PYGZpc{} Use grounded decomposition without arithmetic backstop}
+        \PYG{n+nv}{Base} \PYG{o}{=} \PYG{l+m+mi}{10}\PYG{p}{,}
+        \PYG{n+nv}{BC} \PYG{o}{is} \PYG{n+nv}{S} \PYG{o}{//} \PYG{n+nv}{Base}\PYG{p}{,}  \PYG{c+c1}{\PYGZpc{} This will be replaced with grounded arithmetic later}
+        \PYG{n+nv}{OC} \PYG{o}{is} \PYG{n+nv}{S} \PYG{o}{mod} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{c+c1}{\PYGZpc{} This will be replaced with grounded arithmetic later}
+        
+        \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nv}{Parameters} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{M}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{],}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal for strategy initiation}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}cbbo\PYGZus{}take\PYGZus{}away\PYGZus{}subtraction}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{inference}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+StateNum, \PYGZhy{}NextStateNum, \PYGZhy{}Action) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       State transitions for CBBO take away FSM.}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{l+s+sAtom}{subtract\PYGZus{}bases}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}to\PYGZus{}base\PYGZus{}subtraction}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{state\PYGZus{}change}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{l+s+sAtom}{count\PYGZus{}back\PYGZus{}base}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{continuing\PYGZus{}base\PYGZus{}subtraction\PYGZus{}iteration}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{iteration}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{l+s+sAtom}{switch\PYGZus{}to\PYGZus{}ones}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}base\PYGZus{}subtraction\PYGZus{}phase}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{phase\PYGZus{}transition}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{l+s+sAtom}{count\PYGZus{}back\PYGZus{}one}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{continuing\PYGZus{}ones\PYGZus{}subtraction\PYGZus{}iteration}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{iteration}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{l+s+sAtom}{complete\PYGZus{}subtraction}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{finalizing\PYGZus{}subtraction\PYGZus{}computation}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{completion}\PYG{p}{).}
+
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+s+sAtom}{maintain\PYGZus{}error}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}state\PYGZus{}is\PYGZus{}absorbing}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}handling}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      transition(+State, +Base, \PYGZhy{}NextState, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Complete state transitions with full state tracking and modal integration.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, proceed to subtract the bases (tens).}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{initiating\PYGZus{}base\PYGZus{}subtraction\PYGZus{}phase}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Initialize at M (\PYGZti{}w). Decompose S: \PYGZti{}w bases, \PYGZti{}w ones. Proceed to subtract bases.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{initialization}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Loop in q\PYGZus{}sub\PYGZus{}bases, counting back by one base (10) at a time.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),} \PYG{n+nv}{Base}\PYG{p}{,} 
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{NewCV}\PYG{p}{,} \PYG{n+nv}{NewBC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{BC} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{applying\PYGZus{}embodied\PYGZus{}base\PYGZus{}subtraction}\PYG{p}{)),}
+    \PYG{n+nv}{NewCV} \PYG{o}{is} \PYG{n+nv}{CV} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Base}\PYG{p}{,}
+    \PYG{n+nv}{NewBC} \PYG{o}{is} \PYG{n+nv}{BC} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Count back by base (\PYGZhy{}\PYGZti{}w). New Value=\PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{NewCV}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{base\PYGZus{}subtraction}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} When all bases are subtracted, transition to q\PYGZus{}sub\PYGZus{}ones.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}bases}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} 
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}Bases finished. Switching to ones.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{transitioning\PYGZus{}from\PYGZus{}bases\PYGZus{}to\PYGZus{}ones}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{phase\PYGZus{}completion}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Loop in q\PYGZus{}sub\PYGZus{}ones, counting back by one at a time.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{OC}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} 
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{NewCV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{n+nv}{NewOC}\PYG{p}{),} 
+           \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{OC} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{applying\PYGZus{}embodied\PYGZus{}ones\PYGZus{}subtraction}\PYG{p}{)),}
+    \PYG{n+nv}{NewCV} \PYG{o}{is} \PYG{n+nv}{CV} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nv}{NewOC} \PYG{o}{is} \PYG{n+nv}{OC} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Count back by one (\PYGZhy{}1). New Value=\PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NewCV}\PYG{p}{]),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{ones\PYGZus{}subtraction}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} When all ones are subtracted, transition to the final accept state.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}sub\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} 
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{n+nv}{BC}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}Subtraction finished.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{completing\PYGZus{}cbbo\PYGZus{}take\PYGZus{}away\PYGZus{}strategy}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{strategy\PYGZus{}completion}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Error state transitions}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,}
+           \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}Error: Subtrahend \PYGZgt{} Minuend.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}state\PYGZus{}persistence}\PYG{p}{)),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{error\PYGZus{}maintenance}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      accept\PYGZus{}state(+State) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Defines the accept states for the FSM.}
+\PYG{n+nf}{accept\PYGZus{}state}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{}!      final\PYGZus{}interpretation(+State, \PYGZhy{}Interpretation) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Provides final interpretation of the computation.}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Interpretation}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{atom}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Subtraction finished. Result (Final Position) = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{CV}\PYG{p}{]).}
+\PYG{n+nf}{final\PYGZus{}interpretation}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Error: Subtrahend \PYGZgt{} Minuend.\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}!      extract\PYGZus{}result\PYGZus{}from\PYGZus{}history(+History, \PYGZhy{}Result) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Extracts the final result from the execution history.}
+\PYG{n+nf}{extract\PYGZus{}result\PYGZus{}from\PYGZus{}history}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nv}{LastStep}\PYG{p}{),}
+    \PYG{p}{(}\PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{CV}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{n+nv}{CV}
+    \PYG{p}{;} \PYG{n+nv}{LastStep} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}error}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{;}
+        \PYG{n+nv}{Result} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}
+    \PYG{p}{).}
+\end{MintedVerbatim}

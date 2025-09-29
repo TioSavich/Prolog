@@ -1,0 +1,212 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Student Multiplication Strategy: Conversion to Bases and Ones (CBO)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements a multiplication strategy based on the physical act}
+\PYG{c+cm}{ * of creating groups and then re\PYGZhy{}grouping (converting) them into a standard}
+\PYG{c+cm}{ * base, like 10. It\PYGZsq{}s modeled as a finite state machine.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The process is as follows:}
+\PYG{c+cm}{ * 1.  Start with `N` groups, each containing `S` items.}
+\PYG{c+cm}{ * 2.  Systematically take items from one \PYGZdq{}source\PYGZdq{} group and redistribute them}
+\PYG{c+cm}{ *     one\PYGZhy{}by\PYGZhy{}one into other \PYGZdq{}target\PYGZdq{} groups.}
+\PYG{c+cm}{ * 3.  The goal of the redistribution is to fill the target groups until they}
+\PYG{c+cm}{ *     contain `Base` items (e.g., 10).}
+\PYG{c+cm}{ * 4.  This process continues until the source group is empty.}
+\PYG{c+cm}{ * 5.  The final total is calculated by summing the items in all the rearranged}
+\PYG{c+cm}{ *     groups. This demonstrates the principle of conservation of number, as the}
+\PYG{c+cm}{ *     total remains `N * S` despite the redistribution.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The state is represented by the term:}
+\PYG{c+cm}{ * `state(Name, Groups, SourceIndex, TargetIndex)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The history of execution is captured as a list of steps:}
+\PYG{c+cm}{ * `step(Name, Groups, Interpretation)`}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ * }
+\PYG{c+cm}{ */}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}cbo}\PYG{p}{,}
+          \PYG{p}{[} \PYG{l+s+sAtom}{run\PYGZus{}cbo\PYGZus{}mult}\PYG{o}{/}\PYG{l+m+mi}{5}
+          \PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{n+nf}{library}\PYG{p}{(}\PYG{l+s+sAtom}{lists}\PYG{p}{)).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{greater\PYGZus{}than}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{equal\PYGZus{}to}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{smaller\PYGZus{}than}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+                                  \PYG{l+s+sAtom}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+s+sAtom}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,} 
+                                  \PYG{l+s+sAtom}{add\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{subtract\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{successor}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{,}
+                                  \PYG{l+s+sAtom}{zero}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{incompatibility\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{s}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{comp\PYGZus{}nec}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{exp\PYGZus{}poss}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}!      run\PYGZus{}cbo\PYGZus{}mult(+N:integer, +S:integer, +Base:integer, \PYGZhy{}FinalTotal:integer, \PYGZhy{}History:list) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       Executes the \PYGZsq{}Conversion to Bases and Ones\PYGZsq{} multiplication strategy}
+\PYG{c+c1}{\PYGZpc{}       for N * S, using a target Base for re\PYGZhy{}grouping.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       This predicate initializes and runs a state machine that models the}
+\PYG{c+c1}{\PYGZpc{}       conceptual process of redistribution. It creates `N` groups of `S` items}
+\PYG{c+c1}{\PYGZpc{}       and then shuffles items between them to form groups of size `Base`.}
+\PYG{c+c1}{\PYGZpc{}       The final total demonstrates that the quantity is conserved.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{}       @param N The number of initial groups.}
+\PYG{c+c1}{\PYGZpc{}       @param S The size of each initial group.}
+\PYG{c+c1}{\PYGZpc{}       @param Base The target size for the re\PYGZhy{}grouping.}
+\PYG{c+c1}{\PYGZpc{}       @param FinalTotal The resulting product (N * S).}
+\PYG{c+c1}{\PYGZpc{}       @param History A list of `step/3` terms that describe the state}
+\PYG{c+c1}{\PYGZpc{}       machine\PYGZsq{}s execution path and the interpretation of each step.}
+
+\PYG{n+nf}{run\PYGZus{}cbo\PYGZus{}mult}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{FinalTotal}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Convert inputs to recollection structures}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{Base}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{Zero\PYGZus{}Rec}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Emit modal signal: entering multiplication via grouping context (expansive possibility)}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{creating\PYGZus{}groups\PYGZus{}for\PYGZus{}multiplication}\PYG{p}{)),}
+    
+    \PYG{p}{(}\PYG{n+nf}{greater\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Zero\PYGZus{}Rec}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{create\PYGZus{}groups\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Groups}\PYG{p}{),}
+        \PYG{n+nf}{predecessor\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{SourceIdx}\PYG{p}{)}
+    \PYG{p}{;}
+        \PYG{n+nv}{Groups} \PYG{o}{=} \PYG{p}{[],}
+        \PYG{n+nv}{SourceIdx} \PYG{o}{=} \PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}
+    \PYG{p}{),}
+    
+    \PYG{n+nv}{InitialState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{Groups}\PYG{p}{,} \PYG{n+nv}{SourceIdx}\PYG{p}{,} \PYG{n+nv}{Zero\PYGZus{}Rec}\PYG{p}{),}
+
+    \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{InitialState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{ReversedHistory}\PYG{p}{),}
+    \PYG{n+nf}{reverse}\PYG{p}{(}\PYG{n+nv}{ReversedHistory}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
+
+    \PYG{p}{(}\PYG{n+nf}{last}\PYG{p}{(}\PYG{n+nv}{History}\PYG{p}{,} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{FinalGroups}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+     \PYG{n+nf}{calculate\PYGZus{}total\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{FinalGroups}\PYG{p}{,} \PYG{n+nv}{FinalTotal}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{n+nv}{FinalTotal} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}error\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper to create N groups of S items each using grounded operations}
+\PYG{n+nf}{create\PYGZus{}groups\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{Groups}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{S}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{create\PYGZus{}groups\PYGZus{}helper}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{Groups}\PYG{p}{).}
+
+\PYG{n+nf}{create\PYGZus{}groups\PYGZus{}helper}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{,} \PYG{n+nv}{Groups}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}\PYG{n+nf}{zero}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{Groups} \PYG{o}{=} \PYG{n+nv}{Acc}
+    \PYG{p}{;}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{S}\PYG{p}{),}
+        \PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic:}\PYG{n+nf}{predecessor}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Pred}\PYG{p}{),}
+        \PYG{n+nf}{create\PYGZus{}groups\PYGZus{}helper}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Pred}\PYG{p}{,} \PYG{n+nv}{S\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{S}\PYG{p}{|}\PYG{n+nv}{Acc}\PYG{p}{],} \PYG{n+nv}{Groups}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper to get predecessor in grounded arithmetic}
+\PYG{n+nf}{predecessor\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{Pred}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{One\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{One\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Pred\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Pred\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Pred}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} run/4 is the main recursive loop of the state machine.}
+\PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{calculate\PYGZus{}total\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{Total}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interpretation}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Final Tally. Total = \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Total}\PYG{p}{]),}
+    \PYG{n+nv}{HistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nv}{FinalHistory} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{Acc}\PYG{p}{].}
+
+\PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{,} \PYG{n+nv}{FinalHistory}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nv}{CurrentState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nv}{CurrentState} \PYG{o}{=} \PYG{n+nf}{state}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+    \PYG{n+nv}{HistoryEntry} \PYG{o}{=} \PYG{n+nf}{step}\PYG{p}{(}\PYG{n+nv}{Name}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{Interpretation}\PYG{p}{),}
+    \PYG{n+nf}{run}\PYG{p}{(}\PYG{n+nv}{NextState}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{HistoryEntry} \PYG{p}{|} \PYG{n+nv}{Acc}\PYG{p}{],} \PYG{n+nv}{FinalHistory}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} transition/4 defines the logic for moving from one state to the next.}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init, select a source group to begin redistribution.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SourceIdx}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}select\PYGZus{}source}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SourceIdx}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Initialized groups.\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}select\PYGZus{}source, confirm the source and begin the transfer process.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}select\PYGZus{}source}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SourceIdx}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}transfer}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SourceIdx}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}\PYG{n+nv}{SourceIdx} \PYG{o}{\PYGZgt{}=} \PYG{l+m+mi}{0} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nv}{SI1} \PYG{o}{is} \PYG{n+nv}{SourceIdx} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Selected Group \PYGZti{}w as the source.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{SI1}\PYG{p}{])}
+    \PYG{p}{;}
+        \PYG{n+nv}{Interp} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}No groups to process.\PYGZsq{}}
+    \PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{selecting\PYGZus{}source\PYGZus{}group\PYGZus{}for\PYGZus{}redistribution}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}init\PYGZus{}transfer, start the main redistribution loop.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}init\PYGZus{}transfer}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}transfer}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{Zero\PYGZus{}Rec}\PYG{p}{),}
+           \PYG{l+s+sAtom}{\PYGZsq{}Starting redistribution loop.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{Zero\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{beginning\PYGZus{}redistribution\PYGZus{}process}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} In q\PYGZus{}loop\PYGZus{}transfer, move one item from the source group to a target group.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}transfer}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}transfer}\PYG{p}{,} \PYG{n+nv}{NewGs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{NewTI\PYGZus{}Rec}\PYG{p}{),} \PYG{n+nv}{Interp}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Convert TI\PYGZus{}Rec to integer for list operations (maintaining compatibility)}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),}
+    
+    \PYG{c+c1}{\PYGZpc{} Conditions for transfer: source has items, target is not full.}
+    \PYG{n+nf}{nth0}\PYG{p}{(}\PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SourceItems}\PYG{p}{),} 
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{SourceItems}\PYG{p}{,} \PYG{n+nv}{SourceItems\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nv}{Zero\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{l+s+sAtom}{\PYGZbs{}+} \PYG{n+nf}{equal\PYGZus{}to}\PYG{p}{(}\PYG{n+nv}{SourceItems\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Zero\PYGZus{}Rec}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} SourceItems \PYGZgt{} 0}
+    
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} 
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{smaller\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} TI \PYGZlt{} N}
+    
+    \PYG{p}{(}\PYG{n+nv}{TI} \PYG{l+s+sAtom}{=\PYGZbs{}=} \PYG{n+nv}{SI} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}
+        \PYG{n+nf}{nth0}\PYG{p}{(}\PYG{n+nv}{TI}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{TargetItems}\PYG{p}{),} 
+        \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{TargetItems}\PYG{p}{,} \PYG{n+nv}{TargetItems\PYGZus{}Rec}\PYG{p}{),}
+        \PYG{n+nf}{smaller\PYGZus{}than}\PYG{p}{(}\PYG{n+nv}{TargetItems\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{),} \PYG{c+c1}{\PYGZpc{} TargetItems \PYGZlt{} Base}
+        
+        \PYG{c+c1}{\PYGZpc{} Perform transfer of one item using grounded arithmetic.}
+        \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{One\PYGZus{}Rec}\PYG{p}{),}
+        \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{SourceItems\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{One\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewSourceItems\PYGZus{}Rec}\PYG{p}{),}
+        \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{TargetItems\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{One\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewTargetItems\PYGZus{}Rec}\PYG{p}{),}
+        
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{NewSourceItems\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewSourceItems}\PYG{p}{),}
+        \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{NewTargetItems\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewTargetItems}\PYG{p}{),}
+        
+        \PYG{n+nf}{update\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{NewSourceItems}\PYG{p}{,} \PYG{n+nv}{Gs\PYGZus{}mid}\PYG{p}{),}
+        \PYG{n+nf}{update\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{Gs\PYGZus{}mid}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{,} \PYG{n+nv}{NewTargetItems}\PYG{p}{,} \PYG{n+nv}{NewGs}\PYG{p}{),}
+        
+        \PYG{c+c1}{\PYGZpc{} Check if target is now full, if so, advance target index.}
+        \PYG{p}{(}\PYG{n+nf}{equal\PYGZus{}to}\PYG{p}{(}\PYG{n+nv}{NewTargetItems\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Base\PYGZus{}Rec}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} 
+            \PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic:}\PYG{n+nf}{successor}\PYG{p}{(}\PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewTI\PYGZus{}Rec}\PYG{p}{)}
+        \PYG{p}{;} 
+            \PYG{n+nv}{NewTI\PYGZus{}Rec} \PYG{o}{=} \PYG{n+nv}{TI\PYGZus{}Rec}
+        \PYG{p}{),}
+        
+        \PYG{n+nv}{TI\PYGZus{}Display} \PYG{o}{is} \PYG{n+nv}{TI} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+        \PYG{n+nv}{SI\PYGZus{}Display} \PYG{o}{is} \PYG{n+nv}{SI} \PYG{o}{+} \PYG{l+m+mi}{1}\PYG{p}{,}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{n+nf}{string}\PYG{p}{(}\PYG{n+nv}{Interp}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Transferred 1 from \PYGZti{}w to \PYGZti{}w.\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{SI\PYGZus{}Display}\PYG{p}{,} \PYG{n+nv}{TI\PYGZus{}Display}\PYG{p}{]),}
+        \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{exp\PYGZus{}poss}\PYG{p}{(}\PYG{l+s+sAtom}{transferring\PYGZus{}item\PYGZus{}between\PYGZus{}groups}\PYG{p}{))}
+    \PYG{p}{;}
+        \PYG{c+c1}{\PYGZpc{} Skip transferring to the source index itself.}
+        \PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic:}\PYG{n+nf}{successor}\PYG{p}{(}\PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewTI\PYGZus{}Rec}\PYG{p}{),} 
+        \PYG{n+nv}{NewGs} \PYG{o}{=} \PYG{n+nv}{Gs}\PYG{p}{,} 
+        \PYG{n+nv}{Interp} \PYG{o}{=} \PYG{l+s+sAtom}{\PYGZsq{}Skipping source index.\PYGZsq{}}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Exit the loop when the source is empty or all targets have been considered.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}loop\PYGZus{}transfer}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}finalize}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Redistribution complete.\PYGZsq{}}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{TI\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{p}{(}\PYG{n+nf}{nth0}\PYG{p}{(}\PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{))}  \PYG{c+c1}{\PYGZpc{} Source is empty}
+    \PYG{p}{;}   \PYG{p}{(}\PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{TI} \PYG{o}{\PYGZgt{}=} \PYG{n+nv}{N}\PYG{p}{)}  \PYG{c+c1}{\PYGZpc{} All targets considered}
+    \PYG{p}{),}
+    \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nf}{comp\PYGZus{}nec}\PYG{p}{(}\PYG{l+s+sAtom}{redistribution\PYGZus{}process\PYGZus{}complete}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} From q\PYGZus{}finalize, move to the accept state.}
+\PYG{n+nf}{transition}\PYG{p}{(}\PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}finalize}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nf}{state}\PYG{p}{(}\PYG{l+s+sAtom}{q\PYGZus{}accept}\PYG{p}{,} \PYG{n+nv}{Gs}\PYG{p}{,} \PYG{n+nv}{SI}\PYG{p}{,} \PYG{n+nv}{TI}\PYG{p}{),} \PYG{l+s+sAtom}{\PYGZsq{}Finalizing.\PYGZsq{}}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} update\PYGZus{}list/4 is a helper to non\PYGZhy{}destructively update a list element at an index.}
+\PYG{n+nf}{update\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{List}\PYG{p}{,} \PYG{n+nv}{Index}\PYG{p}{,} \PYG{n+nv}{NewVal}\PYG{p}{,} \PYG{n+nv}{NewList}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{nth0}\PYG{p}{(}\PYG{n+nv}{Index}\PYG{p}{,} \PYG{n+nv}{List}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{),}
+    \PYG{n+nf}{nth0}\PYG{p}{(}\PYG{n+nv}{Index}\PYG{p}{,} \PYG{n+nv}{NewList}\PYG{p}{,} \PYG{n+nv}{NewVal}\PYG{p}{,} \PYG{n+nv}{Rest}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} calculate\PYGZus{}total\PYGZus{}grounded/2 is a helper to sum the elements using grounded arithmetic.}
+\PYG{n+nf}{calculate\PYGZus{}total\PYGZus{}grounded}\PYG{p}{([],} \PYG{l+m+mi}{0}\PYG{p}{).}
+\PYG{n+nf}{calculate\PYGZus{}total\PYGZus{}grounded}\PYG{p}{([}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{T}\PYG{p}{],} \PYG{n+nv}{Total}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{calculate\PYGZus{}total\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{RestTotal}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{H}\PYG{p}{,} \PYG{n+nv}{H\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{integer\PYGZus{}to\PYGZus{}recollection}\PYG{p}{(}\PYG{n+nv}{RestTotal}\PYG{p}{,} \PYG{n+nv}{RestTotal\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{H\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{RestTotal\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Total\PYGZus{}Rec}\PYG{p}{),}
+    \PYG{n+nf}{recollection\PYGZus{}to\PYGZus{}integer}\PYG{p}{(}\PYG{n+nv}{Total\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Total}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}count}\PYG{p}{).} \PYG{c+c1}{\PYGZpc{} Cognitive cost for each addition}
+\end{MintedVerbatim}
