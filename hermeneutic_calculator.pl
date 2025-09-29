@@ -12,7 +12,7 @@
  * @license MIT
  */
 :- module(hermeneutic_calculator,
-          [ calculate/5
+          [ calculate/6
           , list_strategies/2
           ]).
 
@@ -89,13 +89,12 @@ list_strategies(/, [
 
 % --- Calculator Dispatch ---
 
-%!      calculate(+Num1:integer, +Op:atom, +Num2:integer, +Strategy:atom, -Result:integer) is semidet.
+%!      calculate(+Num1:integer, +Op:atom, +Num2:integer, +Strategy:atom, -Result:integer, -History:list) is semidet.
 %
 %       Executes a calculation using a specified cognitive strategy.
 %       This predicate acts as a dispatcher, calling the appropriate
 %       `run_*` predicate from the various strategy modules based on the
-%       `Strategy` name. The history trace from the strategy execution is
-%       ignored.
+%       `Strategy` name. It now captures and returns the execution trace.
 %
 %       @param Num1 The first operand.
 %       @param Op The arithmetic operator (`+`, `-`, `*`, `/`).
@@ -104,48 +103,50 @@ list_strategies(/, [
 %       `list_strategies/2`).
 %       @param Result The numerical result of the calculation. Fails if the
 %       strategy does not complete successfully.
-calculate(N1, +, N2, 'COBO', Result) :-
-    run_cobo(N1, N2, Result, _).
-calculate(N1, +, N2, 'Chunking', Result) :-
-    run_chunking(N1, N2, Result, _).
-calculate(N1, +, N2, 'RMB', Result) :-
-    run_rmb(N1, N2, Result, _).
-calculate(N1, +, N2, 'Rounding', Result) :-
-    run_rounding(N1, N2, Result, _).
+%       @param History A list of terms representing the execution trace of
+%       the chosen strategy.
+calculate(N1, +, N2, 'COBO', Result, History) :-
+    run_cobo(N1, N2, Result, History).
+calculate(N1, +, N2, 'Chunking', Result, History) :-
+    run_chunking(N1, N2, Result, History).
+calculate(N1, +, N2, 'RMB', Result, History) :-
+    run_rmb(N1, N2, Result, History).
+calculate(N1, +, N2, 'Rounding', Result, History) :-
+    run_rounding(N1, N2, Result, History).
 
-calculate(M, -, S, 'COBO (Missing Addend)', Result) :-
-    run_cobo_ma(M, S, Result, _).
-calculate(M, -, S, 'CBBO (Take Away)', Result) :-
-    run_cbbo_ta(M, S, Result, _).
-calculate(M, -, S, 'Decomposition', Result) :-
-    run_decomposition(M, S, Result, _).
-calculate(M, -, S, 'Rounding', Result) :-
-    run_sub_rounding(M, S, Result, _).
-calculate(M, -, S, 'Sliding', Result) :-
-    run_sliding(M, S, Result, _).
-calculate(M, -, S, 'Chunking A', Result) :-
-    run_chunking_a(M, S, Result, _).
-calculate(M, -, S, 'Chunking B', Result) :-
-    run_chunking_b(M, S, Result, _).
-calculate(M, -, S, 'Chunking C', Result) :-
-    run_chunking_c(M, S, Result, _).
+calculate(M, -, S, 'COBO (Missing Addend)', Result, History) :-
+    run_cobo_ma(M, S, Result, History).
+calculate(M, -, S, 'CBBO (Take Away)', Result, History) :-
+    run_cbbo_ta(M, S, Result, History).
+calculate(M, -, S, 'Decomposition', Result, History) :-
+    run_decomposition(M, S, Result, History).
+calculate(M, -, S, 'Rounding', Result, History) :-
+    run_sub_rounding(M, S, Result, History).
+calculate(M, -, S, 'Sliding', Result, History) :-
+    run_sliding(M, S, Result, History).
+calculate(M, -, S, 'Chunking A', Result, History) :-
+    run_chunking_a(M, S, Result, History).
+calculate(M, -, S, 'Chunking B', Result, History) :-
+    run_chunking_b(M, S, Result, History).
+calculate(M, -, S, 'Chunking C', Result, History) :-
+    run_chunking_c(M, S, Result, History).
 
-calculate(N, *, S, 'C2C', Result) :-
-    run_c2c(N, S, Result, _).
-calculate(N, *, S, 'CBO', Result) :-
-    run_cbo_mult(N, S, 10, Result, _).
-calculate(N, *, S, 'Commutative Reasoning', Result) :-
-    run_commutative_mult(N, S, Result, _).
-calculate(N, *, S, 'DR', Result) :-
-    run_dr(N, S, Result, _).
+calculate(N, *, S, 'C2C', Result, History) :-
+    run_c2c(N, S, Result, History).
+calculate(N, *, S, 'CBO', Result, History) :-
+    run_cbo_mult(N, S, 10, Result, History).
+calculate(N, *, S, 'Commutative Reasoning', Result, History) :-
+    run_commutative_mult(N, S, Result, History).
+calculate(N, *, S, 'DR', Result, History) :-
+    run_dr(N, S, Result, History).
 
-calculate(T, /, S, 'CBO (Division)', Result) :-
-    run_cbo_div(T, S, 10, Result, _).
-calculate(T, /, N, 'Dealing by Ones', Result) :-
-    run_dealing_by_ones(T, N, Result, _).
-calculate(T, /, S, 'IDP', Result) :-
+calculate(T, /, S, 'CBO (Division)', Result, History) :-
+    run_cbo_div(T, S, 10, Result, History).
+calculate(T, /, N, 'Dealing by Ones', Result, History) :-
+    run_dealing_by_ones(T, N, Result, History).
+calculate(T, /, S, 'IDP', Result, History) :-
     % A default Knowledge Base is provided for demonstration.
     KB = [40-5, 16-2, 8-1],
-    run_idp(T, S, KB, Result, _).
-calculate(E, /, G, 'UCR', Result) :-
-    run_ucr(E, G, Result, _).
+    run_idp(T, S, KB, Result, History).
+calculate(E, /, G, 'UCR', Result, History) :-
+    run_ucr(E, G, Result, History).

@@ -18,6 +18,40 @@
  */
 :- module(meta_interpreter, [solve/4]).
 :- use_module(object_level). % Ensure we can access the object-level code
+:- use_module(hermeneutic_calculator). % For strategic choice
+
+% Note: is_list/1 is a built-in, no need to import from library(lists).
+
+% --- Arithmetic Goal Handling ---
+
+%!      is_arithmetic_goal(?Goal, ?Op) is semidet.
+%
+%       Identifies arithmetic goals and maps them to standard operators.
+%       This allows the meta-interpreter to intercept these goals and
+%       handle them with the Hermeneutic Calculator instead of the
+%       inefficient object-level definitions.
+is_arithmetic_goal(add(_,_,_), +).
+is_arithmetic_goal(multiply(_,_,_), *).
+% Add other operations like subtract/3, divide/3 here if needed.
+
+
+%!      peano_to_int(?Peano, ?Int) is det.
+%
+%       Converts a Peano number (s(s(0))) to an integer.
+peano_to_int(0, 0).
+peano_to_int(s(P), I) :-
+    peano_to_int(P, I_prev),
+    I is I_prev + 1.
+
+%!      int_to_peano(?Int, ?Peano) is det.
+%
+%       Converts an integer to a Peano number.
+int_to_peano(0, 0).
+int_to_peano(I, s(P)) :-
+    I > 0,
+    I_prev is I - 1,
+    int_to_peano(I_prev, P).
+
 
 %!      solve(+Goal, +InferencesIn, -InferencesOut, -Trace) is nondet.
 %
@@ -55,6 +89,21 @@ solve(Goal, I_In, I_Out, [call(Goal)]) :-
     check_viability(I_In),
     I_Out is I_In - 1,
     call(Goal).
+
+% Arithmetic predicates: Intercept arithmetic goals, choose a strategy,
+% execute it via the hermeneutic calculator, and trace the process.
+solve(Goal, I_In, I_Out, [arithmetic_trace(Strategy, Result, History)]) :-
+    is_arithmetic_goal(Goal, Op),
+    !,
+    check_viability(I_In),
+    I_Out is I_In - 1,
+    Goal =.. [_, Peano1, Peano2, PeanoResult],
+    peano_to_int(Peano1, N1),
+    peano_to_int(Peano2, N2),
+    list_strategies(Op, Strategies),
+    ( is_list(Strategies), Strategies = [Strategy|_] -> true ; throw(error(no_strategy_found(Op), _)) ),
+    calculate(N1, Op, N2, Strategy, Result, History),
+    int_to_peano(Result, PeanoResult).
 
 % Object-level predicates: Find a matching clause in the `object_level` module,
 % record its use, and recursively solve its body. This is the core of observation.
