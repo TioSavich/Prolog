@@ -125,35 +125,19 @@ solve(A, B, Result, Trace) :-
 
 %!      reflect_and_learn(+Result:dict) is semidet.
 %
-%       The core reflective learning trigger. It analyzes a computation's
-%       result, which includes the goal and execution trace, to find
-%       opportunities for creating more efficient strategies.
-%
-%       Now enhanced to analyze embodied modal states and cognitive patterns.
+%       DEPRECATED: Legacy reflective learning trigger.
+%       
+%       Phase 5 Refactoring: This predicate is now a NO-OP placeholder.
+%       All learning happens through FSM synthesis in fsm_synthesis_engine.pl,
+%       which is called directly from execution_handler.pl during crisis.
+%       
+%       This predicate is kept for backward compatibility but does nothing.
+%       It may be removed entirely in future versions.
 %
 %       @param Result A dict containing at least `goal` and `trace`.
-reflect_and_learn(Result) :-
-    Goal = Result.goal,
-    Trace = Result.trace,
-    % We only learn from addition, and only if we have a trace.
-    (   nonvar(Trace), Goal = add(A, B, _)
-    ->  (   writeln('    (Reflecting on addition trace...)'),
-            % Enhanced analysis: examine both syntactic and modal patterns
-            (   detect_cob_pattern(Trace, _),
-                construct_and_validate_cob(A, B)
-            ;   detect_rmb_pattern(Trace, RMB_Data),
-                construct_and_validate_rmb(A, B, RMB_Data)
-            ;   detect_doubles_pattern(Trace, _),
-                construct_and_validate_doubles(A, B)
-            ;   detect_multiplicative_pattern(Trace, MultData),
-                construct_multiplicative_strategy(A, B, MultData)
-            ;   detect_modal_efficiency_pattern(Trace, ModalData),
-                construct_modal_enhanced_strategy(A, B, ModalData)
-            ;   true % Succeed even if no new strategy is found
-            )
-        )
-    ;   true % Succeed if not an addition goal or no trace
-    ).
+reflect_and_learn(_Result) :-
+    % NO-OP: All learning now happens via fsm_synthesis_engine
+    true.
 
 % =================================================================
 % Part 3: Foundational Abilities & Trace Analysis
@@ -202,347 +186,59 @@ get_calculation_trace(T, CT) :-
     get_calculation_trace(InnerT, CT).
 
 % =================================================================
-% Part 4: Pattern Detection & Construction
+% Part 4: DEPRECATED - Pattern Detection & Construction REMOVED
 % =================================================================
-
-% Detects if an inefficient counting strategy was used where commutativity (A+B = B+A) would have been more efficient.
-detect_cob_pattern(Trace, cob_data) :-
-    Trace.strategy = counting,
-    A = Trace.a_start, B = Trace.b_start,
-    integer(A), integer(B),
-    A < B.
-
-% Constructs and validates a new "Counting On Bigger" (COB) strategy clause.
-construct_and_validate_cob(A, B) :-
-    StrategyName = cob,
-    StrategyHead = run_learned_strategy(A_in, B_in, Result, StrategyName, Trace),
-    StrategyBody = (
-        integer(A_in), integer(B_in),
-        (A_in >= B_in -> Start = A_in, Count = B_in, Swap = no_swap ; Start = B_in, Count = A_in, Swap = swapped(B_in, A_in)),
-        (   Swap = swapped(_, _) ->
-            (proves([n(plus(A_in, B_in, R_temp))] => [n(plus(B_in, A_in, R_temp))]) -> true ; fail)
-            ; true
-        ),
-        solve_foundationally(Start, Count, Result, InnerTrace),
-        Trace = trace{a_start:A_in, b_start:B_in, strategy:StrategyName, steps:[Swap, inner_trace(InnerTrace)]}
-    ),
-    validate_and_assert(A, B, StrategyHead, StrategyBody).
-
-
-% Detects if the counting trace shows a pattern of "making a ten".
-detect_rmb_pattern(TraceWrapper, rmb_data{k:K, base:Base}) :-
-    get_calculation_trace(TraceWrapper, Trace),
-    Trace.strategy = counting,
-    Base = 10,
-    A = Trace.a_start, B = Trace.b_start,
-    integer(A), integer(B),
-    A > 0, A < Base, K is Base - A, B >= K,
-    nth1(K, Trace.steps, Step),
-    Step = step(_, Base).
-
-% Constructs and validates a new "Rearranging to Make Bases" (RMB) strategy.
-construct_and_validate_rmb(A, B, RMB_Data) :-
-    Base = RMB_Data.base,
-    StrategyName = rmb(Base),
-    StrategyHead = run_learned_strategy(A_in, B_in, Result, StrategyName, Trace),
-    StrategyBody = (
-        integer(A_in), integer(B_in),
-        A_in > 0, A_in < Base, K_runtime is Base - A_in, B_in >= K_runtime,
-        B_new_runtime is B_in - K_runtime,
-        Result is Base + B_new_runtime,
-        Trace = trace{a_start:A_in, b_start:B_in, strategy:StrategyName, steps:[step(A_in, Base), step(Base, Result)]}
-    ),
-    validate_and_assert(A, B, StrategyHead, StrategyBody).
-
-% Detects if a problem was a "doubles" fact that was solved less efficiently.
-detect_doubles_pattern(TraceWrapper, doubles_data) :-
-    get_calculation_trace(TraceWrapper, Trace),
-    member(Trace.strategy, [counting, rmb(_)]),
-    A = Trace.a_start, B = Trace.b_start,
-    A == B, integer(A).
-
-% Constructs and validates a new "Doubles" strategy (rote knowledge).
-construct_and_validate_doubles(A, B) :-
-    StrategyName = doubles,
-    StrategyHead = run_learned_strategy(A_in, B_in, Result, StrategyName, Trace),
-    StrategyBody = (
-        integer(A_in), A_in == B_in,
-        Result is A_in * 2,
-        Trace = trace{a_start:A_in, b_start:B_in, strategy:StrategyName, steps:[rote(Result)]}
-    ),
-    validate_and_assert(A, B, StrategyHead, StrategyBody).
-
-
-% --- Validation Helper ---
-% Ensures a newly constructed strategy is sound before asserting it.
-validate_and_assert(A, B, StrategyHead, StrategyBody) :-
-    copy_term((StrategyHead, StrategyBody), (ValidationHead, ValidationBody)),
-    arg(1, ValidationHead, A),
-    arg(2, ValidationHead, B),
-    arg(3, ValidationHead, CalculatedResult),
-    arg(4, ValidationHead, StrategyName),
-
-    (   call(ValidationBody),
-        proves([] => [o(plus(A, B, CalculatedResult))])
-    ->
-        (   clause(run_learned_strategy(_, _, _, StrategyName, _), _)
-        ->  format('  (Strategy ~w already known)~n', [StrategyName])
-        ;   assertz((StrategyHead :- StrategyBody)),
-            format('  -> New Strategy Asserted: ~w~n', [StrategyName])
-        )
-    ;   writeln('ERROR: Strategy validation failed. Not asserted.')
-    ).
+%
+% Phase 5.1 Refactoring: All pattern-based strategy construction has been
+% removed to enforce the emergence principle. The system no longer has
+% "innate" knowledge of strategies like COB, RMB, or Doubles.
+%
+% Learning now occurs exclusively through FSM synthesis in
+% fsm_synthesis_engine.pl, which compositionally builds strategies from
+% grounded primitives (successor, predecessor, decompose_base10) guided
+% by oracle interpretations.
+%
+% This is computational hermeneutics: the machine reconstructs rational
+% structures that make oracle guidance intelligible, rather than matching
+% pre-defined templates.
+%
+% Legacy predicates REMOVED:
+% - detect_cob_pattern/2
+% - construct_and_validate_cob/2
+% - detect_rmb_pattern/2
+% - construct_and_validate_rmb/3
+% - detect_doubles_pattern/2
+% - construct_and_validate_doubles/2
+% - validate_and_assert/4
+%
+% These predicates violated the principle that everything must be learned,
+% not given. FSM synthesis replaces all template-based construction.
 
 % =================================================================
-% Part 5: Embodied Modal Logic Pattern Detection
+% Part 5 & 6: DEPRECATED - Advanced Pattern Detection REMOVED
 % =================================================================
-
-%!      detect_modal_efficiency_pattern(+Trace, -ModalData) is semidet.
 %
-%       Detects patterns in embodied modal states that indicate cognitive
-%       efficiency opportunities. Looks for correlations between modal
-%       contexts and computational outcomes.
+% Phase 5.1 Refactoring: All advanced pattern detection removed.
 %
-%       @param Trace The execution trace containing modal signals
-%       @param ModalData Extracted modal pattern information
-detect_modal_efficiency_pattern(Trace, modal_pattern(ModalSequence, EfficiencyGain)) :-
-    extract_modal_sequence(Trace, ModalSequence),
-    ModalSequence \= [],
-    calculate_modal_efficiency_gain(ModalSequence, EfficiencyGain),
-    EfficiencyGain > 0.
-
-%!      extract_modal_sequence(+Trace, -ModalSequence) is det.
+% These predicates represented hypothetical future capabilities for:
+% - Modal efficiency pattern detection
+% - Multiplicative pattern bootstrapping  
+% - Algebraic abstraction recognition
 %
-%       Extracts the sequence of modal contexts from an execution trace.
-extract_modal_sequence([], []).
-extract_modal_sequence([TraceElement|RestTrace], [Modal|RestModals]) :-
-    is_modal_trace_element(TraceElement, Modal), !,
-    extract_modal_sequence(RestTrace, RestModals).
-extract_modal_sequence([_|RestTrace], RestModals) :-
-    extract_modal_sequence(RestTrace, RestModals).
-
-%!      is_modal_trace_element(+TraceElement, -Modal) is semidet.
+% However, they still violated the emergence principle by providing
+% hard-coded pattern templates. If these capabilities are needed in
+% the future, they should be implemented through FSM synthesis, not
+% pattern matching.
 %
-%       Identifies modal context elements in trace entries.
-is_modal_trace_element(modal_trace(ModalGoal, Context, _), modal_state(Context, ModalGoal)).
-is_modal_trace_element(cognitive_cost(modal_shift, _), modal_transition).
-
-%!      calculate_modal_efficiency_gain(+ModalSequence, -EfficiencyGain) is det.
+% Legacy predicates REMOVED:
+% - detect_modal_efficiency_pattern/2
+% - construct_modal_enhanced_strategy/3
+% - detect_multiplicative_pattern/2
+% - construct_multiplicative_strategy/3
+% - detect_algebraic_pattern/2
 %
-%       Calculates the efficiency gain indicated by a modal sequence.
-%       Compressive states should correlate with focused, efficient computation.
-calculate_modal_efficiency_gain(ModalSequence, EfficiencyGain) :-
-    count_compressive_focus(ModalSequence, CompressiveCount),
-    count_expansive_exploration(ModalSequence, ExpansiveCount),
-    % Efficiency gain when there's more compression (focus) than expansion
-    EfficiencyGain is CompressiveCount - ExpansiveCount.
-
-count_compressive_focus([], 0).
-count_compressive_focus([modal_state(compressive, _)|Rest], Count) :-
-    count_compressive_focus(Rest, RestCount),
-    Count is RestCount + 1.
-count_compressive_focus([_|Rest], Count) :-
-    count_compressive_focus(Rest, Count).
-
-count_expansive_exploration([], 0).
-count_expansive_exploration([modal_state(expansive, _)|Rest], Count) :-
-    count_expansive_exploration(Rest, RestCount),
-    Count is RestCount + 1.
-count_expansive_exploration([_|Rest], Count) :-
-    count_expansive_exploration(Rest, Count).
-
-%!      construct_modal_enhanced_strategy(+A, +B, +ModalData) is det.
-%
-%       Constructs a new strategy enhanced with modal context awareness.
-%       This strategy would optimize based on the detected modal patterns.
-construct_modal_enhanced_strategy(A, B, modal_pattern(ModalSequence, EfficiencyGain)) :-
-    format('Constructing modal-enhanced strategy for ~w + ~w~n', [A, B]),
-    format('  Modal sequence: ~w~n', [ModalSequence]),
-    format('  Efficiency gain: ~w~n', [EfficiencyGain]),
-    
-    % Create a strategy name based on modal characteristics
-    determine_modal_strategy_name(ModalSequence, StrategyName),
-    
-    % Construct the enhanced strategy clause
-    construct_modal_strategy_clause(A, B, StrategyName, ModalSequence, Clause),
-    
-    % Validate and assert the new strategy
-    ( validate_strategy_clause(Clause) ->
-        assertz(Clause),
-        format('Successfully created modal-enhanced strategy: ~w~n', [StrategyName])
-    ;
-        writeln('Modal strategy validation failed.')
-    ).
-
-%!      determine_modal_strategy_name(+ModalSequence, -StrategyName) is det.
-%
-%       Determines an appropriate strategy name based on modal characteristics.
-determine_modal_strategy_name(ModalSequence, StrategyName) :-
-    ( member(modal_state(compressive, _), ModalSequence) ->
-        StrategyName = modal_focused_addition
-    ; member(modal_state(expansive, _), ModalSequence) ->
-        StrategyName = modal_exploratory_addition
-    ;
-        StrategyName = modal_neutral_addition
-    ).
-
-%!      construct_modal_strategy_clause(+A, +B, +StrategyName, +ModalSequence, -Clause) is det.
-%
-%       Constructs the actual Prolog clause for the modal-enhanced strategy.
-construct_modal_strategy_clause(A, B, StrategyName, _ModalSequence, Clause) :-
-    % For now, create a simple optimized clause
-    % Future versions could use ModalSequence to customize the strategy body
-    C is A + B,
-    Clause = (run_learned_strategy(A, B, C, StrategyName, 
-                                   [modal_optimization(StrategyName, A, B, C)]) :-
-              integer(A), integer(B), A >= 0, B >= 0).
-
 % =================================================================
-% Part 6: True Bootstrapping - Multiplicative and Algebraic Pattern Detection
-% =================================================================
-
-%!      detect_multiplicative_pattern(+Trace, -MultData) is semidet.
-%
-%       Detects repeated addition patterns that indicate multiplication.
-%       This enables qualitative leaps from arithmetic to multiplicative reasoning.
-%
-%       @param Trace The execution trace to analyze
-%       @param MultData Information about the detected multiplicative pattern
-detect_multiplicative_pattern(Trace, mult_pattern(Multiplicand, Multiplier, TotalOperations)) :-
-    extract_addition_sequence(Trace, AdditionSequence),
-    analyze_for_repeated_addition(AdditionSequence, Multiplicand, Multiplier, TotalOperations),
-    TotalOperations >= 3.  % Require at least 3 repeated additions to detect pattern
-
-%!      extract_addition_sequence(+Trace, -AdditionSequence) is det.
-%
-%       Extracts the sequence of addition operations from a trace.
-extract_addition_sequence([], []).
-extract_addition_sequence([TraceElement|RestTrace], [Addition|RestAdditions]) :-
-    is_addition_trace_element(TraceElement, Addition), !,
-    extract_addition_sequence(RestTrace, RestAdditions).
-extract_addition_sequence([_|RestTrace], RestAdditions) :-
-    extract_addition_sequence(RestTrace, RestAdditions).
-
-%!      is_addition_trace_element(+TraceElement, -Addition) is semidet.
-%
-%       Identifies addition operations in trace elements.
-is_addition_trace_element(arithmetic_trace(_, _, History), addition_ops(History)) :-
-    is_list(History).
-is_addition_trace_element(trace(add(A, B, C), _), direct_add(A, B, C)).
-
-%!      analyze_for_repeated_addition(+AdditionSequence, -Multiplicand, -Multiplier, -Count) is semidet.
-%
-%       Analyzes addition sequence for repeated addition of the same value.
-analyze_for_repeated_addition(AdditionSequence, Multiplicand, Multiplier, Count) :-
-    find_repeated_addend(AdditionSequence, Multiplicand),
-    count_repetitions(AdditionSequence, Multiplicand, Count),
-    Multiplier = Count.
-
-%!      find_repeated_addend(+AdditionSequence, -Addend) is semidet.
-%
-%       Finds an addend that appears repeatedly in the sequence.
-find_repeated_addend([addition_ops(Ops)|_], Addend) :-
-    member(step(_, A, B, _), Ops),
-    (   Addend = A ; Addend = B ),
-    integer(Addend),
-    Addend > 1.
-
-%!      count_repetitions(+AdditionSequence, +Addend, -Count) is det.
-%
-%       Counts how many times an addend appears in the sequence.
-count_repetitions([], _, 0).
-count_repetitions([addition_ops(Ops)|Rest], Addend, Count) :-
-    count_addend_in_ops(Ops, Addend, OpsCount),
-    count_repetitions(Rest, Addend, RestCount),
-    Count is OpsCount + RestCount.
-
-count_addend_in_ops([], _, 0).
-count_addend_in_ops([step(_, A, B, _)|Rest], Addend, Count) :-
-    ( (A == Addend ; B == Addend) ->
-        count_addend_in_ops(Rest, Addend, RestCount),
-        Count is RestCount + 1
-    ;
-        count_addend_in_ops(Rest, Addend, Count)
-    ).
-
-%!      construct_multiplicative_strategy(+A, +B, +MultData) is det.
-%
-%       Constructs a multiplication strategy from detected repeated addition pattern.
-%       This represents true conceptual bootstrapping from addition to multiplication.
-construct_multiplicative_strategy(A, B, mult_pattern(Multiplicand, Multiplier, _)) :-
-    format('BOOTSTRAPPING: Detected multiplicative pattern!~n'),
-    format('  ~w repeated additions of ~w detected~n', [Multiplier, Multiplicand]),
-    format('  Synthesizing multiplication strategy...~n'),
-    
-    % Create new multiplication predicate if it doesn't exist
-    ( \+ predicate_property(multiply_learned(_, _, _), defined) ->
-        create_multiplication_predicate
-    ; true
-    ),
-    
-    % Create specific multiplication rule for this pattern
-    construct_multiplication_rule(Multiplicand, Multiplier, Rule),
-    assertz(Rule),
-    format('  Successfully bootstrapped to multiplication!~n').
-
-%!      create_multiplication_predicate is det.
-%
-%       Creates the basic multiplication predicate structure.
-create_multiplication_predicate :-
-    assertz((multiply_learned(0, _, 0) :-
-        writeln('Multiplication by zero yields zero.'))),
-    assertz((multiply_learned(A, B, Result) :-
-        A > 0, B > 0,
-        A1 is A - 1,
-        multiply_learned(A1, B, PartialResult),
-        Result is PartialResult + B)),
-    writeln('Created fundamental multiplication predicate structure.').
-
-%!      construct_multiplication_rule(+Multiplicand, +Multiplier, -Rule) is det.
-%
-%       Constructs a specific multiplication rule from the detected pattern.
-construct_multiplication_rule(Multiplicand, Multiplier, Rule) :-
-    Product is Multiplicand * Multiplier,
-    Rule = (run_learned_strategy(Multiplicand, Multiplier, Product, 
-                                discovered_multiplication,
-                                [bootstrapped_from_addition(Multiplicand, Multiplier)]) :-
-            integer(Multiplicand), integer(Multiplier),
-            Multiplicand > 0, Multiplier > 0).
-
-%!      detect_algebraic_pattern(+Trace, -AlgebraicData) is semidet.
-%
-%       Detects when arithmetic strategies can be abstracted to symbolic manipulation.
-%       This enables bootstrapping to algebraic reasoning.
-detect_algebraic_pattern(Trace, algebraic_pattern(AbstractForm, Instances)) :-
-    extract_operation_patterns(Trace, Patterns),
-    find_algebraic_abstraction(Patterns, AbstractForm, Instances),
-    length(Instances, InstanceCount),
-    InstanceCount >= 2.  % Need multiple instances to abstract
-
-%!      extract_operation_patterns(+Trace, -Patterns) is det.
-%
-%       Extracts operational patterns that could be algebraically abstracted.
-extract_operation_patterns(Trace, Patterns) :-
-    findall(Pattern, 
-            (member(TraceElement, Trace),
-             extract_operation_pattern(TraceElement, Pattern)),
-            Patterns).
-
-extract_operation_pattern(trace(add(A, B, C), _), add_pattern(A, B, C)).
-extract_operation_pattern(arithmetic_trace(Strategy, Result, _), strategy_pattern(Strategy, Result)).
-
-%!      find_algebraic_abstraction(+Patterns, -AbstractForm, -Instances) is semidet.
-%
-%       Finds common algebraic structures in operation patterns.
-find_algebraic_abstraction(Patterns, commutative_property, Instances) :-
-    findall(add_pattern(A, B, C), 
-            (member(add_pattern(A, B, C), Patterns),
-             member(add_pattern(B, A, C), Patterns)),
-            Instances),
-    Instances \= [].
-
-% =================================================================
-% Part 6: Normative Critique (Placeholder)
+% Part 7: Normative Critique (Placeholder)
 % =================================================================
 
 %!      critique_and_bootstrap(+Goal:term) is det.
