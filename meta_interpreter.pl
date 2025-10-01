@@ -191,6 +191,24 @@ solve(Goal, CtxIn, CtxOut, I_In, I_Out, [clause(object_level:(Goal:-Body)), trac
     clause(object_level:Goal, Body),
     solve(Body, CtxIn, CtxOut, I_Mid, I_Out, BodyTrace).
 
+% PHASE 2: Unknown operation detection
+% When an arithmetic operation is attempted but not defined in object_level,
+% throw an unknown_operation perturbation instead of silently failing.
+% Handles both `object_level:Op(...)` and bare `Op(...)` forms.
+solve(Goal, Ctx, Ctx, _I, _I, _) :-
+    % Extract the actual operation from module-qualified or bare goal
+    (   Goal = object_level:ActualGoal
+    ->  true
+    ;   ActualGoal = Goal
+    ),
+    \+ predicate_property(ActualGoal, built_in),
+    functor(ActualGoal, Functor, 3),
+    member(Functor, [subtract, multiply, divide]),  % Arithmetic operations
+    \+ clause(object_level:ActualGoal, _),
+    !,
+    % This is an unknown operation - trigger learning crisis
+    throw(perturbation(unknown_operation(Functor, Goal))).
+
 % Failure case: If a goal is not a built-in and has no matching clauses,
 % record the failure. Context is unchanged.
 solve(Goal, Ctx, Ctx, I, I, [fail(Goal)]) :-

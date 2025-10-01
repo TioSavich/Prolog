@@ -160,6 +160,62 @@ handle_perturbation(perturbation(normative_crisis(CrisisGoal, Context)), Goal, T
     writeln('Context shift complete. Retrying goal...'),
     run_computation(Goal, Limit).
 
+% PHASE 2: Unknown operation handler
+% When an arithmetic operation (subtract/multiply/divide) is attempted from primordial state,
+% consult oracle for first available strategy, synthesize it, and retry.
+handle_perturbation(perturbation(unknown_operation(Op, PeanoGoal)), Goal, _Trace, Limit) :-
+    writeln(''),
+    writeln('═══════════════════════════════════════════════════════════'),
+    writeln('  CRISIS: Unknown Operation Detected'),
+    writeln('═══════════════════════════════════════════════════════════'),
+    format('  Operation: ~w~n', [Op]),
+    format('  Goal: ~w~n', [PeanoGoal]),
+    writeln('  System has no strategy for this operation type.'),
+    writeln('  Initiating Oracle Consultation...'),
+    writeln(''),
+    
+    % Get first available strategy for this operation from oracle
+    (   oracle_server:list_available_strategies(Op, [FirstStrategy|_])
+    ->  format('  Oracle recommends learning: ~w~n', [FirstStrategy]),
+        
+        % Consult oracle with the specific strategy
+        (   consult_oracle_for_solution(PeanoGoal, FirstStrategy, OracleResult, OracleInterpretation)
+        ->  format('  Oracle Result: ~w~n', [OracleResult]),
+            format('  Oracle Says: "~w"~n', [OracleInterpretation]),
+            writeln(''),
+            writeln('  Attempting to synthesize strategy from oracle guidance...'),
+            
+            % Synthesize the new strategy
+            SynthesisInput = _{
+                goal: PeanoGoal,
+                failed_trace: [],  % No trace - operation doesn't exist yet
+                target_result: OracleResult,
+                target_interpretation: OracleInterpretation,
+                strategy_name: FirstStrategy
+            },
+            
+            (   synthesize_from_oracle(SynthesisInput)
+            ->  writeln('  ✓ Successfully synthesized new strategy!'),
+                writeln('  Retrying goal with new knowledge...'),
+                writeln('═══════════════════════════════════════════════════════════'),
+                writeln(''),
+                run_computation(Goal, Limit)
+            ;   writeln('  ✗ Synthesis failed - unable to learn from oracle'),
+                writeln('  Crisis remains unresolved'),
+                writeln('═══════════════════════════════════════════════════════════'),
+                fail
+            )
+        ;   writeln('  ✗ Oracle execution failed for strategy'),
+            writeln('  Crisis remains unresolved'),
+            writeln('═══════════════════════════════════════════════════════════'),
+            fail
+        )
+    ;   format('  ✗ No strategies available for operation: ~w~n', [Op]),
+        writeln('  Crisis remains unresolved'),
+        writeln('═══════════════════════════════════════════════════════════'),
+        fail
+    ).
+
 handle_perturbation(perturbation(incoherence(Commitments)), Goal, Trace, Limit) :-
     format('Logical incoherence detected in commitments: ~w~n', [Commitments]),
     writeln('Initiating incoherence resolution...'),
@@ -177,6 +233,7 @@ handle_perturbation(Error, _, _, _) :-
 %
 %       Attempts to consult the oracle for a solution to the failed goal.
 %       Converts between Peano numbers and integers as needed.
+%       Tries each available strategy until one succeeds.
 %
 consult_oracle_for_solution(object_level:add(A, B, _), Result, Interpretation) :-
     peano_to_int(A, IntA),
@@ -204,6 +261,54 @@ consult_oracle_for_solution(add(A, B, _), Result, Interpretation) :-
     ),
     !.
 
+%!      consult_oracle_for_solution(+Goal, +StrategyName, -Result, -Interpretation) is semidet.
+%
+%       Consults the oracle with a SPECIFIC strategy for the given goal.
+%       This is used when we want to learn a particular strategy (e.g., first available).
+%       Handles all arithmetic operations: add, subtract, multiply, divide.
+%
+consult_oracle_for_solution(object_level:Op_Goal, StrategyName, Result, Interpretation) :-
+    Op_Goal =.. [Op, A, B, _],
+    member(Op, [add, subtract, multiply, divide]),
+    !,
+    consult_oracle_for_solution(Op_Goal, StrategyName, Result, Interpretation).
+
+consult_oracle_for_solution(add(A, B, _), StrategyName, Result, Interpretation) :-
+    peano_to_int(A, IntA),
+    peano_to_int(B, IntB),
+    catch(
+        oracle_server:query_oracle(add(IntA, IntB), StrategyName, Result, Interpretation),
+        _,
+        fail
+    ).
+
+consult_oracle_for_solution(subtract(A, B, _), StrategyName, Result, Interpretation) :-
+    peano_to_int(A, IntA),
+    peano_to_int(B, IntB),
+    catch(
+        oracle_server:query_oracle(subtract(IntA, IntB), StrategyName, Result, Interpretation),
+        _,
+        fail
+    ).
+
+consult_oracle_for_solution(multiply(A, B, _), StrategyName, Result, Interpretation) :-
+    peano_to_int(A, IntA),
+    peano_to_int(B, IntB),
+    catch(
+        oracle_server:query_oracle(multiply(IntA, IntB), StrategyName, Result, Interpretation),
+        _,
+        fail
+    ).
+
+consult_oracle_for_solution(divide(A, B, _), StrategyName, Result, Interpretation) :-
+    peano_to_int(A, IntA),
+    peano_to_int(B, IntB),
+    catch(
+        oracle_server:query_oracle(divide(IntA, IntB), StrategyName, Result, Interpretation),
+        _,
+        fail
+    ).
+
 %!      peano_to_int(+Peano, -Int) is det.
 %
 %       Converts Peano number to integer.
@@ -226,14 +331,31 @@ peano_to_int(s(N), Int) :-
 %
 synthesize_from_oracle(SynthesisInput) :-
     Goal = SynthesisInput.goal,
-    FailedTrace = SynthesisInput.failed_trace,
+    FailedTrace = SynthesisInput.get(failed_trace, []),  % Default to empty if not provided
     TargetResult = SynthesisInput.target_result,
     TargetInterpretation = SynthesisInput.target_interpretation,
     
-    % Use FSM synthesis engine (Phase 5)
-    fsm_synthesis_engine:synthesize_strategy_from_oracle(
-        Goal,
-        FailedTrace,
-        TargetResult,
-        TargetInterpretation
+    % ALWAYS use oracle-backed synthesis for consistency
+    % FSM synthesis has bugs with Peano conversion, and oracle-backed is simpler
+    (   StrategyName = SynthesisInput.get(strategy_name)
+    ->  % Strategy name explicitly provided (Phase 2: unknown operations)
+        fsm_synthesis_engine:synthesize_strategy_from_oracle(
+            Goal,
+            FailedTrace,
+            TargetResult,
+            TargetInterpretation,
+            StrategyName
+        )
+    ;   % No strategy name - figure out which strategy the oracle used
+        % Extract operation type and get first available strategy
+        (   Goal = object_level:ActualGoal -> true ; ActualGoal = Goal ),
+        functor(ActualGoal, Op, 3),
+        oracle_server:list_available_strategies(Op, [FirstStrategy|_]),
+        fsm_synthesis_engine:synthesize_strategy_from_oracle(
+            Goal,
+            FailedTrace,
+            TargetResult,
+            TargetInterpretation,
+            FirstStrategy
+        )
     ).

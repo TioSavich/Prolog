@@ -50,6 +50,28 @@
 :- use_module(sar_add_rmb, [run_rmb/4]).
 :- use_module(sar_add_rounding, [run_rounding/4]).
 
+% Subtraction strategies
+:- use_module(sar_sub_cobo_missing_addend, [run_cobo_ma/4]).
+:- use_module(sar_sub_cbbo_take_away, [run_cbbo_ta/4]).
+:- use_module(sar_sub_decomposition, [run_decomposition/4]).
+:- use_module(sar_sub_rounding, [run_sub_rounding/4]).
+:- use_module(sar_sub_sliding, [run_sliding/4]).
+:- use_module(sar_sub_chunking_a, [run_chunking_a/4]).
+:- use_module(sar_sub_chunking_b, [run_chunking_b/4]).
+:- use_module(sar_sub_chunking_c, [run_chunking_c/4]).
+
+% Multiplication strategies
+:- use_module(smr_mult_c2c, [run_c2c/4]).
+:- use_module(smr_mult_cbo, [run_cbo_mult/5]).
+:- use_module(smr_mult_commutative_reasoning, [run_commutative_mult/4]).
+:- use_module(smr_mult_dr, [run_dr/4]).
+
+% Division strategies
+:- use_module(smr_div_cbo, [run_cbo_div/5]).
+:- use_module(smr_div_dealing_by_ones, [run_dealing_by_ones/4]).
+:- use_module(smr_div_idp, [run_idp/5]).
+:- use_module(smr_div_ucr, [run_ucr/4]).
+
 % Load the hermeneutic calculator for strategy listing
 :- use_module(hermeneutic_calculator, [list_strategies/2]).
 
@@ -111,8 +133,58 @@ execute_strategy(Num1, +, Num2, 'RMB', Result, History) :-
 execute_strategy(Num1, +, Num2, 'Rounding', Result, History) :-
     sar_add_rounding:run_rounding(Num1, Num2, Result, History).
 
-% For now, only addition strategies are implemented
-% Subtraction, multiplication, and division can be added as needed
+% Subtraction Strategies
+execute_strategy(Num1, -, Num2, 'COBO (Missing Addend)', Result, History) :-
+    sar_sub_cobo_missing_addend:run_cobo_ma(Num1, Num2, Result, History).
+execute_strategy(Num1, -, Num2, 'CBBO (Take Away)', Result, History) :-
+    sar_sub_cbbo_take_away:run_cbbo_ta(Num1, Num2, Result, History).
+execute_strategy(Num1, -, Num2, 'Decomposition', Result, History) :-
+    sar_sub_decomposition:run_decomposition(Num1, Num2, Result, History).
+execute_strategy(Num1, -, Num2, 'Rounding', Result, History) :-
+    sar_sub_rounding:run_sub_rounding(Num1, Num2, Result, History).
+execute_strategy(Num1, -, Num2, 'Sliding', Result, History) :-
+    sar_sub_sliding:run_sliding(Num1, Num2, Result, History).
+execute_strategy(Num1, -, Num2, 'Chunking A', Result, History) :-
+    sar_sub_chunking_a:run_chunking_a(Num1, Num2, Result, History).
+execute_strategy(Num1, -, Num2, 'Chunking B', Result, History) :-
+    sar_sub_chunking_b:run_chunking_b(Num1, Num2, Result, History).
+execute_strategy(Num1, -, Num2, 'Chunking C', Result, History) :-
+    sar_sub_chunking_c:run_chunking_c(Num1, Num2, Result, History).
+
+% Multiplication Strategies
+execute_strategy(Num1, *, Num2, 'C2C', Result, History) :-
+    smr_mult_c2c:run_c2c(Num1, Num2, Result, History).
+execute_strategy(Num1, *, Num2, 'CBO', Result, History) :-
+    smr_mult_cbo:run_cbo_mult(Num1, Num2, 10, Result, History).
+execute_strategy(Num1, *, Num2, 'Commutative Reasoning', Result, History) :-
+    smr_mult_commutative_reasoning:run_commutative_mult(Num1, Num2, Result, History).
+execute_strategy(Num1, *, Num2, 'DR', Result, History) :-
+    smr_mult_dr:run_dr(Num1, Num2, Result, History).
+
+% Division Strategies
+execute_strategy(Num1, /, Num2, 'CBO (Division)', Result, History) :-
+    smr_div_cbo:run_cbo_div(Num1, Num2, 10, Result, History).
+execute_strategy(Num1, /, Num2, 'Dealing by Ones', Result, History) :-
+    smr_div_dealing_by_ones:run_dealing_by_ones(Num1, Num2, Result, History).
+execute_strategy(Num1, /, Num2, 'IDP', Result, History) :-
+    % Knowledge Base of known multiplication facts for IDP strategy
+    % Format: Product-Multiplier means Product = Multiplier × Divisor
+    % This allows IDP to decompose dividends using known factor pairs
+    KB = [
+        % Facts for divisor 7: 56 = 16+40 = 2×7+5×7
+        40-5, 16-2, 8-1,
+        % Facts for divisor 3: 12 = 9+3 = 3×3+1×3
+        9-3, 6-2, 3-1,
+        % Facts for divisor 5: 35 = 30+5 = 6×5+1×5
+        30-6, 25-5, 20-4, 15-3, 10-2, 5-1,
+        % Facts for divisor 12: 84 = 72+12 = 6×12+1×12
+        72-6, 60-5, 48-4, 36-3, 24-2, 12-1
+    ],
+    smr_div_idp:run_idp(Num1, Num2, KB, Result, History).
+execute_strategy(Num1, /, Num2, 'UCR', Result, History) :-
+    smr_div_ucr:run_ucr(Num1, Num2, Result, History).
+
+% Catch-all for unimplemented strategies
 execute_strategy(_Num1, Op, _Num2, StrategyName, _Result, _History) :-
     throw(error(not_implemented(execute_strategy(Op, StrategyName)),
                 context(oracle_server, 'Strategy not yet implemented in oracle'))).
