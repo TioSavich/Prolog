@@ -16,6 +16,7 @@
 :- use_module(meta_interpreter).
 :- use_module(object_level).
 :- use_module(more_machine_learner, [reflect_and_learn/1]).
+:- use_module(oracle_server).  % NEW: Access to normative oracle
 
 %!      run_computation(+Goal:term, +Limit:integer) is semidet.
 %
@@ -104,14 +105,51 @@ reflect_on_success(_Goal, _Trace).
 %       @param Trace The execution trace produced before the error occurred.
 %       @param Limit The original resource limit.
 handle_perturbation(perturbation(resource_exhaustion), Goal, Trace, Limit) :-
-    writeln('Resource exhaustion detected. Initiating reorganization...'),
-    % First, attempt to learn from the failure trace
-    writeln('--- Reflective Cycle Initiated (Failure) ---'),
-    normalize_trace(Trace, NormalizedTrace),
-    Result = _{goal:Goal, trace:NormalizedTrace},
-    reflect_and_learn(Result),
-    writeln('Reorganization complete. Retrying goal...'),
-    run_computation(Goal, Limit).
+    writeln('═══════════════════════════════════════════════════════════'),
+    writeln('  CRISIS: Resource Exhaustion Detected'),
+    writeln('═══════════════════════════════════════════════════════════'),
+    format('  Failed Goal: ~w~n', [Goal]),
+    writeln('  Initiating Oracle Consultation...'),
+    writeln(''),
+    
+    % NEW: Consult the oracle to see how an expert would solve this
+    (   consult_oracle_for_solution(Goal, OracleResult, OracleInterpretation)
+    ->  format('  Oracle Result: ~w~n', [OracleResult]),
+        format('  Oracle Says: "~w"~n', [OracleInterpretation]),
+        writeln(''),
+        writeln('  Attempting to synthesize strategy from oracle guidance...'),
+        
+        % Pass oracle's guidance to learner for synthesis
+        normalize_trace(Trace, NormalizedTrace),
+        SynthesisInput = _{
+            goal: Goal,
+            failed_trace: NormalizedTrace,
+            target_result: OracleResult,
+            target_interpretation: OracleInterpretation
+        },
+        
+        % NEW: Instead of pattern matching, we synthesize from constraints
+        (   synthesize_from_oracle(SynthesisInput)
+        ->  writeln('  ✓ Successfully synthesized new strategy!'),
+            writeln('  Retrying goal with new knowledge...'),
+            writeln('═══════════════════════════════════════════════════════════'),
+            writeln(''),
+            run_computation(Goal, Limit)
+        ;   writeln('  ✗ Synthesis failed - unable to learn from oracle'),
+            writeln('  Crisis remains unresolved'),
+            writeln('═══════════════════════════════════════════════════════════'),
+            fail
+        )
+    ;   writeln('  ✗ Oracle consultation failed - no expert strategy available'),
+        writeln('  Attempting fallback learning...'),
+        % Fallback: try old reflection method (will be removed in later phases)
+        normalize_trace(Trace, NormalizedTrace),
+        Result = _{goal:Goal, trace:NormalizedTrace},
+        reflect_and_learn(Result),
+        writeln('  Reorganization complete. Retrying goal...'),
+        writeln('═══════════════════════════════════════════════════════════'),
+        run_computation(Goal, Limit)
+    ).
 
 handle_perturbation(perturbation(normative_crisis(CrisisGoal, Context)), Goal, Trace, Limit) :-
     format('Normative crisis detected: ~w violates norms of ~w context.~n', [CrisisGoal, Context]),
@@ -133,3 +171,61 @@ handle_perturbation(Error, _, _, _) :-
     writeln('An unhandled error occurred:'),
     writeln(Error),
     fail.
+
+%!      consult_oracle_for_solution(+Goal, -Result, -Interpretation) is semidet.
+%
+%       Attempts to consult the oracle for a solution to the failed goal.
+%       Converts between Peano numbers and integers as needed.
+%
+consult_oracle_for_solution(object_level:add(A, B, _), Result, Interpretation) :-
+    peano_to_int(A, IntA),
+    peano_to_int(B, IntB),
+    % Try each available strategy until one succeeds
+    oracle_server:list_available_strategies(add, Strategies),
+    member(StrategyName, Strategies),
+    catch(
+        oracle_server:query_oracle(add(IntA, IntB), StrategyName, Result, Interpretation),
+        _,
+        fail
+    ),
+    !.  % Cut after first successful strategy
+
+consult_oracle_for_solution(add(A, B, _), Result, Interpretation) :-
+    % Handle case without object_level: prefix
+    peano_to_int(A, IntA),
+    peano_to_int(B, IntB),
+    oracle_server:list_available_strategies(add, Strategies),
+    member(StrategyName, Strategies),
+    catch(
+        oracle_server:query_oracle(add(IntA, IntB), StrategyName, Result, Interpretation),
+        _,
+        fail
+    ),
+    !.
+
+%!      peano_to_int(+Peano, -Int) is det.
+%
+%       Converts Peano number to integer.
+peano_to_int(0, 0) :- !.
+peano_to_int(s(N), Int) :-
+    peano_to_int(N, SubInt),
+    Int is SubInt + 1.
+
+%!      synthesize_from_oracle(+SynthesisInput) is semidet.
+%
+%       PHASE 5 PLACEHOLDER: This is where the FSM synthesis engine will go.
+%       
+%       Currently just a stub that calls the old pattern-matching learner.
+%       In Phase 5, this will be replaced with true synthesis that:
+%       1. Uses target_result and target_interpretation as constraints
+%       2. Searches FSM space using primitive operations
+%       3. Generates new transition/4 rules
+%       4. Does NOT match pre-defined patterns
+%
+synthesize_from_oracle(SynthesisInput) :-
+    % TEMPORARY: Use old learner as placeholder
+    % This will be completely replaced in Phase 5
+    Goal = SynthesisInput.goal,
+    FailedTrace = SynthesisInput.failed_trace,
+    Result = _{goal:Goal, trace:FailedTrace},
+    more_machine_learner:reflect_and_learn(Result).
