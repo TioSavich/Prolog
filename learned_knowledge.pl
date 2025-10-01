@@ -16,49 +16,18 @@
  * 
  */
 
+% PRIMORDIAL STATE: Empty knowledge base
+% The machine begins with NO learned strategies.
+% All strategies must emerge through crisis-driven learning.
+
 % Automatically generated knowledge base.
 :- op(550, xfy, rdiv).
 
-% --- Arithmetic Strategy Rules ---
-run_learned_strategy(A, B, C, rmb(10), D) :-
-    integer(A),
-    integer(B),
-    A>0,
-    A<10,
-    E is 10-A,
-    B>=E,
-    F is B-E,
-    C is 10+F,
-    D=trace{a_start:A, b_start:B, steps:[step(A, 10), step(10, C)], strategy:rmb(10)}.
-run_learned_strategy(A, B, C, doubles, D) :-
-    integer(A),
-    A==B,
-    C is A*2,
-    D=trace{a_start:A, b_start:B, steps:[rote(C)], strategy:doubles}.
-run_learned_strategy(A, B, C, cob, D) :-
-    integer(A),
-    integer(B),
-    (   A>=B
-    ->  E=A,
-        F=B,
-        G=no_swap
-    ;   E=B,
-        F=A,
-        G=swapped(B, A)
-    ),
-    (   G=swapped(_, _)
-    ->  (   proves(([n(plus(A, B, H))]=>[n(plus(B, A, H))]))
-        ->  true
-        ;   fail
-        )
-    ;   true
-    ),
-    solve_foundationally(E, F, C, I),
-    D=trace{a_start:A, b_start:B, steps:[G, inner_trace(I)], strategy:cob}.
-
-% --- Proof Strategy Rules (from v2) ---
-learned_proof_strategy(goal{context:[n(is_complete(A))], vars:[A, B]}, introduce(n(euclid_number(B, A)))) :-
-    incompatibility_semantics:product_of_list(A, C),
-    B is C+1,
-    B>1.
-learned_proof_strategy(goal{context:[n(euclid_number(A, B))], vars:[A, B]}, case_split(n(prime(A)), n(composite(A)))).
+% ═══════════════════════════════════════════════════════════════════════
+% NO LEARNED STRATEGIES
+% ═══════════════════════════════════════════════════════════════════════
+% This file has been reset to primordial state for the refactoring.
+% As the machine encounters crises and learns, new run_learned_strategy/5
+% clauses will be asserted here, creating a "geological record" of its
+% cognitive development.
+% ═══════════════════════════════════════════════════════════════════════

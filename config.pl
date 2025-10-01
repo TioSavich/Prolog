@@ -27,8 +27,13 @@
 %       system must resolve through reorganization.
 %
 %       This predicate is dynamic, so it can be changed at runtime if needed.
+%
+%       PRIMORDIAL MACHINE SETTING: Set to 10 to force early crisis.
+%       The "Counting All" strategy will fail on add(8,5) which requires
+%       5 enumeration steps, triggering resource_exhaustion and forcing
+%       the first dialectical progression.
 :- dynamic max_inferences/1.
-max_inferences(1).
+max_inferences(10).
 
 %!      max_retries(?Limit:integer) is nondet.
 %

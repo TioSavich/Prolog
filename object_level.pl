@@ -1,27 +1,29 @@
 /** <module> Object-Level Knowledge Base
  *
- * This module represents the "object level" of the cognitive architecture.
- * It contains the initial, and potentially flawed, knowledge base that the
- * system reasons with. The predicates defined in this module are the ones
- * that are observed by the meta-interpreter and modified by the
- * reorganization engine.
+ * PRIMORDIAL STATE: This module has been simplified to contain ONLY the
+ * most primitive arithmetic capability - the "Counting All" strategy for
+ * addition via enumerate/1.
  *
- * The key predicate `add/3` is declared as `dynamic` because it is the
- * target of learning and reorganization. Its initial implementation is
- * deliberately inefficient to create opportunities for the system to detect
- * disequilibrium and self-improve.
+ * This represents the machine at "Sense-Certainty" - the most immediate,
+ * unabstracted form of mathematical knowledge. All other operations
+ * (subtract, multiply, divide) have been REMOVED and must be LEARNED
+ * through crisis-driven bootstrapping.
  *
- * 
+ * The `add/3` predicate is deliberately inefficient, designed to fail
+ * via resource_exhaustion on problems like add(8,5), thus triggering
+ * the first productive crisis and forcing dialectical development.
+ *
+ * ARCHITECTURAL ENFORCEMENT: subtract/3, multiply/3, and divide/3 are
+ * NO LONGER EXPORTED. They must emerge through learning, not be given.
  * 
  */
-:- module(object_level, [add/3, subtract/3, multiply/3, divide/3]).
+:- module(object_level, [add/3]).
 
 :- use_module(grounded_arithmetic).
 
 :- dynamic add/3.
-:- dynamic subtract/3.
-:- dynamic multiply/3.
-:- dynamic divide/3.
+% PRIMORDIAL STATE: Only add/3 is available. All other operations removed.
+% They must be learned, not given.
 
 % enumerate/1
 % Helper to force enumeration of a Peano number. Its primary purpose
@@ -42,15 +44,23 @@ recursive_add(s(A), B, s(Sum)) :-
 
 %!      add(?A, ?B, ?Sum) is nondet.
 %
-%       The initial, inefficient definition of addition.
+%       PRIMORDIAL "COUNTING ALL" STRATEGY.
+%
+%       This is the most primitive form of addition - a direct computational
+%       model of physically counting all objects. It treats numbers not as
+%       abstract concepts but as particular collections to be exhaustively
+%       enumerated.
+%
 %       This predicate is designed to simulate a "counting-all" strategy. It
 %       works by first completely grounding the two inputs `A` and `B` by
 %       recursively calling `enumerate/1`. This process is computationally
 %       expensive and is intended to fail (by resource exhaustion) for larger
 %       numbers, thus triggering the ORR learning cycle.
 %
-%       This predicate is declared `dynamic` and will be replaced by a more
-%       efficient version by the `reorganization_engine`.
+%       PHILOSOPHICAL GROUNDING: This is "Sense-Certainty" - the belief that
+%       we can grasp pure particularity directly. Like Hegel's sense-certainty,
+%       this strategy will encounter contradiction when it tries to handle
+%       anything beyond immediate simplicity.
 %
 %       @param A A Peano number representing the first addend.
 %       @param B A Peano number representing the second addend.
@@ -60,72 +70,24 @@ add(A, B, Sum) :-
     enumerate(B),
     recursive_add(A, B, Sum).
 
-%!      multiply(?A, ?B, ?Product) is nondet.
+% ═══════════════════════════════════════════════════════════════════════
+% ALL OTHER OPERATIONS REMOVED
+% ═══════════════════════════════════════════════════════════════════════
 %
-%       The initial, inefficient definition of multiplication.
-%       This predicate is designed to simulate multiplication via repeated
-%       addition. It is computationally expensive and intended to trigger
-%       reorganization for larger numbers.
+% The following operations have been intentionally removed from the
+% primordial state:
+%   - subtract/3
+%   - multiply/3  
+%   - divide/3
+%   - recursive_subtract/3
+%   - recursive_multiply/3
+%   - recursive_divide/3
+%   - recursive_divide_helper/4
 %
-%       This predicate is declared `dynamic` and will be replaced by a more
-%       efficient version by the `reorganization_engine`.
-multiply(A, B, Product) :-
-    enumerate(A),
-    enumerate(B),
-    recursive_multiply(A, B, Product).
-
-% recursive_multiply/3
-% This is the standard, efficient, recursive definition of multiplication.
-recursive_multiply(0, _, 0).
-recursive_multiply(s(A), B, Product) :-
-    recursive_multiply(A, B, PartialProduct),
-    add(PartialProduct, B, Product).
-
-% recursive_subtract/3
-% The standard, efficient recursive definition of subtraction for Peano numbers.
-% This will be synthesized by the reorganization engine.
-recursive_subtract(A, 0, A).
-recursive_subtract(s(A), s(B), Difference) :-
-    recursive_subtract(A, B, Difference).
-
-%!      subtract(?Minuend, ?Subtrahend, ?Difference) is nondet.
+% These capabilities must EMERGE through crisis-driven learning.
+% They are not given; they must be bootstrapped.
 %
-%       The initial, inefficient definition of subtraction.
-%       Like add/3, this deliberately enumerates both inputs to trigger
-%       reorganization. It uses the grounded arithmetic to avoid the
-%       Prolog arithmetic backstop.
-%
-%       @param Minuend A Peano number to subtract from.
-%       @param Subtrahend A Peano number to subtract.
-%       @param Difference The result of Minuend - Subtrahend.
-subtract(Minuend, Subtrahend, Difference) :-
-    enumerate(Minuend),
-    enumerate(Subtrahend),
-    recursive_subtract(Minuend, Subtrahend, Difference).
-
-% recursive_divide/3  
-% The standard definition of division for Peano numbers via repeated subtraction.
-recursive_divide(Dividend, Divisor, Quotient) :-
-    recursive_divide_helper(Dividend, Divisor, 0, Quotient).
-
-recursive_divide_helper(Remainder, Divisor, AccQuotient, Quotient) :-
-    ( recursive_subtract(Remainder, Divisor, NewRemainder) ->
-        recursive_add(AccQuotient, s(0), NewAccQuotient),
-        recursive_divide_helper(NewRemainder, Divisor, NewAccQuotient, Quotient)
-    ;
-        Quotient = AccQuotient
-    ).
-
-%!      divide(?Dividend, ?Divisor, ?Quotient) is nondet.
-%
-%       The initial, inefficient definition of division.
-%       Enumerates inputs and uses repeated subtraction to compute quotient.
-%
-%       @param Dividend A Peano number to be divided.
-%       @param Divisor A Peano number to divide by.
-%       @param Quotient The result of Dividend / Divisor.
-divide(Dividend, Divisor, Quotient) :-
-    enumerate(Dividend),
-    enumerate(Divisor),
-    \+ (Divisor = 0),  % Prevent division by zero
-    recursive_divide(Dividend, Divisor, Quotient).
+% This enforces the core UMEDCA principle: mathematical knowledge is not
+% a static formalism to be applied, but an emergent structure built through
+% embodied practice, crisis, and recognition.
+% ═══════════════════════════════════════════════════════════════════════

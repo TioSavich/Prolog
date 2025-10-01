@@ -41,13 +41,19 @@ run_computation(Goal, Limit) :-
 %       executes the goal and, upon success, reports that the computation
 %       is complete.
 %
+%       PRIMORDIAL REFACTORING: Proactive reflection on success has been
+%       REMOVED. Learning now occurs ONLY through crisis (resource_exhaustion).
+%       This enforces the "Built to Break" philosophy - the system only
+%       changes when its current way of being is proven inadequate.
+%
 %       @param Goal The goal to be solved.
 %       @param Limit The inference limit.
 %       @param Trace The resulting execution trace.
 call_meta_interpreter(Goal, Limit, Trace) :-
     meta_interpreter:solve(Goal, Limit, _, Trace),
-    writeln('Computation successful.'),
-    reflect_on_success(Goal, Trace).
+    writeln('Computation successful.').
+    % REMOVED: reflect_on_success(Goal, Trace)
+    % Learning is now crisis-driven only
 
 %!      normalize_trace(+Trace, -NormalizedTrace) is det.
 %
@@ -67,15 +73,21 @@ normalize_trace(Trace, Trace).
 
 %!      reflect_on_success(+Goal, +Trace) is det.
 %
-%       After a successful computation, this predicate triggers the
-%       reflective learning process. It passes the goal and the resulting
-%       trace to the learning module to check for potential optimizations.
-reflect_on_success(Goal, Trace) :-
-    writeln('--- Proactive Reflection Cycle Initiated (Success) ---'),
-    normalize_trace(Trace, NormalizedTrace),
-    Result = _{goal:Goal, trace:NormalizedTrace},
-    reflect_and_learn(Result),
-    writeln('--- Reflection Cycle Complete ---').
+%       DEPRECATED in primordial refactoring.
+%       
+%       After a successful computation, this predicate USED TO trigger
+%       reflective learning. This has been REMOVED to enforce crisis-driven
+%       learning only. The system must not learn proactively from success;
+%       it must only accommodate when forced by failure.
+%
+%       Kept for backward compatibility but not called.
+reflect_on_success(_Goal, _Trace).
+    % REMOVED: Proactive learning from success
+    % writeln('--- Proactive Reflection Cycle Initiated (Success) ---'),
+    % normalize_trace(Trace, NormalizedTrace),
+    % Result = _{goal:Goal, trace:NormalizedTrace},
+    % reflect_and_learn(Result),
+    % writeln('--- Reflection Cycle Complete ---').
 
 %!      handle_perturbation(+Error, +Goal, +Trace, +Limit) is semidet.
 %
