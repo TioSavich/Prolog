@@ -13,7 +13,9 @@
 \section*{Executive Summary}
 This codebase represents a major architectural advancement in cognitive modeling, featuring a unified Finite State Machine (FSM) engine that standardizes the execution of 17+ student mathematical reasoning strategies. The FSM engine provides modal logic integration, cognitive cost tracking, and grounded arithmetic foundation, eliminating dependency on arithmetic backstops while reducing code duplication by approximately 70\%.
 
-\textbf{New Addition:} The system now includes a comprehensive grounded fractional arithmetic framework that implements Jason's partitive fractional schemes using nested unit representation. This replaces rational-number-based fractional operations with an embodied cognitive model that captures the complete history of partitioning operations through structural representation.
+\textbf{Grounded Fractional Arithmetic:} The system includes a comprehensive grounded fractional arithmetic framework that implements Jason's partitive fractional schemes using nested unit representation. This replaces rational-number-based fractional operations with an embodied cognitive model that captures the complete history of partitioning operations through structural representation.
+
+\textbf{Crisis Detection and Reorganization:} A sophisticated crisis detection system monitors cognitive resource limits and triggers authentic reorganization when inference limits are exceeded. The system enforces genuine resource constraints where even reorganization strategies must operate within the same cognitive bounds, ensuring no computational "free passes" and authentic crisis-driven learning.
 
 \tableofcontents
 \newpage
@@ -26,6 +28,13 @@ This codebase represents a major architectural advancement in cognitive modeling
 \inputminted{prolog}{grounded_arithmetic.pl}
 \subsection{grounded\_utils.pl}
 \inputminted{prolog}{grounded_utils.pl}
+
+% ---------------------- Crisis Detection and Reorganization ----------------------
+\section{Crisis Detection and Reorganization System}
+\subsection{crisis\_processor.pl}
+\inputminted{prolog}{crisis_processor.pl}
+\subsection{curriculum\_processor.pl}
+\inputminted{prolog}{curriculum_processor.pl}
 
 % ---------------------- Grounded Fractional Arithmetic ----------------------
 \section{Grounded Fractional Arithmetic System}
@@ -84,6 +93,8 @@ This codebase represents a major architectural advancement in cognitive modeling
 \inputminted{prolog}{test_basic_functionality.pl}
 \subsection{test\_comprehensive.pl}
 \inputminted{prolog}{test_comprehensive.pl}
+\subsection{test\_fractional\_arithmetic.pl}
+\inputminted{prolog}{test_fractional_arithmetic.pl}
 \subsection{test\_full\_loop.pl}
 \inputminted{prolog}{test_full_loop.pl}
 \subsection{test\_orr\_cycle.pl}
@@ -136,6 +147,17 @@ This codebase represents a major architectural advancement in cognitive modeling
 \subsection{smr\_mult\_dr.pl}
 \inputminted{prolog}{smr_mult_dr.pl}
 
+% ---------------------- System Demonstrations and Benchmarks ----------------------
+\section{System Demonstrations and Benchmarks}
+\subsection{demo\_revolutionary\_system.pl}
+\inputminted{prolog}{demo_revolutionary_system.pl}
+\subsection{final\_demo.pl}
+\inputminted{prolog}{final_demo.pl}
+\subsection{showcase\_grounded\_system.pl}
+\inputminted{prolog}{showcase_grounded_system.pl}
+\subsection{math\_benchmark.pl}
+\inputminted{prolog}{math_benchmark.pl}
+
 % ---------------------- Neuro folder ----------------------
 \section{Neuro (bridge, learned strategies, tests)}
 \subsection{neuro/neuro\_symbolic\_bridge.pl}
@@ -147,7 +169,7 @@ This codebase represents a major architectural advancement in cognitive modeling
 \subsection{neuro/incompatibility\_semantics.py}
 \inputminted{python}{neuro/incompatibility_semantics.py}
 \subsection{neuro/incompatibility\_semantics.pl}
-\inputminted{prolog}{neuro/incompatibility_semantics.pl}
+\inputminted{prolodg}{neuro/incompatibility_semantics.pl}
 
 % ---------------------- Utilities and scripts ----------------------
 \section{Utilities and scripts}
@@ -185,6 +207,15 @@ This codebase represents a major architectural advancement in cognitive modeling
 \inputminted{prolog}{config.pl}
 \subsection{more\_machine\_learner.pl}
 \inputminted{prolog}{more_machine_learner.pl}
+
+% ---------------------- Documentation and Specifications ----------------------
+\section{Documentation and Specifications}
+\subsection{editing\_guide\_fractions.md}
+\inputminted{markdown}{editing_guide_fractions.md}
+\subsection{mathematical\_curriculum.txt}
+\inputminted{text}{mathematical_curriculum.txt}
+\subsection{crisis\_curriculum.txt}
+\inputminted{text}{crisis_curriculum.txt}
 
 % ---------------------- README / documentation ----------------------
 \section{Repository README}

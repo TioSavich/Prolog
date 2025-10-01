@@ -1,0 +1,219 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} Implementation Guide: Grounding Fractional Arithmetic}
+
+This guide involves creating several new supporting modules and then rewriting \PYG{l+s+sb}{`jason.pl`}.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{} Phase 0: Prerequisites}
+
+\PYG{g+gs}{**Grounded Multiplication:**} Ensure \PYG{l+s+sb}{`grounded\PYGZus{}arithmetic.pl`} robustly implements \PYG{l+s+sb}{`multiply\PYGZus{}grounded/3`} (via repeated addition/list concatenation) and \PYG{l+s+sb}{`incur\PYGZus{}cost/1`}. This is required for calculating composite denominators during the integration phase.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{} Phase 1: The Grounded Architecture \PYGZhy{} Representation and Equivalence}
+
+\PYG{g+gs}{**1.1. The Nested Unit Representation**}
+
+We must adopt a convention where quantities are represented as lists of recursively defined units, capturing the history of partitioning.
+
+\PYG{l+s+sb}{```prolog}
+\PYG{c+c1}{\PYGZpc{} Representation Conventions:}
+
+\PYG{c+c1}{\PYGZpc{} A Quantity is a list of Units.}
+
+\PYG{c+c1}{\PYGZpc{} The fundamental unit:}
+\PYG{c+c1}{\PYGZpc{} unit(whole)}
+
+\PYG{c+c1}{\PYGZpc{} A unit derived from partitioning a ParentUnit into D parts (1/D of Parent):}
+\PYG{c+c1}{\PYGZpc{} unit(partitioned(D\PYGZus{}Rec, ParentUnit))}
+\PYG{c+c1}{\PYGZpc{} D\PYGZus{}Rec MUST be a recollection structure.}
+
+\PYG{c+c1}{\PYGZpc{} Example: 1/4 of 1/3 of the Whole (R3, R4 are recollections for 3 and 4)}
+\PYG{c+c1}{\PYGZpc{} unit(partitioned(R4, unit(partitioned(R3, unit(whole)))))}
+\PYG{l+s+sb}{```}
+
+\PYG{g+gs}{**1.2. The Generalized Composition Engine**}
+
+This engine implements the embodied act of grouping.
+
+\PYG{g+gs}{**Action:**} Create \PYG{l+s+sb}{`composition\PYGZus{}engine.pl`}.
+
+\PYG{l+s+sb}{```prolog}
+\PYG{c+c1}{\PYGZpc{} File: composition\PYGZus{}engine.pl}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{composition\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies(+CountRec, +UnitType, +InputQty, \PYGZhy{}Remainder) is semidet.}
+\PYG{n+nf}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{),} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{,} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{).}
+
+\PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{([],} \PYG{k}{\PYGZus{}}\PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{CurrentQty}\PYG{p}{,} \PYG{n+nv}{CurrentQty}\PYG{p}{).}
+\PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{([}\PYG{l+s+sAtom}{t}\PYG{p}{|}\PYG{n+nv}{Ts}\PYG{p}{],} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} select/3 finds and removes one instance.}
+    \PYG{n+nf}{select}\PYG{p}{(}\PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{TempQty}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}grouping}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Ts}\PYG{p}{,} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{TempQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{).}
+\PYG{l+s+sb}{```}
+
+\PYG{g+gs}{**1.3. Fractional Semantics (Equivalence Rules)**}
+
+This module defines the rules of equivalence for the nested representation.
+
+\PYG{g+gs}{**Action:**} Create \PYG{l+s+sb}{`fraction\PYGZus{}semantics.pl`}.
+
+\PYG{l+s+sb}{```prolog}
+\PYG{c+c1}{\PYGZpc{} File: fraction\PYGZus{}semantics.pl}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{composition\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{multiply\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} apply\PYGZus{}equivalence\PYGZus{}rule(+RuleName, +QtyIn, \PYGZhy{}QtyOut) is semidet.}
+
+\PYG{c+c1}{\PYGZpc{} Rule 1: Grouping (Reconstitution)}
+\PYG{c+c1}{\PYGZpc{} D copies of (1/D of P) equals P.}
+\PYG{n+nf}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{p}{(}\PYG{l+s+sAtom}{grouping}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Identify a unit fraction type (D\PYGZus{}Rec and ParentUnit) present in the list.}
+    \PYG{n+nv}{UnitToGroup} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{ParentUnit}\PYG{p}{)),}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{UnitToGroup}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Try to find D copies of this specific unit.}
+    \PYG{n+nf}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{UnitToGroup}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} If successful, they are replaced by the ParentUnit.}
+    \PYG{n+nv}{QtyOut} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{ParentUnit}\PYG{p}{|}\PYG{n+nv}{Remainder}\PYG{p}{],}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{equivalence\PYGZus{}grouping}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Rule 2: Composition (Integration/Coordination of Units)}
+\PYG{c+c1}{\PYGZpc{} (1/A of (1/B of P)) equals (1/(A*B) of P).}
+\PYG{c+c1}{\PYGZpc{} This handles the coordination of three levels of units.}
+\PYG{n+nf}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{p}{(}\PYG{l+s+sAtom}{composition}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Look for a nested partition structure.}
+    \PYG{n+nv}{NestedUnit} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{B\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{ParentUnit}\PYG{p}{)))),}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{NestedUnit}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Calculate the new denominator A*B (Fully grounded).}
+    \PYG{n+nf}{multiply\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{AB\PYGZus{}Rec}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Define the equivalent simple unit fraction.}
+    \PYG{n+nv}{SimpleUnit} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{AB\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{ParentUnit}\PYG{p}{)),}
+
+    \PYG{c+c1}{\PYGZpc{} Replace the nested unit with the simple unit.}
+    \PYG{n+nf}{select}\PYG{p}{(}\PYG{n+nv}{NestedUnit}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{TempQty}\PYG{p}{),}
+    \PYG{n+nv}{QtyOut} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{SimpleUnit}\PYG{p}{|}\PYG{n+nv}{TempQty}\PYG{p}{],}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{equivalence\PYGZus{}composition}\PYG{p}{).}
+\PYG{l+s+sb}{```}
+
+\PYG{g+gs}{**1.4. Normalization Engine**}
+
+This engine repeatedly applies the equivalence rules until the quantity is simplified.
+
+\PYG{g+gs}{**Action:**} Create \PYG{l+s+sb}{`normalization.pl`}.
+
+\PYG{l+s+sb}{```prolog}
+\PYG{c+c1}{\PYGZpc{} File: normalization.pl}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{normalization}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} normalize(+QtyIn, \PYGZhy{}QtyOut) is det.}
+\PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{apply\PYGZus{}normalization\PYGZus{}step}\PYG{p}{(}\PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyTemp}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{QtyTemp}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Sort for a canonical representation}
+        \PYG{n+nf}{sort}\PYG{p}{(}\PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Tries to apply one rule. Use once/1 to commit to the first success.}
+\PYG{n+nf}{apply\PYGZus{}normalization\PYGZus{}step}\PYG{p}{(}\PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 1. Try Grouping (e.g., 3/3 \PYGZhy{}\PYGZgt{} 1)}
+    \PYG{n+nf}{once}\PYG{p}{(}\PYG{n+nf}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{p}{(}\PYG{l+s+sAtom}{grouping}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)).}
+\PYG{n+nf}{apply\PYGZus{}normalization\PYGZus{}step}\PYG{p}{(}\PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} 2. Try Composition (e.g., 1/4 of 1/3 \PYGZhy{}\PYGZgt{} 1/12)}
+    \PYG{n+nf}{once}\PYG{p}{(}\PYG{n+nf}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{p}{(}\PYG{l+s+sAtom}{composition}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)).}
+\PYG{l+s+sb}{```}
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{}\PYGZsh{} Phase 2: Refactoring Jason\PYGZsq{}s Schemes (`jason.pl`)}
+
+We now rewrite \PYG{l+s+sb}{`jason.pl`} to implement the Partitive Fractional Scheme (PFS) using the new grounded architecture.
+
+\PYG{g+gs}{**2.1. Grounded ENS Operations (Helper)**}
+
+We need a module for the core action of partitioning a unit, which generates the nested structure.
+
+\PYG{g+gs}{**Action:**} Create \PYG{l+s+sb}{`grounded\PYGZus{}ens\PYGZus{}operations.pl`}.
+
+\PYG{l+s+sb}{```prolog}
+\PYG{c+c1}{\PYGZpc{} File: grounded\PYGZus{}ens\PYGZus{}operations.pl}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}ens\PYGZus{}operations}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{ens\PYGZus{}partition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} ens\PYGZus{}partition(+InputUnit, +N\PYGZus{}Rec, \PYGZhy{}PartitionedParts) is det.}
+\PYG{c+c1}{\PYGZpc{} Partitions a single InputUnit into N parts.}
+\PYG{n+nf}{ens\PYGZus{}partition}\PYG{p}{(}\PYG{n+nv}{InputUnit}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} The new unit is defined structurally as 1/N of the InputUnit.}
+    \PYG{c+c1}{\PYGZpc{} This naturally handles recursive partitioning by creating nested structures.}
+    \PYG{n+nv}{NewUnit} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{InputUnit}\PYG{p}{)),}
+
+    \PYG{c+c1}{\PYGZpc{} The result is N copies of this new unit.}
+    \PYG{n+nf}{generate\PYGZus{}copies}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewUnit}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{ens\PYGZus{}partition}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper to generate copies based on recollection structure.}
+\PYG{n+nf}{generate\PYGZus{}copies}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{),} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{Copies}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{,} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{Copies}\PYG{p}{).}
+\PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{([],} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{).}
+\PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{([}\PYG{l+s+sAtom}{t}\PYG{p}{|}\PYG{n+nv}{Ts}\PYG{p}{],} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{,} \PYG{n+nv}{Copies}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Ts}\PYG{p}{,} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Unit}\PYG{p}{|}\PYG{n+nv}{Acc}\PYG{p}{],} \PYG{n+nv}{Copies}\PYG{p}{).}
+\PYG{l+s+sb}{```}
+
+\PYG{g+gs}{**2.2. Implementing the Partitive Fractional Scheme**}
+
+\PYG{g+gs}{**Action:**} Replace the contents of \PYG{l+s+sb}{`jason.pl`}. This implementation correctly handles input quantities as lists of units.
+
+\PYG{l+s+sb}{```prolog}
+\PYG{c+c1}{\PYGZpc{} File: jason.pl (Refactored)}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{jason}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{partitive\PYGZus{}fractional\PYGZus{}scheme}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}ens\PYGZus{}operations}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{ens\PYGZus{}partition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{normalization}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} partitive\PYGZus{}fractional\PYGZus{}scheme(+M\PYGZus{}Rec, +D\PYGZus{}Rec, +InputQty, \PYGZhy{}ResultQty)}
+\PYG{c+c1}{\PYGZpc{} Calculates M/D of InputQty.}
+
+\PYG{n+nf}{partitive\PYGZus{}fractional\PYGZus{}scheme}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{ResultQty}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 1. Partitioning Stage \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Partition *each* unit in InputQty into D parts.}
+    \PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{pfs\PYGZus{}partitioning\PYGZus{}stage}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} PartitionedParts is a list of lists.}
+
+    \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 2. Disembedding and 3. Iteration Stage (Combined as Selection) \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} For each sublist, select M parts.}
+    \PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{,} \PYG{n+nv}{SelectedPartsFlat}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{pfs\PYGZus{}selection\PYGZus{}stage}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} \PYGZhy{}\PYGZhy{}\PYGZhy{} 4. Normalization Stage \PYGZhy{}\PYGZhy{}\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Apply equivalence rules (Grouping and Composition).}
+    \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{SelectedPartsFlat}\PYG{p}{,} \PYG{n+nv}{ResultQty}\PYG{p}{).}
+
+
+\PYG{c+c1}{\PYGZpc{} pfs\PYGZus{}partition\PYGZus{}quantity(+D\PYGZus{}Rec, +InputQty, \PYGZhy{}PartitionedParts)}
+\PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[],} \PYG{p}{[]).}
+\PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Unit}\PYG{p}{|}\PYG{n+nv}{RestUnits}\PYG{p}{],} \PYG{p}{[}\PYG{n+nv}{Parts}\PYG{p}{|}\PYG{n+nv}{RestParts}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{ens\PYGZus{}partition}\PYG{p}{(}\PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Parts}\PYG{p}{),}
+    \PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{RestUnits}\PYG{p}{,} \PYG{n+nv}{RestParts}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} pfs\PYGZus{}select\PYGZus{}parts(+M\PYGZus{}Rec, +PartitionedParts, \PYGZhy{}SelectedPartsFlat)}
+\PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[],} \PYG{p}{[]).}
+\PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Parts}\PYG{p}{|}\PYG{n+nv}{RestParts}\PYG{p}{],} \PYG{n+nv}{SelectedPartsFlat}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Take the first M elements from the list \PYGZsq{}Parts\PYGZsq{}.}
+    \PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Parts}\PYG{p}{,} \PYG{n+nv}{Selection}\PYG{p}{),}
+    \PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{RestParts}\PYG{p}{,} \PYG{n+nv}{RestSelection}\PYG{p}{),}
+    \PYG{n+nf}{append}\PYG{p}{(}\PYG{n+nv}{Selection}\PYG{p}{,} \PYG{n+nv}{RestSelection}\PYG{p}{,} \PYG{n+nv}{SelectedPartsFlat}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} take\PYGZus{}m(+M\PYGZus{}Rec, +List, \PYGZhy{}Selection)}
+\PYG{c+c1}{\PYGZpc{} Grounded selection based on the recollection structure.}
+\PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{([]),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{List}\PYG{p}{,} \PYG{p}{[]).}
+\PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{([}\PYG{l+s+sAtom}{t}\PYG{p}{|}\PYG{n+nv}{Ts}\PYG{p}{]),} \PYG{p}{[}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{T}\PYG{p}{],} \PYG{p}{[}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{RestSelection}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{!,}
+    \PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{n+nv}{Ts}\PYG{p}{),} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{RestSelection}\PYG{p}{).}
+\PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{p}{[],} \PYG{p}{[]).} \PYG{c+c1}{\PYGZpc{} Handle case where List is shorter than M\PYGZus{}Rec.}
+\PYG{l+s+sb}{```}
+\end{MintedVerbatim}

@@ -1,0 +1,37 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Grounded Partitive Fractional Scheme Implementation}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements Jason\PYGZsq{}s partitive fractional schemes using a}
+\PYG{c+cm}{ * grounded arithmetic approach with nested unit representation.}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{jason}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{partitive\PYGZus{}fractional\PYGZus{}scheme}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}ens\PYGZus{}operations}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{ens\PYGZus{}partition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{normalization}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{normalize}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{n+nf}{partitive\PYGZus{}fractional\PYGZus{}scheme}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{ResultQty}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{pfs\PYGZus{}partitioning\PYGZus{}stage}\PYG{p}{),}
+    \PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{,} \PYG{n+nv}{SelectedPartsFlat}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{pfs\PYGZus{}selection\PYGZus{}stage}\PYG{p}{),}
+    \PYG{n+nf}{normalize}\PYG{p}{(}\PYG{n+nv}{SelectedPartsFlat}\PYG{p}{,} \PYG{n+nv}{ResultQty}\PYG{p}{).}
+
+\PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[],} \PYG{p}{[]).}
+\PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Unit}\PYG{p}{|}\PYG{n+nv}{RestUnits}\PYG{p}{],} \PYG{p}{[}\PYG{n+nv}{Parts}\PYG{p}{|}\PYG{n+nv}{RestParts}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{ens\PYGZus{}partition}\PYG{p}{(}\PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Parts}\PYG{p}{),}
+    \PYG{n+nf}{pfs\PYGZus{}partition\PYGZus{}quantity}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{RestUnits}\PYG{p}{,} \PYG{n+nv}{RestParts}\PYG{p}{).}
+
+\PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[],} \PYG{p}{[]).}
+\PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Parts}\PYG{p}{|}\PYG{n+nv}{RestParts}\PYG{p}{],} \PYG{n+nv}{SelectedPartsFlat}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{Parts}\PYG{p}{,} \PYG{n+nv}{Selection}\PYG{p}{),}
+    \PYG{n+nf}{pfs\PYGZus{}select\PYGZus{}parts}\PYG{p}{(}\PYG{n+nv}{M\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{RestParts}\PYG{p}{,} \PYG{n+nv}{RestSelection}\PYG{p}{),}
+    \PYG{n+nf}{append}\PYG{p}{(}\PYG{n+nv}{Selection}\PYG{p}{,} \PYG{n+nv}{RestSelection}\PYG{p}{,} \PYG{n+nv}{SelectedPartsFlat}\PYG{p}{).}
+
+\PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{([]),} \PYG{k}{\PYGZus{}}\PYG{n+nv}{List}\PYG{p}{,} \PYG{p}{[]).}
+\PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{([}\PYG{l+s+sAtom}{t}\PYG{p}{|}\PYG{n+nv}{Ts}\PYG{p}{]),} \PYG{p}{[}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{T}\PYG{p}{],} \PYG{p}{[}\PYG{n+nv}{H}\PYG{p}{|}\PYG{n+nv}{RestSelection}\PYG{p}{])} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{!,}
+    \PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{n+nv}{Ts}\PYG{p}{),} \PYG{n+nv}{T}\PYG{p}{,} \PYG{n+nv}{RestSelection}\PYG{p}{).}
+\PYG{n+nf}{take\PYGZus{}m}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{p}{[],} \PYG{p}{[]).}
+\end{MintedVerbatim}

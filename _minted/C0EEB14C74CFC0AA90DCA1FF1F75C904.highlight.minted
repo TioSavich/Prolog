@@ -29,7 +29,7 @@
 \PYG{c+c1}{\PYGZpc{}}
 \PYG{c+c1}{\PYGZpc{}       This predicate is dynamic, so it can be changed at runtime if needed.}
 \PYG{p}{:\PYGZhy{}} \PYG{l+s+sAtom}{dynamic} \PYG{l+s+sAtom}{max\PYGZus{}inferences}\PYG{o}{/}\PYG{l+m+mf}{1.}
-\PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{l+m+mi}{15}\PYG{p}{).}
+\PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{).}
 
 \PYG{c+c1}{\PYGZpc{}!      max\PYGZus{}retries(?Limit:integer) is nondet.}
 \PYG{c+c1}{\PYGZpc{}}

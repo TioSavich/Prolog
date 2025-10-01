@@ -110,18 +110,26 @@ solve(incur_cost(Action), Ctx, Ctx, I_In, I_Out, [cognitive_cost(Action, Cost)])
 
 % Modal Operator: Detect a modal operator, switch context for the sub-proof,
 % and restore it upon completion. Enhanced to capture detailed modal information.
+% PHASE 6: Modal operators now consume inference budget (modal_shift cost).
+% Thinking is not free - cognitive context shifts represent real cognitive events.
 solve(s(ModalGoal), CtxIn, CtxIn, I_In, I_Out, [modal_trace(ModalGoal, Ctx, SubTrace, ModalInfo)]) :-
     is_modal_operator(ModalGoal, Ctx),
     !,
+    % PHASE 6: Charge cost for modal context shift
+    config:cognitive_cost(modal_shift, ModalCost),
+    check_viability(I_In, ModalCost),
+    I_AfterShift is I_In - ModalCost,
+    
     ModalGoal =.. [_, InnerGoal],
     % Record modal transition information
     ModalInfo = modal_info(
         transition(CtxIn, Ctx),
         cost_impact(CtxIn, Ctx),
-        goal(InnerGoal)
+        goal(InnerGoal),
+        modal_cost_charged(ModalCost)  % PHASE 6: Record cost in trace
     ),
     % The context is switched for the InnerGoal, but restored to CtxIn afterward.
-    solve(InnerGoal, Ctx, _, I_In, I_Out, SubTrace).
+    solve(InnerGoal, Ctx, _, I_AfterShift, I_Out, SubTrace).
 
 % Conjunction: Solve `A` then `B`. The context flows from `A` to `B`.
 solve((A, B), CtxIn, CtxOut, I_In, I_Out, [trace(A, A_Trace), trace(B, B_Trace)]) :-

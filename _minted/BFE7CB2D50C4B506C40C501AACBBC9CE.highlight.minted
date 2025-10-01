@@ -1,0 +1,68 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Fractional Semantics for Grounded Arithmetic}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module defines the equivalence rules for the nested unit representation}
+\PYG{c+cm}{ * used in grounded fractional arithmetic. It implements the core cognitive }
+\PYG{c+cm}{ * operations for fractional reasoning: grouping and composition.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The equivalence rules are:}
+\PYG{c+cm}{ * 1. Grouping: D copies of (1/D of P) equals P (reconstitution)}
+\PYG{c+cm}{ * 2. Composition: (1/A of (1/B of P)) equals (1/(A*B) of P) (integration)}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author FSM Engine System  }
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{o}{/}\PYG{l+m+mi}{3}
+\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{composition\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{multiply\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}! apply\PYGZus{}equivalence\PYGZus{}rule(+RuleName, +QtyIn, \PYGZhy{}QtyOut) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Applies a specific equivalence rule to transform a quantity.}
+\PYG{c+c1}{\PYGZpc{} This implements the cognitive operations for fractional reasoning.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} @param RuleName The name of the rule to apply (grouping or composition)}
+\PYG{c+c1}{\PYGZpc{} @param QtyIn Input quantity (list of units)}
+\PYG{c+c1}{\PYGZpc{} @param QtyOut Output quantity after applying the rule}
+\PYG{c+c1}{\PYGZpc{}}
+
+\PYG{c+c1}{\PYGZpc{} Rule 1: Grouping (Reconstitution)}
+\PYG{c+c1}{\PYGZpc{} D copies of (1/D of P) equals P.}
+\PYG{c+c1}{\PYGZpc{} This rule implements the embodied understanding that collecting all parts}
+\PYG{c+c1}{\PYGZpc{} of a partitioned whole reconstitutes the original whole.}
+\PYG{n+nf}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{p}{(}\PYG{l+s+sAtom}{grouping}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Identify a unit fraction type (D\PYGZus{}Rec and ParentUnit) present in the list}
+    \PYG{n+nv}{UnitToGroup} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{ParentUnit}\PYG{p}{)),}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{UnitToGroup}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Try to find D copies of this specific unit}
+    \PYG{n+nf}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{p}{(}\PYG{n+nv}{D\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{UnitToGroup}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} If successful, they are replaced by the ParentUnit}
+    \PYG{n+nv}{QtyOut} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{ParentUnit}\PYG{p}{|}\PYG{n+nv}{Remainder}\PYG{p}{],}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{equivalence\PYGZus{}grouping}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Rule 2: Composition (Integration/Coordination of Units)}
+\PYG{c+c1}{\PYGZpc{} (1/A of (1/B of P)) equals (1/(A*B) of P).}
+\PYG{c+c1}{\PYGZpc{} This handles the coordination of three levels of units by flattening}
+\PYG{c+c1}{\PYGZpc{} nested partitions into a single partition with composite denominator.}
+\PYG{n+nf}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{p}{(}\PYG{l+s+sAtom}{composition}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{QtyOut}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Look for a nested partition structure}
+    \PYG{n+nv}{NestedUnit} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{B\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{ParentUnit}\PYG{p}{)))),}
+    \PYG{n+nf}{member}\PYG{p}{(}\PYG{n+nv}{NestedUnit}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Calculate the new denominator A*B using fully grounded arithmetic}
+    \PYG{n+nf}{multiply\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{A\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{AB\PYGZus{}Rec}\PYG{p}{),}
+
+    \PYG{c+c1}{\PYGZpc{} Define the equivalent simple unit fraction}
+    \PYG{n+nv}{SimpleUnit} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{AB\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{ParentUnit}\PYG{p}{)),}
+
+    \PYG{c+c1}{\PYGZpc{} Replace the nested unit with the simple unit}
+    \PYG{n+nf}{select}\PYG{p}{(}\PYG{n+nv}{NestedUnit}\PYG{p}{,} \PYG{n+nv}{QtyIn}\PYG{p}{,} \PYG{n+nv}{TempQty}\PYG{p}{),}
+    \PYG{n+nv}{QtyOut} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{SimpleUnit}\PYG{p}{|}\PYG{n+nv}{TempQty}\PYG{p}{],}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{equivalence\PYGZus{}composition}\PYG{p}{).}
+\end{MintedVerbatim}

@@ -20,30 +20,40 @@ This is modeled in the repository through several key components:
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Student Strategy Models**}: The CGI aspect is modeled through a library of student problem\PYGZhy{}solving strategies (\PYG{l+s+sb}{`sar\PYGZus{}*.pl`} for addition/subtraction and \PYG{l+s+sb}{`smr\PYGZus{}*.pl`} for multiplication/division), which simulate how students with different conceptual understandings might approach a problem.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Learning Cycle**}: The Piagetian process of learning through disequilibrium is modeled by the \PYG{g+gs}{**Observe\PYGZhy{}Reorganize\PYGZhy{}Reflect (ORR)**} cycle, which can detect failures in its own knowledge and attempt to repair itself.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**FSM Engine Architecture**}: All student strategy models are unified under a common Finite State Machine engine that provides consistent execution, modal logic integration, and cognitive cost tracking.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Grounded Fractional Arithmetic**}: A comprehensive system implementing Jason\PYGZsq{}s partitive fractional schemes using nested unit representation instead of rational numbers, providing embodied cognitive modeling of fractional reasoning.
 
 \PYG{g+gu}{\PYGZsh{}\PYGZsh{} 3. System Architecture}
 
 The system is composed of several distinct parts that work together, unified by a common FSM engine architecture.
 
-\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.1. FSM Engine Architecture (New Core Framework)}
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.1. FSM Engine Architecture (Core Framework)}
 A unified finite state machine engine that standardizes all student strategy execution:
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`fsm\PYGZus{}engine.pl`**}: The core FSM execution engine that provides consistent state transition handling, modal logic integration, and cognitive cost tracking across all student strategies.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`grounded\PYGZus{}arithmetic.pl`**}: The foundational grounded arithmetic system that eliminates dependency on arithmetic backstops by providing embodied mathematical operations with cognitive cost tracking.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`grounded\PYGZus{}utils.pl`**}: Utility functions supporting the grounded arithmetic foundation.
 
-\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.2. The ORR Cycle (Cognitive Core)}
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.2. Grounded Fractional Arithmetic System (New Addition)}
+A comprehensive framework implementing Jason\PYGZsq{}s partitive fractional schemes with embodied cognition:
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`composition\PYGZus{}engine.pl`**}: Implements embodied grouping operations for unit composition with cognitive cost tracking.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`fraction\PYGZus{}semantics.pl`**}: Defines equivalence rules for fractional reasoning including grouping (D copies of 1/D equals 1) and composition (nested fractions).
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`grounded\PYGZus{}ens\PYGZus{}operations.pl`**}: Core Equal\PYGZhy{}N\PYGZhy{}Sharing (ENS) operations that create nested unit structures through structural partitioning.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`normalization.pl`**}: Iterative normalization engine that applies equivalence rules until quantities are fully simplified.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`jason.pl`**}: Completely refactored implementation of partitive fractional schemes using nested unit representation instead of rational numbers.
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`test\PYGZus{}fractional\PYGZus{}arithmetic.pl`**}: Comprehensive test suite for the grounded fractional arithmetic system.
+
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.3. The ORR Cycle (Cognitive Core)}
 This is the heart of the system\PYGZsq{}s learning capability, inspired by Piagetian mechanisms.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`execution\PYGZus{}handler.pl`**}: The main driver that orchestrates the ORR cycle.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`meta\PYGZus{}interpreter.pl`**}: The \PYG{g+gs}{**Observe**} phase. It runs a given goal while producing a detailed execution trace, making the system\PYGZsq{}s reasoning process observable to itself.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`reflective\PYGZus{}monitor.pl`**}: The \PYG{g+gs}{**Reflect**} phase. It analyzes the trace from the meta\PYGZhy{}interpreter to detect signs of \PYGZdq{}disequilibrium\PYGZdq{} (e.g., goal failures, contradictions).
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`reorganization\PYGZus{}engine.pl`**}: The \PYG{g+gs}{**Reorganize**} phase. Triggered by disequilibrium, it attempts to modify the system\PYGZsq{}s own knowledge base to resolve the conflict.
 
-\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.3. Knowledge Base}
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.4. Knowledge Base}
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`object\PYGZus{}level.pl`**}: Contains the system\PYGZsq{}s foundational, and potentially flawed, knowledge (e.g., an inefficient rule for addition). This is the knowledge that the ORR cycle operates on and modifies.
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`incompatibility\PYGZus{}semantics.pl`**}: Defines the core logical and mathematical rules of the \PYGZdq{}world,\PYGZdq{} including what concepts are incompatible with each other, and provides modal logic operators (s/1, comp\PYGZus{}nec/1, exp\PYGZus{}poss/1).
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`learned\PYGZus{}knowledge.pl`**}: An auto\PYGZhy{}generated file where new, more efficient strategies discovered by the \PYG{l+s+sb}{`more\PYGZus{}machine\PYGZus{}learner.pl`} module are stored.
 
-\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.4. API Server}
+\PYG{g+gu}{\PYGZsh{}\PYGZsh{}\PYGZsh{} 3.5. API Server}
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**`working\PYGZus{}server.pl`**}: The production\PYGZhy{}ready server for powering the web\PYGZhy{}based GUI. It contains stable, optimized analysis logic and is used by the startup script.
 
 \PYG{g+gu}{\PYGZsh{}\PYGZsh{} 4. FSM Engine Architecture (Major Innovation)}
@@ -125,6 +135,14 @@ curl\PYG{+w}{ }\PYGZhy{}X\PYG{+w}{ }POST\PYG{+w}{ }\PYGZhy{}H\PYG{+w}{ }\PYG{l+s
 \PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`fsm\PYGZus{}engine.pl`}: Core finite state machine execution engine providing unified strategy execution.
 \PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`grounded\PYGZus{}arithmetic.pl`}: Foundational grounded arithmetic system with cognitive cost tracking.
 \PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`grounded\PYGZus{}utils.pl`}: Utility functions supporting grounded arithmetic operations.
+
+\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**Grounded Fractional Arithmetic System**}:
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`composition\PYGZus{}engine.pl`}: Embodied grouping operations for fractional unit composition.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`fraction\PYGZus{}semantics.pl`}: Equivalence rules for fractional reasoning (grouping and composition).
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`grounded\PYGZus{}ens\PYGZus{}operations.pl`}: Core Equal\PYGZhy{}N\PYGZhy{}Sharing operations creating nested unit structures.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`normalization.pl`}: Iterative normalization engine applying equivalence rules.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`jason.pl`}: Refactored partitive fractional schemes using nested unit representation.
+\PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`test\PYGZus{}fractional\PYGZus{}arithmetic.pl`}: Comprehensive test suite for fractional arithmetic.
 
 \PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{g+gs}{**API Server**}:
 \PYG{+w}{  }\PYG{k}{\PYGZhy{}}\PYG{+w}{ }\PYG{l+s+sb}{`working\PYGZus{}server.pl`}: Production server that powers the web GUI with stable, optimized logic.

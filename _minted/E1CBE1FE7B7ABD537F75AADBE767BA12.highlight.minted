@@ -1,0 +1,219 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Curriculum Processor}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Processes mathematical curriculum line by line, building capabilities}
+\PYG{c+cm}{ * progressively through accumulated learning and fact generation.}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{curriculum\PYGZus{}processor}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{process\PYGZus{}curriculum}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{l+s+sAtom}{process\PYGZus{}curriculum\PYGZus{}file}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{l+s+sAtom}{run\PYGZus{}progressive\PYGZus{}learning}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{l+s+sAtom}{process\PYGZus{}task}\PYG{o}{/}\PYG{l+m+mi}{1}
+\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{jason}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{partitive\PYGZus{}fractional\PYGZus{}scheme}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{add\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{subtract\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+s+sAtom}{multiply\PYGZus{}grounded}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}ens\PYGZus{}operations}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{ens\PYGZus{}partition}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}semantics}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{apply\PYGZus{}equivalence\PYGZus{}rule}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Dynamic predicates for learned facts}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{dynamic}\PYG{p}{(}\PYG{l+s+sAtom}{learned\PYGZus{}fact}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{dynamic}\PYG{p}{(}\PYG{l+s+sAtom}{multiplication\PYGZus{}fact}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{dynamic}\PYG{p}{(}\PYG{l+s+sAtom}{division\PYGZus{}fact}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{dynamic}\PYG{p}{(}\PYG{l+s+sAtom}{fraction\PYGZus{}fact}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Clear previous learning session}
+\PYG{n+nf}{reset\PYGZus{}learning} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{multiplication\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{division\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{c+c1}{\PYGZpc{} Process a single curriculum line}
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{Length} \PYG{o}{is} \PYG{n+nv}{N}\PYG{p}{,}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Tally}\PYG{p}{,} \PYG{n+nv}{Length}\PYG{p}{),}
+    \PYG{n+nf}{maplist}\PYG{p}{(}\PYG{l+s+sAtom}{=}\PYG{p}{(}\PYG{l+s+sAtom}{t}\PYG{p}{),} \PYG{n+nv}{Tally}\PYG{p}{),}
+    \PYG{n+nv}{Result} \PYG{o}{=} \PYG{n+nf}{recollection}\PYG{p}{(}\PYG{n+nv}{Tally}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: count(\PYGZti{}w) = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{]).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{TallyA}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{TallyA}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{TallyB}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}  
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{TallyB}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{n+nv}{TallyB}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: add(\PYGZti{}w, \PYGZti{}w) = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{]).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{TallyA}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{TallyA}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{TallyB}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{TallyB}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nf}{subtract\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{n+nv}{TallyB}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{subtract}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: subtract(\PYGZti{}w, \PYGZti{}w) = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{]).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{TallyA}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{TallyA}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{TallyB}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{TallyB}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Check if multiply\PYGZus{}grounded exists, otherwise use repeated addition}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{multiply\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{n+nv}{TallyB}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Fallback: multiplication as repeated addition}
+        \PYG{n+nf}{multiply\PYGZus{}by\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{multiplication\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nv}{Product} \PYG{o}{is} \PYG{n+nv}{A} \PYG{o}{*} \PYG{n+nv}{B}\PYG{p}{,}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Product}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: multiply(\PYGZti{}w, \PYGZti{}w) = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Helper predicate for multiplication by repeated addition}
+\PYG{n+nf}{multiply\PYGZus{}by\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{n+nf}{recollection}\PYG{p}{([]))} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+\PYG{n+nf}{multiply\PYGZus{}by\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{n+nv}{TallyA}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+\PYG{n+nf}{multiply\PYGZus{}by\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nv}{N1} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{multiply\PYGZus{}by\PYGZus{}repeated\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{PartialResult}\PYG{p}{),}
+    \PYG{n+nf}{add\PYGZus{}grounded}\PYG{p}{(}\PYG{n+nv}{TallyA}\PYG{p}{,} \PYG{n+nv}{PartialResult}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{divide}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Division requires multiplication facts to work}
+    \PYG{p}{(}   \PYG{c+c1}{\PYGZpc{} Find a multiplication fact where B * Quotient = A}
+        \PYG{n+nf}{multiplication\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{ProductResult}\PYG{p}{),}
+        \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{ProductResult}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Quotient}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{division\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{divide}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: divide(\PYGZti{}w, \PYGZti{}w) = \PYGZti{}w (using \PYGZti{}w × \PYGZti{}w = \PYGZti{}w)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{])}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Try the other way: A * Quotient = B  }
+        \PYG{n+nf}{multiplication\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{ProductResult}\PYG{p}{),}
+        \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{),} \PYG{n+nv}{ProductResult}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Quotient}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{division\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{divide}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: divide(\PYGZti{}w, \PYGZti{}w) = \PYGZti{}w (using \PYGZti{}w × \PYGZti{}w = \PYGZti{}w)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{Quotient}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{A}\PYG{p}{])}
+    \PYG{p}{;}   \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Cannot yet divide(\PYGZti{}w, \PYGZti{}w) \PYGZhy{} insufficient multiplication facts\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{])}
+    \PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{fraction}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{),} \PYG{n+nv}{TallyNum}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{),} \PYG{n+nv}{TallyNum}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den}\PYG{p}{),} \PYG{n+nv}{TallyDen}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den}\PYG{p}{),} \PYG{n+nv}{TallyDen}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nf}{partitive\PYGZus{}fractional\PYGZus{}scheme}\PYG{p}{(}\PYG{n+nv}{TallyNum}\PYG{p}{,} \PYG{n+nv}{TallyDen}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{unit}\PYG{p}{(}\PYG{l+s+sAtom}{whole}\PYG{p}{)],} \PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{fraction}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: fraction(\PYGZti{}w/\PYGZti{}w) = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{]).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}of}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{l+s+sAtom}{whole}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{fraction\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{fraction}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{)),} \PYG{n+nf}{fraction\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}of}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{l+s+sAtom}{whole}\PYG{p}{),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: \PYGZti{}w/\PYGZti{}w of whole = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{]).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}of}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nf}{wholes}\PYG{p}{(}\PYG{n+nv}{Count}\PYG{p}{)))} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{),} \PYG{n+nv}{TallyNum}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{),} \PYG{n+nv}{TallyNum}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den}\PYG{p}{),} \PYG{n+nv}{TallyDen}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den}\PYG{p}{),} \PYG{n+nv}{TallyDen}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Wholes}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{),}
+    \PYG{n+nf}{maplist}\PYG{p}{(}\PYG{l+s+sAtom}{=}\PYG{p}{(}\PYG{n+nf}{unit}\PYG{p}{(}\PYG{l+s+sAtom}{whole}\PYG{p}{)),} \PYG{n+nv}{Wholes}\PYG{p}{),}
+    \PYG{n+nf}{partitive\PYGZus{}fractional\PYGZus{}scheme}\PYG{p}{(}\PYG{n+nv}{TallyNum}\PYG{p}{,} \PYG{n+nv}{TallyDen}\PYG{p}{,} \PYG{n+nv}{Wholes}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}of}\PYG{p}{(}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nf}{wholes}\PYG{p}{(}\PYG{n+nv}{Count}\PYG{p}{)),} \PYG{n+nv}{Result}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: \PYGZti{}w/\PYGZti{}w of \PYGZti{}w wholes = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Num}\PYG{p}{,} \PYG{n+nv}{Den}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{]).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}of\PYGZus{}fraction}\PYG{p}{(}\PYG{n+nv}{Num1}\PYG{p}{,} \PYG{n+nv}{Den1}\PYG{p}{,} \PYG{n+nv}{Num2}\PYG{p}{,} \PYG{n+nv}{Den2}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} First get the base fraction}
+    \PYG{p}{(}   \PYG{n+nf}{fraction\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{Num2}\PYG{p}{,} \PYG{n+nv}{Den2}\PYG{p}{,} \PYG{n+nv}{BaseFraction}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{fraction}\PYG{p}{(}\PYG{n+nv}{Num2}\PYG{p}{,} \PYG{n+nv}{Den2}\PYG{p}{)),} \PYG{n+nf}{fraction\PYGZus{}fact}\PYG{p}{(}\PYG{n+nv}{Num2}\PYG{p}{,} \PYG{n+nv}{Den2}\PYG{p}{,} \PYG{n+nv}{BaseFraction}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nv}{BaseFraction} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{BaseUnit}\PYG{p}{|}\PYG{k}{\PYGZus{}}\PYG{p}{],}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num1}\PYG{p}{),} \PYG{n+nv}{TallyNum1}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num1}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Num1}\PYG{p}{),} \PYG{n+nv}{TallyNum1}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den1}\PYG{p}{),} \PYG{n+nv}{TallyDen1}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den1}\PYG{p}{)),} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{Den1}\PYG{p}{),} \PYG{n+nv}{TallyDen1}\PYG{p}{)}
+    \PYG{p}{),}
+    \PYG{n+nf}{ens\PYGZus{}partition}\PYG{p}{(}\PYG{n+nv}{BaseUnit}\PYG{p}{,} \PYG{n+nv}{TallyDen1}\PYG{p}{,} \PYG{n+nv}{Parts}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{SelectedParts}\PYG{p}{,} \PYG{n+nv}{Num1}\PYG{p}{),}
+    \PYG{n+nf}{append}\PYG{p}{(}\PYG{n+nv}{SelectedParts}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Parts}\PYG{p}{),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{fraction\PYGZus{}of\PYGZus{}fraction}\PYG{p}{(}\PYG{n+nv}{Num1}\PYG{p}{,} \PYG{n+nv}{Den1}\PYG{p}{,} \PYG{n+nv}{Num2}\PYG{p}{,} \PYG{n+nv}{Den2}\PYG{p}{),} \PYG{n+nv}{SelectedParts}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Learned: \PYGZti{}w/\PYGZti{}w of \PYGZti{}w/\PYGZti{}w = \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Num1}\PYG{p}{,} \PYG{n+nv}{Den1}\PYG{p}{,} \PYG{n+nv}{Num2}\PYG{p}{,} \PYG{n+nv}{Den2}\PYG{p}{,} \PYG{n+nv}{SelectedParts}\PYG{p}{]).}
+
+\PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Skipping unimplemented task: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Task}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Process curriculum from file}
+\PYG{n+nf}{process\PYGZus{}curriculum\PYGZus{}file}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{reset\PYGZus{}learning}\PYG{p}{,}
+    \PYG{n+nf}{open}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{,} \PYG{l+s+sAtom}{read}\PYG{p}{,} \PYG{n+nv}{Stream}\PYG{p}{),}
+    \PYG{n+nf}{process\PYGZus{}lines}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{),}
+    \PYG{n+nf}{close}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}lines}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{read\PYGZus{}line\PYGZus{}to\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nv}{Line} \PYG{o}{==} \PYG{l+s+sAtom}{end\PYGZus{}of\PYGZus{}file}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{p}{(}   \PYG{n+nf}{string\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{)}  \PYG{c+c1}{\PYGZpc{} Skip comments}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+        \PYG{p}{;}   \PYG{n+nv}{Line} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}  \PYG{c+c1}{\PYGZpc{} Skip empty lines}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+        \PYG{p}{;}   \PYG{n+nf}{parse\PYGZus{}and\PYGZus{}process\PYGZus{}line}\PYG{p}{(}\PYG{n+nv}{Line}\PYG{p}{)}
+        \PYG{p}{),}
+        \PYG{n+nf}{process\PYGZus{}lines}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{parse\PYGZus{}and\PYGZus{}process\PYGZus{}line}\PYG{p}{(}\PYG{n+nv}{Line}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Atom}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{term\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Term}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Processing: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Term}\PYG{p}{]),}
+        \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nv}{Term}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Could not parse: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Line}\PYG{p}{])}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Run the full curriculum}
+\PYG{n+nf}{run\PYGZus{}progressive\PYGZus{}learning} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}PROGRESSIVE MATHEMATICAL LEARNING DEMONSTRATION\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=\PYGZsq{}} \PYG{o}{*} \PYG{l+m+mi}{50}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Starting with basic counting, building to complex operations\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{process\PYGZus{}curriculum\PYGZus{}file}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}mathematical\PYGZus{}curriculum.txt\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}LEARNING SUMMARY:\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{Fact}\PYG{p}{,} \PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Fact}\PYG{p}{),} \PYG{n+nv}{Facts}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Facts}\PYG{p}{,} \PYG{n+nv}{NumFacts}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Total facts learned: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NumFacts}\PYG{p}{]),}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{MF}\PYG{p}{,} \PYG{n+nf}{multiplication\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{MF}\PYG{p}{),} \PYG{n+nv}{MultFacts}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{MultFacts}\PYG{p}{,} \PYG{n+nv}{NumMultFacts}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Multiplication facts: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NumMultFacts}\PYG{p}{]),}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{DF}\PYG{p}{,} \PYG{n+nf}{division\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{DF}\PYG{p}{),} \PYG{n+nv}{DivFacts}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{DivFacts}\PYG{p}{,} \PYG{n+nv}{NumDivFacts}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Division facts: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NumDivFacts}\PYG{p}{]),}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{FF}\PYG{p}{,} \PYG{n+nf}{fraction\PYGZus{}fact}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{FF}\PYG{p}{),} \PYG{n+nv}{FracFacts}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{FracFacts}\PYG{p}{,} \PYG{n+nv}{NumFracFacts}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Fraction facts: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NumFracFacts}\PYG{p}{]),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}curriculum}\PYG{p}{(}\PYG{n+nv}{Tasks}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{l+s+sAtom}{reset\PYGZus{}learning}\PYG{p}{,}
+    \PYG{n+nf}{maplist}\PYG{p}{(}\PYG{l+s+sAtom}{process\PYGZus{}task}\PYG{p}{,} \PYG{n+nv}{Tasks}\PYG{p}{).}
+\end{MintedVerbatim}

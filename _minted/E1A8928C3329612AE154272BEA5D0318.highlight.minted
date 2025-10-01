@@ -1,0 +1,53 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Composition Engine for Grounded Fractional Arithmetic}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements the embodied act of grouping for fractional arithmetic.}
+\PYG{c+cm}{ * It provides the core functionality for finding and extracting copies of units}
+\PYG{c+cm}{ * from quantities, which is essential for the equivalence rules in fractional }
+\PYG{c+cm}{ * reasoning.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The composition engine supports the grounded approach to fractional arithmetic}
+\PYG{c+cm}{ * by treating grouping as a cognitive action with associated costs.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author FSM Engine System}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{composition\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{o}{/}\PYG{l+m+mi}{4}
+\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}! find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies(+CountRec, +UnitType, +InputQty, \PYGZhy{}Remainder) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Finds and extracts a specific number of copies of a given unit type from}
+\PYG{c+c1}{\PYGZpc{} an input quantity. This implements the embodied act of grouping units.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} @param CountRec The recollection structure specifying how many copies to extract}
+\PYG{c+c1}{\PYGZpc{} @param UnitType The specific unit type to look for and extract}
+\PYG{c+c1}{\PYGZpc{} @param InputQty The input quantity (list of units) to search in}
+\PYG{c+c1}{\PYGZpc{} @param Remainder The remaining quantity after extraction}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} This predicate fails if there are insufficient copies of UnitType in InputQty.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{n+nf}{find\PYGZus{}and\PYGZus{}extract\PYGZus{}copies}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{),} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{,} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}! extract\PYGZus{}recursive(+Tallies, +UnitType, +CurrentQty, \PYGZhy{}Remainder) is semidet.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Recursively extracts units based on the tally structure.}
+\PYG{c+c1}{\PYGZpc{} Each tally \PYGZsq{}t\PYGZsq{} represents one unit to extract.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} @param Tallies List of tallies (each \PYGZsq{}t\PYGZsq{} represents one unit to extract)}
+\PYG{c+c1}{\PYGZpc{} @param UnitType The unit type to extract}
+\PYG{c+c1}{\PYGZpc{} @param CurrentQty Current quantity being processed}
+\PYG{c+c1}{\PYGZpc{} @param Remainder Final remainder after all extractions}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{([],} \PYG{k}{\PYGZus{}}\PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{CurrentQty}\PYG{p}{,} \PYG{n+nv}{CurrentQty}\PYG{p}{).}
+\PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{([}\PYG{l+s+sAtom}{t}\PYG{p}{|}\PYG{n+nv}{Ts}\PYG{p}{],} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} select/3 finds and removes one instance of UnitType}
+    \PYG{n+nf}{select}\PYG{p}{(}\PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{InputQty}\PYG{p}{,} \PYG{n+nv}{TempQty}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{unit\PYGZus{}grouping}\PYG{p}{),}
+    \PYG{n+nf}{extract\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Ts}\PYG{p}{,} \PYG{n+nv}{UnitType}\PYG{p}{,} \PYG{n+nv}{TempQty}\PYG{p}{,} \PYG{n+nv}{Remainder}\PYG{p}{).}
+\end{MintedVerbatim}

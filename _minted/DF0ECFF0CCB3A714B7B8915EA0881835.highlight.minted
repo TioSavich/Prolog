@@ -1,0 +1,327 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Crisis Processor}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Monitors cognitive crisis and reorganization when system hits}
+\PYG{c+cm}{ * inference limits and computational thresholds}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{crisis\PYGZus{}processor}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{process\PYGZus{}crisis\PYGZus{}curriculum}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{l+s+sAtom}{run\PYGZus{}crisis\PYGZus{}demo}\PYG{o}{/}\PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{l+s+sAtom}{monitor\PYGZus{}reorganization}\PYG{o}{/}\PYG{l+m+mi}{0}
+\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{curriculum\PYGZus{}processor}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{process\PYGZus{}task}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}engine}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{reorganize\PYGZus{}system}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{config}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{max\PYGZus{}inferences}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+s+sAtom}{cognitive\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{execution\PYGZus{}handler}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}computation}\PYG{o}{/}\PYG{l+m+mi}{2}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{solve}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{c+c1}{\PYGZpc{} Import specific strategies directly to avoid conflicts}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{sar\PYGZus{}add\PYGZus{}chunking}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}chunking}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}c2c}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{run\PYGZus{}c2c}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{} Monitor inference costs and crisis points}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{dynamic}\PYG{p}{(}\PYG{l+s+sAtom}{inference\PYGZus{}crisis}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{dynamic}\PYG{p}{(}\PYG{l+s+sAtom}{reorganization\PYGZus{}event}\PYG{o}{/}\PYG{l+m+mi}{4}\PYG{p}{).}
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{dynamic}\PYG{p}{(}\PYG{l+s+sAtom}{strategy\PYGZus{}change}\PYG{o}{/}\PYG{l+m+mi}{3}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Use config.pl max\PYGZus{}inferences directly \PYGZhy{} no custom tracking needed}
+
+\PYG{n+nf}{process\PYGZus{}crisis\PYGZus{}curriculum}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}COGNITIVE CRISIS AND REORGANIZATION DEMONSTRATION\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=\PYGZsq{}} \PYG{o}{*} \PYG{l+m+mi}{55}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Testing system behavior at inference limits\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{reset\PYGZus{}crisis\PYGZus{}monitoring}\PYG{p}{,}
+    \PYG{n+nf}{open}\PYG{p}{(}\PYG{n+nv}{File}\PYG{p}{,} \PYG{l+s+sAtom}{read}\PYG{p}{,} \PYG{n+nv}{Stream}\PYG{p}{),}
+    \PYG{n+nf}{process\PYGZus{}crisis\PYGZus{}lines}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{),}
+    \PYG{n+nf}{close}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{),}
+    \PYG{l+s+sAtom}{analyze\PYGZus{}reorganization\PYGZus{}events}\PYG{p}{.}
+
+\PYG{n+nf}{reset\PYGZus{}crisis\PYGZus{}monitoring} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)),}
+    \PYG{n+nf}{retractall}\PYG{p}{(}\PYG{n+nf}{strategy\PYGZus{}change}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{)).}
+
+\PYG{n+nf}{process\PYGZus{}crisis\PYGZus{}lines}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{read\PYGZus{}line\PYGZus{}to\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nv}{Line} \PYG{o}{==} \PYG{l+s+sAtom}{end\PYGZus{}of\PYGZus{}file}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+    \PYG{p}{;}   \PYG{p}{(}   \PYG{n+nf}{string\PYGZus{}concat}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsh{}\PYGZsq{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{)}  \PYG{c+c1}{\PYGZpc{} Skip comments}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+        \PYG{p}{;}   \PYG{n+nv}{Line} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZdq{}}  \PYG{c+c1}{\PYGZpc{} Skip empty lines}
+        \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{l+s+sAtom}{true}
+        \PYG{p}{;}   \PYG{n+nf}{parse\PYGZus{}and\PYGZus{}monitor\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Line}\PYG{p}{)}
+        \PYG{p}{),}
+        \PYG{n+nf}{process\PYGZus{}crisis\PYGZus{}lines}\PYG{p}{(}\PYG{n+nv}{Stream}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{parse\PYGZus{}and\PYGZus{}monitor\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Line}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{atom\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Atom}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{term\PYGZus{}string}\PYG{p}{(}\PYG{n+nv}{Term}\PYG{p}{,} \PYG{n+nv}{Line}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZti{}nProcessing crisis task: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Term}\PYG{p}{]),}
+        \PYG{n+nf}{monitor\PYGZus{}task\PYGZus{}execution}\PYG{p}{(}\PYG{n+nv}{Term}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Could not parse crisis task: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Line}\PYG{p}{])}
+    \PYG{p}{).}
+
+\PYG{n+nf}{monitor\PYGZus{}task\PYGZus{}execution}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{get\PYGZus{}time}\PYG{p}{(}\PYG{n+nv}{StartTime}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}
+            \PYG{n+nf}{process\PYGZus{}task\PYGZus{}with\PYGZus{}monitoring}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{),}
+            \PYG{n+nv}{Error}\PYG{p}{,}
+            \PYG{n+nf}{handle\PYGZus{}crisis\PYGZus{}error}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{Error}\PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{get\PYGZus{}time}\PYG{p}{(}\PYG{n+nv}{EndTime}\PYG{p}{),}
+        \PYG{n+nv}{ExecutionTime} \PYG{o}{is} \PYG{n+nv}{EndTime} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{StartTime}\PYG{p}{,}
+        \PYG{n+nf}{check\PYGZus{}for\PYGZus{}crisis\PYGZus{}indicators}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{ExecutionTime}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{record\PYGZus{}crisis\PYGZus{}failure}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}task\PYGZus{}with\PYGZus{}monitoring}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use proper meta\PYGZhy{}interpreter with inference limits}
+    \PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{n+nv}{Limit}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Convert to Peano representation for meta\PYGZhy{}interpreter}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{PeanoN}\PYG{p}{),}
+    \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{PeanoN}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}
+            \PYG{l+s+sAtom}{meta\PYGZus{}interpreter:}\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+            \PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{),}
+            \PYG{p}{(}\PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   INFERENCE CRISIS: count(\PYGZti{}w) exceeded \PYGZti{}w\PYGZhy{}step limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{]),}
+             \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)),}
+             \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   SUCCESS: count(\PYGZti{}w) completed within limits\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{]),}
+        \PYG{c+c1}{\PYGZpc{} Extract result and store as learned fact  }
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nf}{meta\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{)))}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Crisis detected \PYGZhy{} attempt reorganization}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   ATTEMPTING REORGANIZATION: count(\PYGZti{}w) hit inference limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{]),}
+        \PYG{n+nf}{check\PYGZus{}reorganization\PYGZus{}response}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{)),}
+        \PYG{n+nf}{attempt\PYGZus{}chunking\PYGZus{}count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}task\PYGZus{}with\PYGZus{}monitoring}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use proper meta\PYGZhy{}interpreter with inference limits}
+    \PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{n+nv}{Limit}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Convert to Peano representation}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{PeanoA}\PYG{p}{),}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{PeanoB}\PYG{p}{),}
+    \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{PeanoA}\PYG{p}{,} \PYG{n+nv}{PeanoB}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}
+            \PYG{l+s+sAtom}{meta\PYGZus{}interpreter:}\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+            \PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{),}
+            \PYG{p}{(}\PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   INFERENCE CRISIS: add(\PYGZti{}w,\PYGZti{}w) exceeded \PYGZti{}w\PYGZhy{}step limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{]),}
+             \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)),}
+             \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   SUCCESS: add(\PYGZti{}w,\PYGZti{}w) completed within limits\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nf}{meta\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{)))}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Crisis detected \PYGZhy{} attempt reorganization  }
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   ATTEMPTING REORGANIZATION: add(\PYGZti{}w,\PYGZti{}w) hit inference limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]),}
+        \PYG{n+nf}{attempt\PYGZus{}chunking\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}task\PYGZus{}with\PYGZus{}monitoring}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Use proper meta\PYGZhy{}interpreter with inference limits}
+    \PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{n+nv}{Limit}\PYG{p}{),}
+    \PYG{c+c1}{\PYGZpc{} Convert to Peano representation}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{PeanoA}\PYG{p}{),}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{PeanoB}\PYG{p}{),}
+    \PYG{n+nv}{Goal} \PYG{o}{=} \PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{PeanoA}\PYG{p}{,} \PYG{n+nv}{PeanoB}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Result}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}
+            \PYG{l+s+sAtom}{meta\PYGZus{}interpreter:}\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Trace}\PYG{p}{),}
+            \PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{),}
+            \PYG{p}{(}\PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   INFERENCE CRISIS: multiply(\PYGZti{}w,\PYGZti{}w) exceeded \PYGZti{}w\PYGZhy{}step limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{]),}
+             \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{,} \PYG{n+nv}{Limit}\PYG{p}{)),}
+             \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+        \PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   SUCCESS: multiply(\PYGZti{}w,\PYGZti{}w) completed within limits\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nf}{meta\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{Trace}\PYG{p}{)))}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Crisis detected \PYGZhy{} attempt reorganization}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   ATTEMPTING REORGANIZATION: multiply(\PYGZti{}w,\PYGZti{}w) hit inference limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]),}
+        \PYG{n+nf}{attempt\PYGZus{}strategic\PYGZus{}multiplication}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Helper predicate for Peano conversion}
+\PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{)} \PYG{p}{:\PYGZhy{}} \PYG{p}{!.}
+\PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nf}{s}\PYG{p}{(}\PYG{n+nv}{P}\PYG{p}{))} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nv}{N} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}\PYG{p}{,}
+    \PYG{n+nv}{N1} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{\PYGZhy{}} \PYG{l+m+mi}{1}\PYG{p}{,}
+    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{P}\PYG{p}{).}
+
+\PYG{n+nf}{process\PYGZus{}task\PYGZus{}with\PYGZus{}monitoring}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Fallback for other tasks \PYGZhy{} use regular processing}
+    \PYG{n+nf}{process\PYGZus{}task}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{).}
+
+\PYG{n+nf}{handle\PYGZus{}crisis\PYGZus{}error}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{Error}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   CRISIS ERROR in \PYGZti{}w: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{Error}\PYG{p}{]),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{l+s+sAtom}{error}\PYG{p}{,} \PYG{n+nv}{Error}\PYG{p}{)).}
+
+\PYG{n+nf}{check\PYGZus{}for\PYGZus{}crisis\PYGZus{}indicators}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{ExecutionTime}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{p}{(}   \PYG{n+nv}{ExecutionTime} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{5.0}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   PERFORMANCE CRISIS: Task \PYGZti{}w took \PYGZti{}2f seconds\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{ExecutionTime}\PYG{p}{]),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{l+s+sAtom}{performance}\PYG{p}{,} \PYG{n+nv}{ExecutionTime}\PYG{p}{))}
+    \PYG{p}{;}   \PYG{l+s+sAtom}{true}
+    \PYG{p}{).}
+
+\PYG{n+nf}{check\PYGZus{}reorganization\PYGZus{}response}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Check if system shows signs of reorganization}
+    \PYG{c+c1}{\PYGZpc{} This would detect if the system switches strategies}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   Checking for reorganization response to \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Task}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Add stress to trigger reorganization engine (simple version)}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{conceptual\PYGZus{}stress}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{l+s+sAtom}{high}\PYG{p}{)),}
+    
+    \PYG{c+c1}{\PYGZpc{} Attempt to trigger reorganization}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{reorganize\PYGZus{}system}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{p}{[]),} \PYG{n+nv}{Error}\PYG{p}{,} 
+             \PYG{p}{(}\PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   REORGANIZATION ERROR: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Error}\PYG{p}{]),} \PYG{l+s+sAtom}{fail}\PYG{p}{))}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   REORGANIZATION SUCCESS: System adapted strategy\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{l+s+sAtom}{strategy\PYGZus{}switch}\PYG{p}{,} \PYG{l+s+sAtom}{tally\PYGZus{}counting}\PYG{p}{,} \PYG{l+s+sAtom}{strategic\PYGZus{}chunking}\PYG{p}{))}
+    \PYG{p}{;}   \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   REORGANIZATION ATTEMPT: Traditional mechanisms tried\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{l+s+sAtom}{attempted}\PYG{p}{,} \PYG{l+s+sAtom}{tally\PYGZus{}counting}\PYG{p}{,} \PYG{l+s+sAtom}{none}\PYG{p}{))}
+    \PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} New reorganization strategies for large counts}
+\PYG{n+nf}{attempt\PYGZus{}chunking\PYGZus{}count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   CHUNKING COUNT: Breaking \PYGZti{}w into manageable chunks\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{]),}
+    \PYG{c+c1}{\PYGZpc{} Use base\PYGZhy{}10 chunking: 157 = 100 + 50 + 7}
+    \PYG{n+nv}{Hundreds} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{//} \PYG{l+m+mi}{100}\PYG{p}{,}
+    \PYG{n+nv}{Remainder1} \PYG{o}{is} \PYG{n+nv}{N} \PYG{o}{mod} \PYG{l+m+mi}{100}\PYG{p}{,}
+    \PYG{n+nv}{Tens} \PYG{o}{is} \PYG{n+nv}{Remainder1} \PYG{o}{//} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nv}{Ones} \PYG{o}{is} \PYG{n+nv}{Remainder1} \PYG{o}{mod} \PYG{l+m+mi}{10}\PYG{p}{,}
+    
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   CHUNKED: \PYGZti{}w = \PYGZti{}w×100 + \PYGZti{}w×10 + \PYGZti{}w×1\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{,} \PYG{n+nv}{Hundreds}\PYG{p}{,} \PYG{n+nv}{Tens}\PYG{p}{,} \PYG{n+nv}{Ones}\PYG{p}{]),}
+    
+    \PYG{c+c1}{\PYGZpc{} Build result through chunking rather than massive tally}
+    \PYG{n+nv}{ChunkedResult} \PYG{o}{=} \PYG{n+nf}{chunked\PYGZus{}count}\PYG{p}{(}\PYG{n+nf}{hundreds}\PYG{p}{(}\PYG{n+nv}{Hundreds}\PYG{p}{),} \PYG{n+nf}{tens}\PYG{p}{(}\PYG{n+nv}{Tens}\PYG{p}{),} \PYG{n+nf}{ones}\PYG{p}{(}\PYG{n+nv}{Ones}\PYG{p}{)),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{n+nv}{N}\PYG{p}{),} \PYG{n+nv}{ChunkedResult}\PYG{p}{)),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   SUCCESS: Learned chunked representation for \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{N}\PYG{p}{]).}
+
+\PYG{n+nf}{attempt\PYGZus{}chunking\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   CHUNKING ADDITION: Using base decomposition for \PYGZti{}w + \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]),}
+    \PYG{c+c1}{\PYGZpc{} Use chunking strategy instead of massive tally concatenation}
+    
+    \PYG{c+c1}{\PYGZpc{} Try to use existing chunking strategy through meta\PYGZhy{}interpreter (subject to limits)}
+    \PYG{n+nn}{config}\PYG{p}{:}\PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{n+nv}{Limit}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter:}\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nf}{run\PYGZus{}chunking}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{History}\PYG{p}{),} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} 
+              \PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{),} 
+              \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   SUCCESS: Chunking strategy completed within limits\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nf}{chunked\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{))),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{l+s+sAtom}{strategy\PYGZus{}switch}\PYG{p}{,} \PYG{l+s+sAtom}{tally\PYGZus{}concatenation}\PYG{p}{,} \PYG{l+s+sAtom}{chunking\PYGZus{}strategy}\PYG{p}{))}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Fallback also fails \PYGZhy{} even reorganization exceeds limits!}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   REORGANIZATION FAILURE: Even chunking strategy exceeds \PYGZti{}w\PYGZhy{}step limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Limit}\PYG{p}{]),}
+        \PYG{l+s+sAtom}{fail}
+    \PYG{p}{).}
+
+\PYG{n+nf}{attempt\PYGZus{}strategic\PYGZus{}multiplication}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   STRATEGIC MULTIPLICATION: Using counting strategies for \PYGZti{}w × \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{]),}
+    \PYG{c+c1}{\PYGZpc{} Try coordinating two counts (C2C) strategy through meta\PYGZhy{}interpreter}
+    \PYG{n+nn}{config}\PYG{p}{:}\PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{n+nv}{Limit}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nf}{catch}\PYG{p}{(}\PYG{l+s+sAtom}{meta\PYGZus{}interpreter:}\PYG{n+nf}{solve}\PYG{p}{(}\PYG{l+s+sAtom}{smr\PYGZus{}mult\PYGZus{}c2c:}\PYG{n+nf}{run\PYGZus{}c2c}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{n+nv}{History}\PYG{p}{),} \PYG{n+nv}{Limit}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),}
+              \PYG{n+nf}{perturbation}\PYG{p}{(}\PYG{l+s+sAtom}{resource\PYGZus{}exhaustion}\PYG{p}{),}
+              \PYG{l+s+sAtom}{fail}\PYG{p}{)}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   SUCCESS: C2C strategy completed within limits\PYGZti{}n\PYGZsq{}}\PYG{p}{),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{learned\PYGZus{}fact}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{n+nf}{strategic\PYGZus{}result}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{))),}
+        \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{),} \PYG{l+s+sAtom}{strategy\PYGZus{}switch}\PYG{p}{,} \PYG{l+s+sAtom}{repeated\PYGZus{}addition}\PYG{p}{,} \PYG{l+s+sAtom}{c2c\PYGZus{}strategy}\PYG{p}{))}
+    \PYG{p}{;}   \PYG{c+c1}{\PYGZpc{} Fallback also fails \PYGZhy{} even strategic multiplication exceeds limits!}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   REORGANIZATION FAILURE: Even C2C strategy exceeds \PYGZti{}w\PYGZhy{}step limit\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Limit}\PYG{p}{]),}
+        \PYG{l+s+sAtom}{fail}
+    \PYG{p}{).}
+
+\PYG{n+nf}{manual\PYGZus{}chunking\PYGZus{}addition}\PYG{p}{(}\PYG{n+nv}{A}\PYG{p}{,} \PYG{n+nv}{B}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} Decompose both numbers into place values}
+    \PYG{n+nv}{A\PYGZus{}hundreds} \PYG{o}{is} \PYG{n+nv}{A} \PYG{o}{//} \PYG{l+m+mi}{100}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}tens} \PYG{o}{is} \PYG{p}{(}\PYG{n+nv}{A} \PYG{o}{mod} \PYG{l+m+mi}{100}\PYG{p}{)} \PYG{o}{//} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}ones} \PYG{o}{is} \PYG{n+nv}{A} \PYG{o}{mod} \PYG{l+m+mi}{10}\PYG{p}{,}
+    \PYG{n+nv}{B\PYGZus{}hundreds} \PYG{o}{is} \PYG{n+nv}{B} \PYG{o}{//} \PYG{l+m+mi}{100}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}tens} \PYG{o}{is} \PYG{p}{(}\PYG{n+nv}{B} \PYG{o}{mod} \PYG{l+m+mi}{100}\PYG{p}{)} \PYG{o}{//} \PYG{l+m+mi}{10}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}ones} \PYG{o}{is} \PYG{n+nv}{B} \PYG{o}{mod} \PYG{l+m+mi}{10}\PYG{p}{,}
+    
+    \PYG{c+c1}{\PYGZpc{} Add place values}
+    \PYG{n+nv}{Sum\PYGZus{}hundreds} \PYG{o}{is} \PYG{n+nv}{A\PYGZus{}hundreds} \PYG{o}{+} \PYG{n+nv}{B\PYGZus{}hundreds}\PYG{p}{,}
+    \PYG{n+nv}{Sum\PYGZus{}tens} \PYG{o}{is} \PYG{n+nv}{A\PYGZus{}tens} \PYG{o}{+} \PYG{n+nv}{B\PYGZus{}tens}\PYG{p}{,} 
+    \PYG{n+nv}{Sum\PYGZus{}ones} \PYG{o}{is} \PYG{n+nv}{A\PYGZus{}ones} \PYG{o}{+} \PYG{n+nv}{B\PYGZus{}ones}\PYG{p}{,}
+    
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   PLACE VALUE ADDITION: (\PYGZti{}w+\PYGZti{}w)×100 + (\PYGZti{}w+\PYGZti{}w)×10 + (\PYGZti{}w+\PYGZti{}w)×1\PYGZti{}n\PYGZsq{}}\PYG{p}{,} 
+           \PYG{p}{[}\PYG{n+nv}{A\PYGZus{}hundreds}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}hundreds}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}tens}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}tens}\PYG{p}{,} \PYG{n+nv}{A\PYGZus{}ones}\PYG{p}{,} \PYG{n+nv}{B\PYGZus{}ones}\PYG{p}{]),}
+    
+    \PYG{n+nv}{Result} \PYG{o}{=} \PYG{n+nf}{place\PYGZus{}value\PYGZus{}sum}\PYG{p}{(}\PYG{n+nf}{hundreds}\PYG{p}{(}\PYG{n+nv}{Sum\PYGZus{}hundreds}\PYG{p}{),} \PYG{n+nf}{tens}\PYG{p}{(}\PYG{n+nv}{Sum\PYGZus{}tens}\PYG{p}{),} \PYG{n+nf}{ones}\PYG{p}{(}\PYG{n+nv}{Sum\PYGZus{}ones}\PYG{p}{)).}
+
+\PYG{n+nf}{record\PYGZus{}crisis\PYGZus{}failure}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}   CRISIS FAILURE: Task \PYGZti{}w completely failed\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Task}\PYG{p}{]),}
+    \PYG{n+nf}{assertz}\PYG{p}{(}\PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{l+s+sAtom}{complete\PYGZus{}failure}\PYG{p}{,} \PYG{l+s+sAtom}{none}\PYG{p}{)).}
+
+\PYG{n+nf}{analyze\PYGZus{}reorganization\PYGZus{}events} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}CRISIS ANALYSIS RESULTS:\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=\PYGZsq{}} \PYG{o}{*} \PYG{l+m+mi}{30}\PYG{p}{),}
+    
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{Crisis}\PYG{p}{,} \PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Crises}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Crises}\PYG{p}{,} \PYG{n+nv}{NumCrises}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Total crisis events detected: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NumCrises}\PYG{p}{]),}
+    
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{Reorg}\PYG{p}{,} \PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Reorgs}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Reorgs}\PYG{p}{,} \PYG{n+nv}{NumReorgs}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Reorganization events detected: \PYGZti{}w\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{NumReorgs}\PYG{p}{]),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}DETAILED CRISIS EVENTS:\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{forall}\PYG{p}{(}
+        \PYG{n+nf}{inference\PYGZus{}crisis}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{Type}\PYG{p}{,} \PYG{n+nv}{Details}\PYG{p}{),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{} \PYGZti{}w: \PYGZti{}w (\PYGZti{}w)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{Type}\PYG{p}{,} \PYG{n+nv}{Details}\PYG{p}{])}
+    \PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}REORGANIZATION ANALYSIS:\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{forall}\PYG{p}{(}
+        \PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{Type}\PYG{p}{,} \PYG{n+nv}{Old}\PYG{p}{,} \PYG{n+nv}{New}\PYG{p}{),}
+        \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZhy{} \PYGZti{}w: \PYGZti{}w (\PYGZti{}w \PYGZhy{}\PYGZgt{} \PYGZti{}w)\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Task}\PYG{p}{,} \PYG{n+nv}{Type}\PYG{p}{,} \PYG{n+nv}{Old}\PYG{p}{,} \PYG{n+nv}{New}\PYG{p}{])}
+    \PYG{p}{),}
+    
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{p}{(}   \PYG{n+nv}{NumReorgs} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}✅ REORGANIZATION DETECTED: System adapted to crisis\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nv}{NumCrises} \PYG{o}{\PYGZgt{}} \PYG{l+m+mi}{0}
+    \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}}  \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}⚠️  CRISIS WITHOUT REORGANIZATION: System may need better adaptation mechanisms\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{;}   \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}ℹ️  NO CRISIS DETECTED: Tasks within current system capabilities\PYGZsq{}}\PYG{p}{)}
+    \PYG{p}{).}
+
+\PYG{n+nf}{run\PYGZus{}crisis\PYGZus{}demo} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}TESTING COGNITIVE CRISIS AND REORGANIZATION\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}=\PYGZsq{}} \PYG{o}{*} \PYG{l+m+mi}{45}\PYG{p}{),}
+    \PYG{n+nf}{max\PYGZus{}inferences}\PYG{p}{(}\PYG{n+nv}{Limit}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Testing with inference limit: \PYGZti{}w steps\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Limit}\PYG{p}{]),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}inference\PYGZus{}limits}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}CRISIS DEMONSTRATION COMPLETE\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}This reveals how inference limits trigger reorganization\PYGZsq{}}\PYG{p}{).}
+
+\PYG{n+nf}{test\PYGZus{}inference\PYGZus{}limits} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Testing simple operations:\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}simple\PYGZus{}operations}\PYG{p}{,}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Testing complex operations that should exceed limits:\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{test\PYGZus{}complex\PYGZus{}operations}\PYG{p}{.}
+
+\PYG{n+nf}{test\PYGZus{}simple\PYGZus{}operations} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Simple count: count(5)\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{reset\PYGZus{}crisis\PYGZus{}monitoring}\PYG{p}{,}
+    \PYG{p}{(}\PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{monitor\PYGZus{}task\PYGZus{}execution}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{l+m+mi}{5}\PYG{p}{)),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+s+sAtom}{true}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{l+s+sAtom}{true}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Simple addition: add(3, 2)\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{reset\PYGZus{}crisis\PYGZus{}monitoring}\PYG{p}{,}
+    \PYG{p}{(}\PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{monitor\PYGZus{}task\PYGZus{}execution}\PYG{p}{(}\PYG{n+nf}{add}\PYG{p}{(}\PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{)),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+s+sAtom}{true}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{l+s+sAtom}{true}\PYG{p}{).}
+
+\PYG{n+nf}{test\PYGZus{}complex\PYGZus{}operations} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Complex count: count(100) \PYGZhy{} should hit limit\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{reset\PYGZus{}crisis\PYGZus{}monitoring}\PYG{p}{,}
+    \PYG{p}{(}\PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{monitor\PYGZus{}task\PYGZus{}execution}\PYG{p}{(}\PYG{n+nf}{count}\PYG{p}{(}\PYG{l+m+mi}{100}\PYG{p}{)),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+s+sAtom}{true}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{l+s+sAtom}{true}\PYG{p}{),}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}  Complex multiplication: multiply(15, 8) \PYGZhy{} should hit limit\PYGZsq{}}\PYG{p}{),}
+    \PYG{l+s+sAtom}{reset\PYGZus{}crisis\PYGZus{}monitoring}\PYG{p}{,}
+    \PYG{p}{(}\PYG{n+nf}{catch}\PYG{p}{(}\PYG{n+nf}{monitor\PYGZus{}task\PYGZus{}execution}\PYG{p}{(}\PYG{n+nf}{multiply}\PYG{p}{(}\PYG{l+m+mi}{15}\PYG{p}{,} \PYG{l+m+mi}{8}\PYG{p}{)),} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{l+s+sAtom}{true}\PYG{p}{)} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{l+s+sAtom}{true}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{} Placeholder for monitor\PYGZus{}reorganization/0}
+\PYG{n+nf}{monitor\PYGZus{}reorganization} \PYG{o}{:\PYGZhy{}}
+    \PYG{n+nf}{writeln}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Monitoring reorganization events...\PYGZsq{}}\PYG{p}{),}
+    \PYG{n+nf}{findall}\PYG{p}{(}\PYG{n+nv}{Event}\PYG{p}{,} \PYG{n+nf}{reorganization\PYGZus{}event}\PYG{p}{(}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{k}{\PYGZus{}}\PYG{p}{),} \PYG{n+nv}{Events}\PYG{p}{),}
+    \PYG{n+nf}{length}\PYG{p}{(}\PYG{n+nv}{Events}\PYG{p}{,} \PYG{n+nv}{Count}\PYG{p}{),}
+    \PYG{n+nf}{format}\PYG{p}{(}\PYG{l+s+sAtom}{\PYGZsq{}Found \PYGZti{}w reorganization events\PYGZti{}n\PYGZsq{}}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Count}\PYG{p}{]).}
+\end{MintedVerbatim}

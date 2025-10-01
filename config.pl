@@ -11,6 +11,8 @@
     max_inferences/1,
     max_retries/1,
     cognitive_cost/2,
+    calculate_recollection_cost/2,  % Phase 6: Embodied cost calculation
+    calculate_strategy_cost/2,      % Phase 6: Strategy cost measurement
     server_mode/1,
     server_endpoint_enabled/1
     ]).
@@ -53,12 +55,20 @@ max_retries(5).
 %       embodied mathematics system. This implements the "measuring stick"
 %       metaphor where computational effort represents embodied distance.
 %
+%       Phase 6 Enhancement: Costs now implement theoretical commitments:
+%       - Embodied representations (recollection lists) cost proportional to length
+%       - Modal shifts represent cognitive events and consume resources
+%       - Abstraction is measured as cost reduction vs enumeration
+%       - These costs are NOT optimizations - they operationalize theory
+%
 %       Different actions have different cognitive costs based on their
 %       embodied nature:
 %       - unit_count: The effort of counting one item (high effort, temporal)
 %       - slide_step: Moving one step on a mental number line (spatial, lower effort)
 %       - fact_retrieval: Accessing a known fact (compressed, minimal effort)
 %       - inference: Standard logical inference (abstract reasoning)
+%       - modal_shift: Cognitive context transition (comp_nec, exp_poss, etc.)
+%       - recollection_step: Manipulating one tally in embodied representation
 %
 %       This predicate is dynamic to allow learning-based cost adjustments.
 :- dynamic cognitive_cost/2.
@@ -75,11 +85,58 @@ cognitive_cost(slide_step, 2).
 % Cost of retrieving a known fact (highly compressed, minimal effort)
 cognitive_cost(fact_retrieval, 1).
 
-% Cost for modal state transitions (embodied cognitive shifts)
+% PHASE 6: Cost for modal state transitions (embodied cognitive shifts)
+% Modal operators ($s(comp_nec(...)), $s(exp_poss(...))) represent
+% actual cognitive events - reflection, restructuring, modal focus.
+% Thinking is not free. Each modal shift consumes resources.
 cognitive_cost(modal_shift, 3).
+
+% PHASE 6: Cost for each tally in a recollection list
+% Manipulating embodied representations (recollection([tally|...])) 
+% costs effort proportional to list length. This models the physical
+% effort of token manipulation. "Counting All" exhaustion is embodied
+% exhaustion, not arbitrary resource limitation.
+cognitive_cost(recollection_step, 1).
 
 % Cost for normative checking (validating against mathematical context)
 cognitive_cost(norm_check, 2).
+
+%!      calculate_recollection_cost(+Recollection, -Cost) is det.
+%
+%       PHASE 6: Calculates the embodied cost of working with a recollection.
+%       Cost is proportional to the length of the tally list, representing
+%       the physical effort of manipulating tokens.
+%
+%       This operationalizes the theory that embodied representations
+%       have inherent costs. Abstraction (learned strategies) reduces
+%       this cost by working with compressed representations.
+%
+%       @param Recollection A recollection term: recollection([tally, tally, ...])
+%       @param Cost The calculated cognitive cost
+calculate_recollection_cost(recollection(TallyList), Cost) :-
+    is_list(TallyList),
+    length(TallyList, Length),
+    cognitive_cost(recollection_step, StepCost),
+    Cost is Length * StepCost.
+
+%!      calculate_strategy_cost(+StrategyTrace, -Cost) is det.
+%
+%       PHASE 6: Calculates total cost of a strategy execution.
+%       This allows measuring abstraction as cost reduction.
+%
+%       Developmental progress = (Primordial Cost - Learned Cost) / Primordial Cost
+%
+%       @param StrategyTrace Execution trace of a strategy
+%       @param Cost Total cognitive cost consumed
+calculate_strategy_cost(StrategyTrace, Cost) :-
+    % Placeholder - full implementation would analyze trace structure
+    % and sum all cognitive costs (recollections, modal shifts, inferences)
+    % For now, return a simple heuristic
+    ( is_list(StrategyTrace)
+    -> length(StrategyTrace, TraceLength),
+       Cost is TraceLength * 1  % Simple heuristic
+    ; Cost = 1  % Default
+    ).
 
 % --- Server Configuration ---
 

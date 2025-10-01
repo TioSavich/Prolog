@@ -1,0 +1,74 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Grounded ENS Operations for Fractional Arithmetic}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module implements the core Equal\PYGZhy{}N\PYGZhy{}Sharing (ENS) operations for}
+\PYG{c+cm}{ * grounded fractional arithmetic. It provides the fundamental partitioning}
+\PYG{c+cm}{ * operations that create nested unit structures.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * The ENS operations capture the embodied understanding of partitioning,}
+\PYG{c+cm}{ * where a unit is divided into equal parts through structural representation}
+\PYG{c+cm}{ * rather than numerical calculation.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author FSM Engine System}
+\PYG{c+cm}{ * @license MIT}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}ens\PYGZus{}operations}\PYG{p}{,} \PYG{p}{[}
+    \PYG{l+s+sAtom}{ens\PYGZus{}partition}\PYG{o}{/}\PYG{l+m+mi}{3}
+\PYG{p}{]).}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{use\PYGZus{}module}\PYG{p}{(}\PYG{l+s+sAtom}{grounded\PYGZus{}arithmetic}\PYG{p}{,} \PYG{p}{[}\PYG{l+s+sAtom}{incur\PYGZus{}cost}\PYG{o}{/}\PYG{l+m+mi}{1}\PYG{p}{]).}
+
+\PYG{c+c1}{\PYGZpc{}! ens\PYGZus{}partition(+InputUnit, +N\PYGZus{}Rec, \PYGZhy{}PartitionedParts) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Partitions a single InputUnit into N equal parts using structural}
+\PYG{c+c1}{\PYGZpc{} representation. This implements the embodied understanding of division}
+\PYG{c+c1}{\PYGZpc{} as creating equal shares.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} @param InputUnit The unit to be partitioned}
+\PYG{c+c1}{\PYGZpc{} @param N\PYGZus{}Rec Recollection structure specifying the number of parts}
+\PYG{c+c1}{\PYGZpc{} @param PartitionedParts List of N identical fractional units}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} The partitioning creates a nested structure where each new unit is}
+\PYG{c+c1}{\PYGZpc{} defined as 1/N of the InputUnit. This naturally handles recursive}
+\PYG{c+c1}{\PYGZpc{} partitioning by creating increasingly nested structures.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Example: Partitioning unit(whole) into 3 parts creates:}
+\PYG{c+c1}{\PYGZpc{} [unit(partitioned(recollection([t,t,t]), unit(whole))), }
+\PYG{c+c1}{\PYGZpc{}  unit(partitioned(recollection([t,t,t]), unit(whole))),}
+\PYG{c+c1}{\PYGZpc{}  unit(partitioned(recollection([t,t,t]), unit(whole)))]}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{n+nf}{ens\PYGZus{}partition}\PYG{p}{(}\PYG{n+nv}{InputUnit}\PYG{p}{,} \PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{c+c1}{\PYGZpc{} The new unit is defined structurally as 1/N of the InputUnit}
+    \PYG{c+c1}{\PYGZpc{} This naturally handles recursive partitioning by creating nested structures}
+    \PYG{n+nv}{NewUnit} \PYG{o}{=} \PYG{n+nf}{unit}\PYG{p}{(}\PYG{n+nf}{partitioned}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{InputUnit}\PYG{p}{)),}
+
+    \PYG{c+c1}{\PYGZpc{} The result is N copies of this new unit}
+    \PYG{n+nf}{generate\PYGZus{}copies}\PYG{p}{(}\PYG{n+nv}{N\PYGZus{}Rec}\PYG{p}{,} \PYG{n+nv}{NewUnit}\PYG{p}{,} \PYG{n+nv}{PartitionedParts}\PYG{p}{),}
+    \PYG{n+nf}{incur\PYGZus{}cost}\PYG{p}{(}\PYG{l+s+sAtom}{ens\PYGZus{}partition}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}! generate\PYGZus{}copies(+N\PYGZus{}Rec, +Unit, \PYGZhy{}Copies) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Generates N copies of a unit based on the recollection structure.}
+\PYG{c+c1}{\PYGZpc{} Each tally \PYGZsq{}t\PYGZsq{} in the recollection corresponds to one copy.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} @param N\PYGZus{}Rec Recollection structure with tallies}
+\PYG{c+c1}{\PYGZpc{} @param Unit The unit to copy}
+\PYG{c+c1}{\PYGZpc{} @param Copies List of N identical units}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{n+nf}{generate\PYGZus{}copies}\PYG{p}{(}\PYG{n+nf}{recollection}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{),} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{Copies}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Tallies}\PYG{p}{,} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{p}{[],} \PYG{n+nv}{Copies}\PYG{p}{).}
+
+\PYG{c+c1}{\PYGZpc{}! generate\PYGZus{}recursive(+Tallies, +Unit, +Acc, \PYGZhy{}Copies) is det.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} Recursively generates copies by processing each tally.}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{c+c1}{\PYGZpc{} @param Tallies List of tallies to process}
+\PYG{c+c1}{\PYGZpc{} @param Unit The unit to copy}
+\PYG{c+c1}{\PYGZpc{} @param Acc Accumulator for building the result}
+\PYG{c+c1}{\PYGZpc{} @param Copies Final list of copies}
+\PYG{c+c1}{\PYGZpc{}}
+\PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{([],} \PYG{k}{\PYGZus{}}\PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{).}
+\PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{([}\PYG{l+s+sAtom}{t}\PYG{p}{|}\PYG{n+nv}{Ts}\PYG{p}{],} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{n+nv}{Acc}\PYG{p}{,} \PYG{n+nv}{Copies}\PYG{p}{)} \PYG{p}{:\PYGZhy{}}
+    \PYG{n+nf}{generate\PYGZus{}recursive}\PYG{p}{(}\PYG{n+nv}{Ts}\PYG{p}{,} \PYG{n+nv}{Unit}\PYG{p}{,} \PYG{p}{[}\PYG{n+nv}{Unit}\PYG{p}{|}\PYG{n+nv}{Acc}\PYG{p}{],} \PYG{n+nv}{Copies}\PYG{p}{).}
+\end{MintedVerbatim}

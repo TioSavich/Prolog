@@ -138,20 +138,20 @@
     \PYG{n+nv}{I\PYGZus{}Out} \PYG{o}{is} \PYG{n+nv}{I\PYGZus{}In} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Cost}\PYG{p}{,}
     \PYG{n+nf}{call}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{).}
 
-\PYG{c+c1}{\PYGZpc{} Arithmetic predicates: Use context\PYGZhy{}dependent cost. Context is unchanged.}
-\PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{arithmetic\PYGZus{}trace}\PYG{p}{(}\PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}
-    \PYG{n+nf}{is\PYGZus{}arithmetic\PYGZus{}goal}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{Op}\PYG{p}{),}
-    \PYG{p}{!,}
-    \PYG{n+nf}{get\PYGZus{}inference\PYGZus{}cost}\PYG{p}{(}\PYG{n+nv}{Ctx}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
-    \PYG{n+nf}{check\PYGZus{}viability}\PYG{p}{(}\PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{Cost}\PYG{p}{),}
-    \PYG{n+nv}{I\PYGZus{}Out} \PYG{o}{is} \PYG{n+nv}{I\PYGZus{}In} \PYG{o}{\PYGZhy{}} \PYG{n+nv}{Cost}\PYG{p}{,}
-    \PYG{n+nv}{Goal} \PYG{l+s+sAtom}{=..} \PYG{p}{[}\PYG{k}{\PYGZus{}}\PYG{p}{,} \PYG{n+nv}{Peano1}\PYG{p}{,} \PYG{n+nv}{Peano2}\PYG{p}{,} \PYG{n+nv}{PeanoResult}\PYG{p}{],}
-    \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{Peano1}\PYG{p}{,} \PYG{n+nv}{N1}\PYG{p}{),}
-    \PYG{n+nf}{peano\PYGZus{}to\PYGZus{}int}\PYG{p}{(}\PYG{n+nv}{Peano2}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{),}
-    \PYG{n+nf}{list\PYGZus{}strategies}\PYG{p}{(}\PYG{n+nv}{Op}\PYG{p}{,} \PYG{n+nv}{Strategies}\PYG{p}{),}
-    \PYG{p}{(} \PYG{n+nf}{is\PYGZus{}list}\PYG{p}{(}\PYG{n+nv}{Strategies}\PYG{p}{),} \PYG{n+nv}{Strategies} \PYG{o}{=} \PYG{p}{[}\PYG{n+nv}{Strategy}\PYG{p}{|}\PYG{k}{\PYGZus{}}\PYG{p}{]} \PYG{l+s+sAtom}{\PYGZhy{}\PYGZgt{}} \PYG{l+s+sAtom}{true} \PYG{p}{;} \PYG{n+nf}{throw}\PYG{p}{(}\PYG{n+nf}{error}\PYG{p}{(}\PYG{n+nf}{no\PYGZus{}strategy\PYGZus{}found}\PYG{p}{(}\PYG{n+nv}{Op}\PYG{p}{),} \PYG{k}{\PYGZus{}}\PYG{p}{))} \PYG{p}{),}
-    \PYG{n+nf}{calculate}\PYG{p}{(}\PYG{n+nv}{N1}\PYG{p}{,} \PYG{n+nv}{Op}\PYG{p}{,} \PYG{n+nv}{N2}\PYG{p}{,} \PYG{n+nv}{Strategy}\PYG{p}{,} \PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{History}\PYG{p}{),}
-    \PYG{n+nf}{int\PYGZus{}to\PYGZus{}peano}\PYG{p}{(}\PYG{n+nv}{Result}\PYG{p}{,} \PYG{n+nv}{PeanoResult}\PYG{p}{).}
+\PYG{c+c1}{\PYGZpc{} DISABLED: Arithmetic handler (forces arithmetic through object\PYGZhy{}level predicates for crisis testing)}
+\PYG{c+c1}{\PYGZpc{} solve(Goal, Ctx, Ctx, I\PYGZus{}In, I\PYGZus{}Out, [arithmetic\PYGZus{}trace(Strategy, Result, History)]) :\PYGZhy{}}
+\PYG{c+c1}{\PYGZpc{}     is\PYGZus{}arithmetic\PYGZus{}goal(Goal, Op),}
+\PYG{c+c1}{\PYGZpc{}     !,}
+\PYG{c+c1}{\PYGZpc{}     get\PYGZus{}inference\PYGZus{}cost(Ctx, Cost),}
+\PYG{c+c1}{\PYGZpc{}     check\PYGZus{}viability(I\PYGZus{}In, Cost),}
+\PYG{c+c1}{\PYGZpc{}     I\PYGZus{}Out is I\PYGZus{}In \PYGZhy{} Cost,}
+\PYG{c+c1}{\PYGZpc{}     Goal =.. [\PYGZus{}, Peano1, Peano2, PeanoResult],}
+\PYG{c+c1}{\PYGZpc{}     peano\PYGZus{}to\PYGZus{}int(Peano1, N1),}
+\PYG{c+c1}{\PYGZpc{}     peano\PYGZus{}to\PYGZus{}int(Peano2, N2),}
+\PYG{c+c1}{\PYGZpc{}     list\PYGZus{}strategies(Op, Strategies),}
+\PYG{c+c1}{\PYGZpc{}     ( is\PYGZus{}list(Strategies), Strategies = [Strategy|\PYGZus{}] \PYGZhy{}\PYGZgt{} true ; throw(error(no\PYGZus{}strategy\PYGZus{}found(Op), \PYGZus{})) ),}
+\PYG{c+c1}{\PYGZpc{}     calculate(N1, Op, N2, Strategy, Result, History),}
+\PYG{c+c1}{\PYGZpc{}     int\PYGZus{}to\PYGZus{}peano(Result, PeanoResult).}
 
 \PYG{c+c1}{\PYGZpc{} Object\PYGZhy{}level predicates: Use context\PYGZhy{}dependent cost. Context flows through sub\PYGZhy{}proof.}
 \PYG{n+nf}{solve}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{,} \PYG{n+nv}{CtxIn}\PYG{p}{,} \PYG{n+nv}{CtxOut}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}In}\PYG{p}{,} \PYG{n+nv}{I\PYGZus{}Out}\PYG{p}{,} \PYG{p}{[}\PYG{n+nf}{clause}\PYG{p}{(}\PYG{l+s+sAtom}{object\PYGZus{}level:}\PYG{p}{(}\PYG{n+nv}{Goal}\PYG{p}{:\PYGZhy{}}\PYG{n+nv}{Body}\PYG{p}{)),} \PYG{n+nf}{trace}\PYG{p}{(}\PYG{n+nv}{Body}\PYG{p}{,} \PYG{n+nv}{BodyTrace}\PYG{p}{)])} \PYG{p}{:\PYGZhy{}}

@@ -1,0 +1,27 @@
+\begin{MintedVerbatim}[commandchars=\\\{\}]
+\PYG{c+cm}{/** \PYGZlt{}module\PYGZgt{} Standardized Strategy Loader}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * This module serves as a documentation index for all defined student}
+\PYG{c+cm}{ * reasoning strategies. It no longer imports modules to avoid namespace}
+\PYG{c+cm}{ * conflicts between FSM strategy predicates.}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Individual modules should be loaded directly when needed using}
+\PYG{c+cm}{ * module\PYGZhy{}qualified calls like: sar\PYGZus{}add\PYGZus{}chunking:run\PYGZus{}chunking/4}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * Available strategies:}
+\PYG{c+cm}{ * \PYGZhy{} Addition: sar\PYGZus{}add\PYGZus{}chunking, sar\PYGZus{}add\PYGZus{}cobo, sar\PYGZus{}add\PYGZus{}rmb, sar\PYGZus{}add\PYGZus{}rounding}
+\PYG{c+cm}{ * \PYGZhy{} Subtraction: sar\PYGZus{}sub\PYGZus{}cbbo\PYGZus{}take\PYGZus{}away, sar\PYGZus{}sub\PYGZus{}chunking\PYGZus{}a/b/c, }
+\PYG{c+cm}{ *                sar\PYGZus{}sub\PYGZus{}cobo\PYGZus{}missing\PYGZus{}addend, sar\PYGZus{}sub\PYGZus{}decomposition,}
+\PYG{c+cm}{ *                sar\PYGZus{}sub\PYGZus{}rounding, sar\PYGZus{}sub\PYGZus{}sliding}
+\PYG{c+cm}{ * \PYGZhy{} Multiplication: smr\PYGZus{}mult\PYGZus{}c2c, smr\PYGZus{}mult\PYGZus{}cbo, smr\PYGZus{}mult\PYGZus{}commutative\PYGZus{}reasoning,}
+\PYG{c+cm}{ *                   smr\PYGZus{}mult\PYGZus{}dr}
+\PYG{c+cm}{ * \PYGZhy{} Division: smr\PYGZus{}div\PYGZus{}cbo, smr\PYGZus{}div\PYGZus{}dealing\PYGZus{}by\PYGZus{}ones, smr\PYGZus{}div\PYGZus{}idp, smr\PYGZus{}div\PYGZus{}ucr}
+\PYG{c+cm}{ *}
+\PYG{c+cm}{ * @author Jules}
+\PYG{c+cm}{ */}
+
+\PYG{p}{:\PYGZhy{}} \PYG{n+nf}{module}\PYG{p}{(}\PYG{l+s+sAtom}{strategies}\PYG{p}{,} \PYG{p}{[]).}
+
+\PYG{c+c1}{\PYGZpc{} This module intentionally exports nothing and imports nothing}
+\PYG{c+c1}{\PYGZpc{} to avoid namespace conflicts between strategy modules.}
+\end{MintedVerbatim}
