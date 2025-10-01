@@ -22,6 +22,7 @@
 :- use_module(incompatibility_semantics, [s/1, 'comp_nec'/1, 'comp_poss'/1, 'exp_nec'/1, 'exp_poss'/1, check_norms/1]). % For modal operators and norm checking
 :- use_module(grounded_arithmetic). % For cognitive cost tracking
 :- use_module(config). % For cognitive cost lookup
+:- use_module(more_machine_learner, [run_learned_strategy/5]). % Phase 3.2: LIFO strategy selection
 
 % Note: is_list/1 is a built-in, no need to import from library(lists).
 
@@ -151,6 +152,24 @@ solve(Goal, Ctx, Ctx, I_In, I_Out, [call(Goal)]) :-
 %     ( is_list(Strategies), Strategies = [Strategy|_] -> true ; throw(error(no_strategy_found(Op), _)) ),
 %     calculate(N1, Op, N2, Strategy, Result, History),
 %     int_to_peano(Result, PeanoResult).
+
+% PHASE 3.2: Learned Strategy Selection (LIFO Hierarchy)
+% Try learned strategies BEFORE falling back to primordial object_level predicates.
+% This implements the developmental hierarchy where newer strategies are tried first.
+solve(object_level:add(A, B, Result), Ctx, Ctx, I_In, I_Out, [learned_strategy(StrategyName, StrategyTrace)]) :-
+    !,  % Cut to prevent backtracking to object_level after trying learned strategies
+    get_inference_cost(Ctx, Cost),
+    check_viability(I_In, Cost),
+    I_Mid is I_In - Cost,
+    % Try to use a learned strategy (queries most recent first via Prolog's clause ordering)
+    (   more_machine_learner:run_learned_strategy(A, B, Result, StrategyName, StrategyTrace),
+        format('      [Strategy Selection] Using learned strategy: ~w~n', [StrategyName]),
+        I_Out = I_Mid
+    ;   % No learned strategy succeeded, fall back to primordial counting
+        format('      [Strategy Selection] No learned strategy applicable, using primordial add/3~n', []),
+        clause(object_level:add(A, B, Result), Body),
+        solve(Body, Ctx, _, I_Mid, I_Out, _)
+    ).
 
 % Object-level predicates: Use context-dependent cost. Context flows through sub-proof.
 solve(Goal, CtxIn, CtxOut, I_In, I_Out, [clause(object_level:(Goal:-Body)), trace(Body, BodyTrace)]) :-

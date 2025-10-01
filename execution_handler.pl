@@ -16,7 +16,8 @@
 :- use_module(meta_interpreter).
 :- use_module(object_level).
 :- use_module(more_machine_learner, [reflect_and_learn/1]).
-:- use_module(oracle_server).  % NEW: Access to normative oracle
+:- use_module(oracle_server).  % Access to normative oracle
+:- use_module(fsm_synthesis_engine).  % NEW Phase 5: True FSM synthesis
 
 %!      run_computation(+Goal:term, +Limit:integer) is semidet.
 %
@@ -213,19 +214,26 @@ peano_to_int(s(N), Int) :-
 
 %!      synthesize_from_oracle(+SynthesisInput) is semidet.
 %
-%       PHASE 5 PLACEHOLDER: This is where the FSM synthesis engine will go.
+%       PHASE 5 IMPLEMENTATION: True FSM synthesis engine.
 %       
-%       Currently just a stub that calls the old pattern-matching learner.
-%       In Phase 5, this will be replaced with true synthesis that:
-%       1. Uses target_result and target_interpretation as constraints
-%       2. Searches FSM space using primitive operations
-%       3. Generates new transition/4 rules
-%       4. Does NOT match pre-defined patterns
+%       This uses the fsm_synthesis_engine to construct strategies from
+%       primitives, guided by oracle's result and interpretation.
+%       The machine receives WHAT (result) and HOW (interpretation),
+%       and synthesizes WHY (FSM structure) from grounded primitives.
+%
+%       This is computational hermeneutics: making sense of oracle guidance
+%       by finding a rational structure that makes the interpretation intelligible.
 %
 synthesize_from_oracle(SynthesisInput) :-
-    % TEMPORARY: Use old learner as placeholder
-    % This will be completely replaced in Phase 5
     Goal = SynthesisInput.goal,
     FailedTrace = SynthesisInput.failed_trace,
-    Result = _{goal:Goal, trace:FailedTrace},
-    more_machine_learner:reflect_and_learn(Result).
+    TargetResult = SynthesisInput.target_result,
+    TargetInterpretation = SynthesisInput.target_interpretation,
+    
+    % Use FSM synthesis engine (Phase 5)
+    fsm_synthesis_engine:synthesize_strategy_from_oracle(
+        Goal,
+        FailedTrace,
+        TargetResult,
+        TargetInterpretation
+    ).

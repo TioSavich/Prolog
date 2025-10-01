@@ -5,82 +5,87 @@ This checklist guides the implementation of the architectural refactoring to sep
 
 ---
 
-## Phase 1: Build the Primordial Machine (Bootstrap Kernel)
+## Phase 1: Build the Primordial Machine (Bootstrap Kernel) ✅ **COMPLETE**
 
 ### 1.1 Create Entry Point
-- [ ] Create new file: `primordial_start.pl`
-  - [ ] This will be the main execution entry point
-  - [ ] Must enforce strict separation from full strategy library
-  - [ ] Should only load essential kernel modules
+- [x] Create new file: `primordial_start.pl` ✅
+  - [x] This will be the main execution entry point ✅
+  - [x] Must enforce strict separation from full strategy library ✅
+  - [x] Should only load essential kernel modules ✅
+  - **ISSUE RESOLVED:** solve/4 conflict between meta_interpreter and more_machine_learner - resolved by loading more_machine_learner indirectly through execution_handler
 
 ### 1.2 Configure Kernel Module Loading
-- [ ] In `primordial_start.pl`, load ONLY these modules:
-  - [ ] `config.pl` (system-wide settings, inference limits)
-  - [ ] `grounded_arithmetic.pl` (foundational embodiment: recollection/tally/successor)
-  - [ ] `object_level.pl` (dynamic knowledge base)
-  - [ ] `meta_interpreter.pl` (ORR cycle component)
-  - [ ] `reflective_monitor.pl` (ORR cycle component)
-  - [ ] `reorganization_engine.pl` (ORR cycle component)
-  - [ ] `execution_handler.pl` (ORR cycle component)
-  - [ ] `more_machine_learner.pl` (learning engine)
+- [x] In `primordial_start.pl`, load ONLY these modules: ✅
+  - [x] `config.pl` (system-wide settings, inference limits) ✅
+  - [x] `grounded_arithmetic.pl` (foundational embodiment: recollection/tally/successor) ✅
+  - [x] `object_level.pl` (dynamic knowledge base) ✅
+  - [x] `meta_interpreter.pl` (ORR cycle component) ✅
+  - [x] `reflective_monitor.pl` (ORR cycle component) ✅
+  - [x] `reorganization_engine.pl` (ORR cycle component) ✅
+  - [x] `execution_handler.pl` (ORR cycle controller) ✅
+  - [x] ~~`more_machine_learner.pl` (learning engine)~~ - Loaded indirectly to avoid conflicts ✅
 
 ### 1.3 Simplify object_level.pl to Primordial State
-- [ ] Ensure ONLY the inefficient `add/3` predicate exists
-  - [ ] This predicate must rely on `enumerate/1`
-  - [ ] Implements "Counting All" strategy (most primitive)
-- [ ] **CRITICAL:** Remove or comment out ALL other rules:
-  - [ ] `subtract/3`
-  - [ ] `multiply/3`
-  - [ ] `divide/3`
-  - [ ] Any other arithmetic operations
-- [ ] Document why each removal enforces emergence principle
+- [x] Ensure ONLY the inefficient `add/3` predicate exists ✅
+  - [x] This predicate must rely on `enumerate/1` ✅
+  - [x] Implements "Counting All" strategy (most primitive) ✅
+- [x] **CRITICAL:** Remove or comment out ALL other rules: ✅
+  - [x] `subtract/3` ✅
+  - [x] `multiply/3` ✅
+  - [x] `divide/3` ✅
+  - [x] Any other arithmetic operations ✅
+- [x] Document why each removal enforces emergence principle ✅
 
 ### 1.4 Configure Inference Limits
-- [ ] In `config.pl`, set global inference limit
-  - [ ] Define: `max_inferences(10)`
-  - [ ] Verify this causes "Counting All" to fail on `add(8,5)`
-  - [ ] Document reasoning: small enough to force early crisis
+- [x] In `config.pl`, set global inference limit ✅
+- [x] Define: `max_inferences(10)` ✅
+  - [x] Verify this causes "Counting All" to fail on `add(8,5)` ✅ **TESTED**
+  - [x] Document reasoning: small enough to force early crisis ✅
 
 ---
 
-## Phase 2: Refine Learning-through-Crisis Mechanism
+## Phase 2: Refine Learning-through-Crisis Mechanism ⏸️ **90% COMPLETE** (Blocked by Phase 5)
 
 ### 2.1 Make Crisis the Exclusive Learning Trigger
-- [ ] Modify `execution_handler.pl`:
-  - [ ] Review `run_computation/2` predicate
-  - [ ] Ensure `catch/3` traps perturbations from meta_interpreter
-  - [ ] Verify ONLY `perturbation(resource_exhaustion)` triggers learning
-  - [ ] Remove any proactive/optional learning paths
+- [x] Modify `execution_handler.pl`: ✅
+  - [x] Review `run_computation/2` predicate ✅
+  - [x] Ensure `catch/3` traps perturbations from meta_interpreter ✅
+  - [x] Verify ONLY `perturbation(resource_exhaustion)` triggers learning ✅
+  - [x] Remove any proactive/optional learning paths ✅
+  - [x] **NEW:** Added oracle consultation on crisis ✅
+  - [x] **NEW:** Added `consult_oracle_for_solution/3` with Peano conversion ✅
+  - [ ] **BLOCKED:** `synthesize_from_oracle/1` is placeholder - needs Phase 5 FSM synthesis ⚠️
 
-- [ ] Modify `reorganization_engine.pl`:
-  - [ ] Ensure reorganization ONLY called on resource_exhaustion
-  - [ ] Learning must be reactive accommodation to failure
-  - [ ] No learning from successful executions
+- [x] Modify `reorganization_engine.pl`: ✅
+  - [x] Ensure reorganization ONLY called on resource_exhaustion ✅
+  - [x] Learning must be reactive accommodation to failure ✅
+  - [x] No learning from successful executions ✅
 
 ### 2.2 Create Developmental Curriculum
-- [ ] Verify `crisis_curriculum.txt` is primary curriculum file
-- [ ] Structure curriculum as crisis-inducing progression:
-  - [ ] Task 1: `add(2,3)` - solvable within 10 steps (success)
-  - [ ] Task 2: `add(8,5)` - exceeds 10 steps (FIRST CRISIS)
-  - [ ] Task 3: `add(3,8)` - tests generalization/commutativity
-  - [ ] Task 4: `multiply(3,4)` - NEW crisis type (missing predicate)
-  - [ ] Continue progression with increasingly complex tasks
-- [ ] Document each task's intended crisis/learning goal
-- [ ] Each crisis should model finite→infinite dialectic
+- [x] Created `crisis_curriculum_primordial.txt` as primary curriculum file ✅
+- [x] Structure curriculum as crisis-inducing progression: ✅
+  - [x] Stage 1: `add(2,3)` - solvable within 10 steps (success) ✅
+  - [x] Stage 2: `add(8,5)` - exceeds 10 steps (FIRST CRISIS) ✅
+  - [x] Stage 3-7: Progressive complexity with multiply/subtract/advanced ✅
+- [x] Document each task's intended crisis/learning goal ✅
+- [x] Each crisis should model finite→infinite dialectic ✅
+
+**CURRENT STATUS:** Oracle integration complete, system correctly detects crisis and consults oracle. Synthesis step is placeholder until Phase 5 implements true FSM synthesis engine.
 
 ---
 
-## Phase 3: Implement Developmental Knowledge System
+## Phase 3: Implement Developmental Knowledge System 📋 **PENDING** (After Phase 5)
 
 ### 3.1 Modify Learning Strategy Assertion
-- [ ] In `more_machine_learner.pl`:
-  - [ ] When synthesizing new strategy, use `assertz/1` to add clause
-  - [ ] Add to dynamic database or `learned_knowledge.pl` for persistence
-  - [ ] **CRITICAL:** NEVER call `retract/1` on previous strategies
-  - [ ] Document: preserves "geological record" of development
+- [x] In `more_machine_learner.pl`: ⏸️ **EXISTS BUT NEEDS REVIEW**
+  - [x] When synthesizing new strategy, use `assertz/1` to add clause - Already implemented ✅
+  - [x] Add to dynamic database or `learned_knowledge.pl` for persistence ✅
+  - [x] **CRITICAL:** NEVER call `retract/1` on previous strategies - Already enforced ✅
+  - [x] Document: preserves "geological record" of development ✅
+  - **NOTE:** Current implementation may need refactoring after Phase 5 synthesis engine is complete
 
 ### 3.2 Re-architect Strategy Invocation Hierarchy
-- [ ] In `execution_handler.pl`, modify `run_computation/2`:
+- [ ] In `execution_handler.pl`, modify `run_computation/2`: ⚠️ **CRITICAL - NOT YET IMPLEMENTED**
   - [ ] DO NOT immediately default to `object_level:add/3`
   - [ ] FIRST: Query learned strategies in reverse order (LIFO)
   - [ ] Use `clause/2` to find all matching `run_learned_strategy` clauses
@@ -90,65 +95,73 @@ This checklist guides the implementation of the architectural refactoring to sep
     2. [ ] Second most recent learned strategy
     3. [ ] ... (all learned strategies)
     4. [ ] Primordial `object_level:add/3` (last resort)
+  - **ISSUE TO RESOLVE:** Current code still defaults to object_level immediately - needs LIFO selection added
 
 ### 3.3 Add Strategy Selection Logging
-- [ ] Log which strategy is successfully selected
+- [ ] Log which strategy is successfully selected ⚠️ **NOT IMPLEMENTED**
 - [ ] Include strategy name (e.g., `rmb(10)`, `cobo`)
 - [ ] Add to execution trace for visibility
 - [ ] Makes developmental stage explicit in output
 
 ---
 
-## Phase 4: Build the Oracle Server
+## Phase 4: Build the Oracle Server ✅ **COMPLETE**
 
 ### 4.1 Create Oracle Interface
-- [ ] Create new file: `oracle_server.pl`
-  - [ ] Load `hermeneutic_calculator.pl` dispatcher
-  - [ ] This indirectly loads ALL `sar_*.pl` and `smr_*.pl` modules
-  - [ ] Expose ONLY one predicate: `query_oracle/4`
+- [x] Create new file: `oracle_server.pl` ✅
+  - [x] Load `hermeneutic_calculator.pl` dispatcher ✅
+  - [x] This indirectly loads ALL `sar_*.pl` and `smr_*.pl` modules ✅
+  - [x] Expose ONLY one predicate: `query_oracle/4` ✅
+  - **ISSUE RESOLVED:** hermeneutic_calculator had wrong predicate names - bypassed by calling strategies directly via `execute_strategy/6`
 
 ### 4.2 Implement query_oracle/4
-- [ ] Signature: `query_oracle(+Operation, +StrategyName, -Result, -Interpretation)`
-- [ ] Example: `query_oracle(add(8,5), rmb, Result, Interp)`
-- [ ] Implementation:
-  - [ ] Use `hermeneutic_calculator:calculate/6` to execute strategy
-  - [ ] Capture final numerical result
-  - [ ] Capture final textual interpretation string
-  - [ ] **CRITICAL:** Discard step-by-step execution trace
-  - [ ] Enforce black box constraint (no internal states exposed)
+- [x] Signature: `query_oracle(+Operation, +StrategyName, -Result, -Interpretation)` ✅
+- [x] Example: `query_oracle(add(8,5), rmb, Result, Interp)` ✅ **TESTED**
+- [x] Implementation: ✅
+  - [x] ~~Use `hermeneutic_calculator:calculate/6`~~ - Bypassed due to bugs ✅
+  - [x] Created `execute_strategy/6` to call strategies directly ✅
+  - [x] Capture final numerical result ✅
+  - [x] Capture final textual interpretation string via `extract_interpretation/7` ✅
+  - [x] **CRITICAL:** Discard step-by-step execution trace ✅
+  - [x] Enforce black box constraint (no internal states exposed) ✅
+  - [x] Added `list_available_strategies/2` for strategy discovery ✅
 
 ### 4.3 Test Oracle Isolation
-- [ ] Verify oracle runs in separate logical context
-- [ ] Primordial machine CANNOT access internal oracle predicates
-- [ ] Only `query_oracle/4` interface is available
+- [x] Verify oracle runs in separate logical context ✅
+- [x] Primordial machine CANNOT access internal oracle predicates ✅
+- [x] Only `query_oracle/4` interface is available ✅
+- [x] **TESTED:** `add(8,5)` returns Result=13, Interpretation="Count on from bigger..." ✅
 
 ---
 
-## Phase 5: Transform Learner into Synthesis Engine
+## Phase 5: Transform Learner into Synthesis Engine ⚠️ **CRITICAL - NEXT PRIORITY** (Blocks Phase 2 completion)
 
 ### 5.1 Remove Pattern Detection Heuristics
-- [ ] In `more_machine_learner.pl`, DELETE:
+- [ ] In `more_machine_learner.pl`, DELETE: ⚠️ **MUST DO**
   - [ ] `detect_cob_pattern/2`
   - [ ] `detect_rmb_pattern/2`
   - [ ] `construct_and_validate_cob/2`
   - [ ] `construct_and_validate_rmb/3`
   - [ ] ANY other hard-coded strategy pattern detectors
 - [ ] Document: learner can no longer have "innate" strategy knowledge
+- **ISSUE:** Current code still has pattern matchers that violate emergence principle
 
 ### 5.2 Integrate Oracle into Crisis Response
-- [ ] In `reorganization_engine.pl`:
-  - [ ] On `resource_exhaustion` for goal like `add(8,5)`:
-    1. [ ] Query oracle: `query_oracle(add(8,5), Strategy, Result, Interp)`
-    2. [ ] Oracle returns (e.g.) `Result = 13`, `Interp = 'Count on from bigger'`
-    3. [ ] Pass to learner: `synthesize_strategy/4`
+- [x] In `reorganization_engine.pl`: ✅ **DONE in execution_handler.pl**
+  - [x] On `resource_exhaustion` for goal like `add(8,5)`: ✅
+    1. [x] Query oracle: `query_oracle(add(8,5), Strategy, Result, Interp)` ✅
+    2. [x] Oracle returns (e.g.) `Result = 13`, `Interp = 'Count on from bigger'` ✅
+    3. [ ] Pass to learner: `synthesize_strategy/4` ⚠️ **PLACEHOLDER ONLY**
+  - **NOTE:** Integration logic is in `execution_handler.pl:handle_perturbation/4`, not reorganization_engine
 
-### 5.3 Implement Synthesis Engine Core
-- [ ] Create new predicate: `synthesize_strategy/4`
+### 5.3 Implement Synthesis Engine Core ⚠️ **BLOCKING ISSUE**
+- [ ] Create new predicate: `synthesize_strategy/4` **NOT YET IMPLEMENTED**
   - [ ] Signature: `synthesize_strategy(+Goal, +FailedTrace, +TargetResult, +TargetInterpretation)`
   - [ ] This is the new heart of learning system
   - [ ] Task: Generate new `transition/4` rules for FSM
+  - **CURRENT STATUS:** `synthesize_from_oracle/1` in execution_handler is placeholder that calls old pattern matcher
 
-- [ ] Implement FSM Search:
+- [ ] Implement FSM Search: **NOT YET IMPLEMENTED**
   - [ ] Search space: all possible FSMs
   - [ ] Building blocks: primitives from `grounded_utils.pl`
     - [ ] `successor/2`
@@ -158,37 +171,44 @@ This checklist guides the implementation of the architectural refactoring to sep
     1. [ ] Synthesized FSM must produce `TargetResult`
     2. [ ] FSM execution must not exceed `max_inferences` limit
   - [ ] Use `TargetInterpretation` as heuristic hint (optional/advanced)
+  - **BLOCKING:** Without this, system enters infinite retry loop on crisis
 
 ### 5.4 Define Meta-Abilities for Search
-- [ ] Implement segmentation/analysis of failed traces
-- [ ] Implement recombination of primitives
-- [ ] Implement generalization (variabilization)
+- [ ] Implement segmentation/analysis of failed traces **NOT IMPLEMENTED**
+- [ ] Implement recombination of primitives **NOT IMPLEMENTED**
+- [ ] Implement generalization (variabilization) **NOT IMPLEMENTED**
 - [ ] These are domain-general, not math-specific
+
+**CRITICAL PATH:** This phase is essential for system to learn from oracle guidance. Current placeholder prevents actual strategy synthesis.
 
 ---
 
-## Phase 6: Define Cost Function (Theory Operationalization)
+## Phase 6: Define Cost Function (Theory Operationalization) 📋 **PENDING** (Lower Priority)
 
 ### 6.1 Embodied Representation Costs
-- [ ] Cost of `recollection([tally|...])` operations:
+- [ ] Cost of `recollection([tally|...])` operations: **NOT YET IMPLEMENTED**
   - [ ] MUST be proportional to list length
   - [ ] Models effort of manipulating tokens
   - [ ] "Counting All" exhaustion is embodied exhaustion
 - [ ] Document: this is not optimization, this is theory
+- **NOTE:** Current system uses simple inference counting; embodied cost model needs implementation
 
 ### 6.2 Modal Shift Costs
-- [ ] Modal operators consume inference budget:
+- [ ] Modal operators consume inference budget: **NOT YET IMPLEMENTED**
   - [ ] `$s(comp_nec(...))`
   - [ ] `$s(exp_poss(...))`
   - [ ] Represent cognitive events (reflection, restructuring)
 - [ ] Document: thinking is not free
+- **NOTE:** Modal operators exist in codebase but don't yet consume inference budget
 
 ### 6.3 Measure Abstraction as Cost Reduction
-- [ ] Learned strategy cost = sum of:
+- [ ] Learned strategy cost = sum of: **NOT YET IMPLEMENTED**
   - [ ] Primitive operations
   - [ ] Modal shifts
 - [ ] Abstraction = significant cost reduction vs enumeration
 - [ ] This reduction measures developmental progress
+
+**PRIORITY:** Lower priority - can be implemented after Phase 5 makes learning functional
 
 ---
 
@@ -234,43 +254,47 @@ This checklist guides the implementation of the architectural refactoring to sep
 
 ---
 
-## Phase 9: Testing & Validation
+## Phase 9: Testing & Validation 🧪 **PARTIAL** (Testing as we build)
 
 ### 9.1 Test Primordial Machine Initialization
-- [ ] Run `primordial_start.pl`
-- [ ] Verify only kernel modules loaded
-- [ ] Verify only `add/3` (Counting All) exists
-- [ ] Verify `max_inferences(10)` is active
+- [x] Run `primordial_start.pl` ✅ **TESTED**
+- [x] Verify only kernel modules loaded ✅
+- [x] Verify only `add/3` (Counting All) exists ✅
+- [x] Verify `max_inferences(10)` is active ✅
 
 ### 9.2 Test First Crisis
-- [ ] Run `add(2,3)` - should succeed
-- [ ] Run `add(8,5)` - should fail with `resource_exhaustion`
-- [ ] Verify crisis triggers reorganization
-- [ ] Verify oracle is consulted
+- [x] Run `add(2,3)` - should succeed ✅ **TESTED - Result: s(s(s(s(s(0)))))**
+- [x] Run `add(8,5)` - should fail with `resource_exhaustion` ✅ **TESTED - Triggers crisis**
+- [x] Verify crisis triggers reorganization ✅ **Confirmed**
+- [x] Verify oracle is consulted ✅ **TESTED - Returns Result=13, Interpretation**
+- **ISSUE:** Oracle consultation works but synthesis placeholder doesn't actually learn (expected until Phase 5)
 
 ### 9.3 Test Learning from Crisis
-- [ ] After first crisis, verify new strategy asserted
+- [ ] After first crisis, verify new strategy asserted ⚠️ **BLOCKED by Phase 5**
 - [ ] Verify old strategy NOT retracted
-- [ ] Run `add(8,5)` again - should succeed with new strategy
+- [ ] Run `add(8,5)` again - should succeed with new strategy ⚠️ **Currently enters retry loop**
 - [ ] Verify strategy selection logged
+- **CURRENT BEHAVIOR:** Synthesis placeholder reports success but doesn't generate working strategy
 
 ### 9.4 Test Strategy Hierarchy
-- [ ] After multiple learning cycles:
+- [ ] After multiple learning cycles: ⚠️ **BLOCKED by Phase 3.2 + Phase 5**
   - [ ] Verify newest strategy tried first
   - [ ] Verify fallback to older strategies
   - [ ] Verify primordial strategy is last resort
 - [ ] Check `learned_knowledge.pl` shows geological record
+- **ISSUE:** LIFO selection not yet implemented (Phase 3.2)
 
 ### 9.5 Test Oracle Isolation
-- [ ] Verify primordial machine cannot directly access `sar_*.pl`
-- [ ] Verify only `query_oracle/4` provides access
-- [ ] Verify internal oracle traces are hidden
+- [x] Verify primordial machine cannot directly access `sar_*.pl` ✅ **Architecturally enforced**
+- [x] Verify only `query_oracle/4` provides access ✅ **Confirmed**
+- [x] Verify internal oracle traces are hidden ✅ **Black box constraint enforced**
 
 ### 9.6 Run Full Curriculum
-- [ ] Execute entire `crisis_curriculum.txt`
+- [ ] Execute entire `crisis_curriculum_primordial.txt` ⚠️ **BLOCKED by Phase 5**
 - [ ] Document each crisis and learned response
 - [ ] Verify developmental trajectory matches theory
 - [ ] Check final capability vs initial capability
+- **NOTE:** Cannot complete until synthesis engine is functional
 
 ---
 
@@ -370,3 +394,54 @@ This checklist guides the implementation of the architectural refactoring to sep
 - [ ] Strategy hierarchy diagram
 - [ ] Theoretical claims validated
 - [ ] Remaining limitations acknowledged
+
+---
+
+## 📊 PROGRESS TRACKING (Updated: Phase 2 Partial)
+
+### ✅ COMPLETED PHASES:
+1. **Phase 1:** Primordial Machine Bootstrap - 100% complete
+2. **Phase 4:** Oracle Server - 100% complete
+3. **Phase 2:** Oracle Integration - 90% complete (synthesis placeholder)
+
+### ⚠️ CRITICAL BLOCKERS:
+1. **Phase 5 (CRITICAL):** FSM Synthesis Engine - 0% complete
+   - BLOCKS: Complete Phase 2, all learning functionality, full testing
+   - ISSUE: `synthesize_from_oracle/1` is placeholder using old pattern matcher
+   - NEEDED: True FSM search from primitives
+   
+2. **Phase 3.2:** LIFO Strategy Selection - 0% complete
+   - BLOCKS: Proper strategy hierarchy, developmental record visibility
+   - ISSUE: System defaults to object_level immediately
+   - NEEDED: Query learned_knowledge.pl in reverse order
+
+### 📋 PENDING PHASES:
+- **Phase 3.1:** Learning assertion (exists but may need review after Phase 5)
+- **Phase 3.3:** Strategy selection logging
+- **Phase 5.1:** Remove pattern detection heuristics (violates emergence)
+- **Phase 6:** Cost function implementation (lower priority)
+- **Phase 7:** Computational hermeneutics (partial - oracle returns interpretation)
+- **Phase 8:** Divasion architecture documentation
+- **Phase 9:** Full testing suite
+- **Phase 10:** Documentation and theoretical alignment
+
+### 🔧 ISSUES TO RESOLVE LATER:
+1. **hermeneutic_calculator predicate names** - Currently bypassed with direct strategy calls
+2. **more_machine_learner pattern matchers** - Violate emergence principle, need removal
+3. **Synthesis engine architecture** - Needs complete redesign for FSM search
+4. **Strategy invocation hierarchy** - Needs LIFO implementation
+5. **Cost function theory** - Modal operators and embodied costs not yet counted
+6. **Full curriculum testing** - Blocked until learning is functional
+
+### 📈 CURRENT SYSTEM BEHAVIOR:
+- ✅ Simple add(3,2) succeeds with primordial Counting All
+- ✅ Complex add(8,5) triggers resource_exhaustion crisis
+- ✅ Oracle consultation returns Result=13 and Interpretation="Count on from bigger..."
+- ⏸️ Synthesis placeholder reports success but doesn't generate working strategy
+- ⏸️ System enters infinite retry loop (expected until Phase 5)
+
+### 🎯 NEXT IMMEDIATE ACTIONS:
+1. Implement Phase 5.3: FSM synthesis engine with primitive search
+2. Implement Phase 3.2: LIFO strategy selection
+3. Remove Phase 5.1: Pattern detection heuristics
+4. Test full learning cycle: Crisis → Oracle → Synthesis → Learn → Retry → Success
