@@ -168,13 +168,20 @@ solve(object_level:add(A, B, Result), Ctx, Ctx, I_In, I_Out, [learned_strategy(S
     !,  % Cut to prevent backtracking to object_level after trying learned strategies
     get_inference_cost(Ctx, Cost),
     check_viability(I_In, Cost),
-    I_Mid is I_In - Cost,
     % Try to use a learned strategy (queries most recent first via Prolog's clause ordering)
-    (   more_machine_learner:run_learned_strategy(A, B, Result, StrategyName, StrategyTrace),
+    (   
+        format('      [DEBUG] Calling run_learned_strategy A=~w B=~w Res=~w Name=~w Trace=~w~n', [A, B, Result, StrategyName, StrategyTrace]),
+        more_machine_learner:run_learned_strategy(A, B, Result, StrategyName, StrategyTrace),
         format('      [Strategy Selection] Using learned strategy: ~w~n', [StrategyName]),
-        I_Out = I_Mid
-    ;   % No learned strategy succeeded, fall back to primordial counting
-        format('      [Strategy Selection] No learned strategy applicable, using primordial add/3~n', []),
+        strategy_runtime_cost(StrategyName, A, B, StratCost),
+        check_viability(I_In, StratCost), % THIS will trigger crisis if StratCost > I_In
+        I_Out is I_In - StratCost
+    ;   
+        % Fall back to foundational solving if no learned strategy applies
+        format('      [Strategy Selection] No learned strategy applicable, using primordial ~w~n', [object_level:add(A,B,Result)]),
+        get_inference_cost(Ctx, Cost), % Cost for falling back to primordial
+        check_viability(I_In, Cost),
+        I_Mid is I_In - Cost,
         clause(object_level:add(A, B, Result), Body),
         solve(Body, Ctx, _, I_Mid, I_Out, _)
     ).
@@ -222,7 +229,43 @@ solve(Goal, Ctx, Ctx, I, I, [fail(Goal)]) :-
 % check_viability(+Inferences, +Cost)
 %
 % Succeeds if the inference counter is sufficient for the next step's cost.
-check_viability(I, Cost) :- I >= Cost, !.
-check_viability(_, _) :-
+check_viability(I, Cost) :- 
+    % format('      [DEBUG] check_viability: I=~w, Cost=~w~n', [I, Cost]),
+    I >= Cost, !.
+check_viability(I, Cost) :-
     % Constraint violated: PERTURBATION DETECTED
+    format('      [CRISIS] Resource Exhaustion! I=~w < Cost=~w~n', [I, Cost]),
     throw(perturbation(resource_exhaustion)).
+
+% === Strategy Runtime Costs ===
+% Evaluates the theoretical inference cost of a learned strategy, so that the meta-interpreter
+% appropriately deducts "effort" and can trigger subsequent crises if the problem scales up.
+strategy_runtime_cost('COBO', object_level:add(A, B, _), _, Cost) :-
+    fsm_synthesis_engine:peano_to_int(A, IntA),
+    fsm_synthesis_engine:peano_to_int(B, IntB),
+    Cost is min(IntA, IntB) + 1.
+
+strategy_runtime_cost('COBO', A, B, Cost) :-
+    fsm_synthesis_engine:peano_to_int(A, IntA),
+    fsm_synthesis_engine:peano_to_int(B, IntB),
+    Cost is min(IntA, IntB) + 1.
+
+strategy_runtime_cost('RMB', A, B, Cost) :-
+    fsm_synthesis_engine:peano_to_int(A, IntA),
+    fsm_synthesis_engine:peano_to_int(B, IntB),
+    DistA is abs(10 - IntA),
+    DistB is abs(10 - IntB),
+    % Cost depends on how far the number is from 10.
+    Cost is min(DistA, DistB) * 2 + 3.
+
+strategy_runtime_cost('Chunking', A, B, Cost) :-
+    fsm_synthesis_engine:peano_to_int(A, IntA),
+    fsm_synthesis_engine:peano_to_int(B, IntB),
+    % Chunking cost scales with number of decades
+    Cost is (IntA // 10) + (IntB // 10) + 3.
+
+strategy_runtime_cost('Rounding', _, _, Cost) :-
+    % Rounding up to tens is very cheap assuming large numbers
+    Cost = 4.
+
+strategy_runtime_cost(_, _, _, 1). % Default fallback cost

@@ -1,0 +1,174 @@
+\documentclass[12pt]{book}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[normalem]{ulem}
+\usepackage{graphicx}
+\usepackage{cancel}
+\usepackage{soul}
+\usepackage{float}
+\usepackage[autostyle]{csquotes}
+\usepackage{fontspec}
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning,backgrounds,calc,arrows.meta,shapes.geometric,fit,shadows}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{multirow}
+\usepackage{minted}
+\usepackage{caption}
+%\setmainfont{Times New Roman}
+
+\usepackage[style=apa, backend=biber]{biblatex}
+\addbibresource{/Users/tio/Documents/GitHub/September_UMEDCA/references.bib}
+
+\newenvironment{abstract}
+    { % Code executed at the beginning of the environment
+      \begin{center} % Center the "Abstract" title
+        \textbf{Abstract} % Make the title bold
+      \end{center}
+      \vspace{\baselineskip} % Add some space after the title
+      \begin{quotation} % Indent the abstract text
+      \small % Optional: Make the abstract text slightly smaller
+    }
+    { % Code executed at the end of the environment
+      \end{quotation} % End the indentation
+      \bigskip % Add some vertical space after the abstract
+    }
+
+%  --  Custom Macros for consistent notation  -- 
+\newcommand{\SBox}{\Box_{\mathsf{S}}}
+\newcommand{\OBox}{\Box_{\mathsf{O}}}
+\newcommand{\NBox}{\Box_{\mathsf{N}}}
+\newcommand{\SDia}{\Diamond_{\mathsf{S}}}
+\newcommand{\ODia}{\Diamond_{\mathsf{O}}}
+\newcommand{\NDia}{\Diamond_{\mathsf{N}}}
+
+% Subjective polarity operators
+\newcommand{\SBoxUp}{\Box_{\mathsf{S}}^{\uparrow}}
+\newcommand{\SBoxDown}{\Box_{\mathsf{S}}^{\downarrow}}
+
+% Naming and Sublation
+\newcommand{\name}[1]{\ulcorner #1 \urcorner}
+\newcommand{\sublate}[1]{\cancel{#1}} % Simplified for pedagogical clarity
+
+\title{Carspecken's Philosophy}
+\author{Theodore M. Savich}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{The Transcending Subject: Embodiment, Phenomenology, and the ``I-feeling'' in the Work of Phil Francis Carspecken}\label{the-transcending-subject-embodiment-phenomenology-and-the-i-feeling-in-the-work-of-phil-francis-carspecken}
+
+\subsection{Introduction: Beyond Picture-Thinking --- The Foundations of Carspecken's Critical Project}\label{introduction-beyond-picture-thinking-the-foundations-of-carspeckens-critical-project}
+
+Phil Carspecken's work presents a profound challenge to the foundational assumptions of Western social science and philosophy. He begins by identifying a pervasive paradigm that structures mainstream thought—and even many counter-mainstream approaches: what he calls ``picture-thinking'' and its correlate, the ``ontology of presence'' \parencite{carspecken_limits_2016, Carspecken2018}. This framework, Carspecken contends, fundamentally misrepresents the nature of knowledge, being, and the human subject by treating them as objects available for observation. The result is an artificial separation between the knower and the known that carries significant ideological weight. In response, he develops an alternative grounded in communicative pragmatism, phenomenology, and a deep understanding of embodiment \parencite{Carspecken1995aa, Carspecken2018}. This alternative seeks to restore what he understands as the ontological unity of knowing and being—not by starting with the solitary observer, but with the interacting, embodied subject.
+
+\subsubsection{Defining the Dominant Paradigm: ``Picture-Thinking'' and the Ontology of Presence}\label{defining-the-dominant-paradigm-picture-thinking-and-the-ontology-of-presence}
+
+At the heart of Carspecken's critique is the concept of ``picture-thinking''—a term borrowed from Hegel to describe the unconscious tendency to grasp fundamental concepts through spatial and visual metaphors \parencite{carspecken_limits_2016, Carspecken2018}. Within this paradigm, knowledge becomes conceived as a picture of reality taken from a position any possible sapient being could occupy. Knowledge transforms into representation, model, or map—something ontologically distinct from the reality it purports to describe. This mode of thought privileges visual perception as the model for all knowledge, establishing what Carspecken calls the ``originary scene'': a passive, solitary observer gaining knowledge of an external world \parencite{Carspecken1995aa, Carspecken1999}. This scene, he argues, covertly structures the vast majority of Western philosophy—from positivism, which believes the picture can be accurate, to constructivism, which argues the picture is created by the observer's ``value window'' yet remains trapped within the same subject-object dichotomy \parencite{Carspecken1995aa, Carspecken1999, carspecken_limits_2016}.
+
+The ontological correlate of picture-thinking is an ``ontology of presence'' \parencite{Carspecken2018}—the belief, famously deconstructed by Derrida as the ``metaphysics of presence,'' that reality is composed of stable, determined objects persisting in time and space, fully present to a perceiving subject \parencite{Carspecken1995aa, Carspecken1999}. This ontology fails to account for the processual, non-objective nature of both lived experience and the experiencing subject.
+
+\subsubsection{The Failure of Mainstream and Counter-Mainstream Methodologies}\label{the-failure-of-mainstream-and-counter-mainstream-methodologies}
+
+Mainstream social science operates uncritically within this paradigm. It treats human beings as objects of study, reducing them to sets of attributes (variables) that can be measured and explained through external, correlational, or causal relationships \parencite{Carspecken1995aa}. By its very structure, this approach cannot question the validity of the values, beliefs, and experiences it transforms into data points. The dominant paradigm is not merely a philosophical error but an ideological one. Its function is to render the human subject an object of knowledge, making people amenable to techniques of measurement, prediction, and control—thereby reinforcing existing power structures. By turning people into objects of study, the epistemological foundation of mainstream research prefigures a relationship of instrumental control over human beings.
+
+The counter-mainstream—interpretive and constructivist approaches—offers an important critique by emphasizing the meanings and interpretations through which people understand their worlds \parencite{Carspecken1995aa}. Yet here we encounter a tension: while these approaches correctly recognize that social reality is constructed through meaning, they often fail to question the validity of those meanings themselves. Constructivism rightly insists that knowledge is constructed, but frequently treats this insight as foreclosing any possibility of critique \parencite{Carspecken1995aa, Carspecken1999}. If all knowledge is merely constructed, on what grounds can we criticize power or advocate for justice? If we follow this thought further, we find constructivism trapped within the same picture-thinking paradigm it seeks to escape. It simply relocates the ``picture'' from an external reality to the subjective mind, but retains the ontological separation between knower and known.
+
+What becomes clear is that both mainstream and counter-mainstream approaches miss something fundamental. They fail to grasp that the categories ``objective'' and ``subjective'' are themselves artifacts of the picture-thinking paradigm \parencite{carspecken_limits_2016}. Neither positivism nor constructivism can account for the experiencing subject—the ``I'' that does the observing or constructing—because picture-thinking treats everything, including the subject, as an object available for representation. This leaves no conceptual space for agency, freedom, or genuine critique.
+
+\begin{longtable}[]{@{}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.2500}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3750}}
+  >{\raggedright\arraybackslash}p{(\columnwidth - 4\tabcolsep) * \real{0.3750}}@{}}
+\toprule\noalign{}
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Distinguishing} \textbf{Feature}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Perception Paradigm (Picture-Thinking)}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Communicative \& Embodied Paradigm (Carspecken)}
+\end{minipage} \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Primal Scene}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+A solitary, passive observer perceiving an external world.
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Interacting subjects in a shared world of meaning.
+\end{minipage} \\
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Model of Knowing}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Visual perception (``seeing is knowing'').
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Communicative understanding and embodied feeling.
+\end{minipage} \\
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Ontology}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Ontology of Presence (reality as stable, observable objects).
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Ontology of Action \& Relation (reality as process).
+\end{minipage} \\
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{The Subject (``I'')}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+An anonymous, universal observer outside the world.
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+A non-objective, embodied source of action (``I-feeling'').
+\end{minipage} \\
+\begin{minipage}[b]{\linewidth}\raggedright
+\textbf{Knowledge \& Being}
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Ontologically distinct (knowledge is a \emph{picture} of being).
+\end{minipage} & \begin{minipage}[b]{\linewidth}\raggedright
+Ontologically fused (knowing \emph{is} a form of being).
+\end{minipage} \\
+\end{longtable}
+
+
+
+\subsection{The Phenomenology of the ``I'' and the Limits of Knowledge}\label{the-phenomenology-of-the-i-and-the-limits-of-knowledge}
+
+\subsubsection{The Non-Objective Subject}\label{the-non-objective-subject}
+
+Carspecken's understanding of the subject begins with a profound phenomenological insight into the nature of the ``I.'' He insists that the ``I''—the subject—is fundamentally distinct from ``subjectivity,'' which we might understand as the realm of inner experiences that can be objectified and examined \parencite{carspecken_limits_2016}. Drawing on Kant's distinction between the transcendent (unknowable objects beyond experience) and the transcendental (necessary conditions for experience), Carspecken emphasizes that the ``I''—the experiencing subject—can never become an object of its own experience \parencite{carspecken_limits_2016, Carspecken2009aa}. The ``I'' is the condition of possibility for experiencing objects—what Kant called the ``transcendental unity of apperception''—but it cannot itself be pictured, modeled, or conceptualized as a finite entity.
+
+\subsubsection{The Missing Infinite and Existential Significance}\label{the-missing-infinite-and-existential-significance}
+
+This non-objective nature of the ``I'' constitutes what Carspecken calls the ``missing infinite'' \parencite{Carspecken2018}. The ``I'' is in-finite—not determined by boundaries or objective properties. This insight reveals the fundamental limits to knowledge inherent in any framework based on picture-thinking. These limits are not mere epistemological barriers; they have profound existential significance. The recognition that the ``I'' cannot be known as an object is simultaneously the recognition of human freedom \parencite{Carspecken2018}. It also forms the basis for what Carspecken explores as a post-secular spirituality—grounded not in belief, but in the direct experience of the limits of conceptual thought and the infinite nature of the self \parencite{Carspecken2009aa}.
+
+\subsection{Embodiment, Meaning, and Validity Claims}\label{embodiment-meaning-and-validity-claims}
+
+\subsubsection{The Primacy of Embodied Meaning}\label{the-primacy-of-embodied-meaning}
+
+Carspecken rejects the view of the subject as a detached, cognitive observer. Influenced by pragmatism, he argues that our primary engagement with the world is as embodied agents \parencite{Carspecken1999}. Experience is initially holistic and predifferentiated—a felt sense of the situation before it gets analyzed into distinct objects and concepts \parencite{Carspecken1995aa, Carspecken1999}. Meaning is first and foremost embodied. We feel it pre-reflectively in postures, gestures, and the lived sense of interaction before articulating it linguistically \parencite{Carspecken1995aa}.
+
+\subsubsection{The Structure of Meaning: Validity Claims and Intersubjectivity}\label{the-structure-of-meaning-validity-claims-and-intersubjectivity}
+
+The embodied subject is never solitary. The ``I'' is constituted intersubjectively \parencite{Carspecken2013aa}. Carspecken integrates G.H. Mead's insights on the social genesis of the self with theories of communicative action (Habermas) and recognition (Honneth) \parencite{Carspecken1995aa, Carspecken1999, Carspecken2018}. Identity formation depends fundamentally on the recognition of the ``I'' by others.
+
+In this framework, meaning becomes an interactive achievement structured by ``validity claims'' \parencite{Carspecken1995aa}. Every meaningful act implicitly raises claims corresponding to three ontological realms: objective truth, subjective honesty, and normative appropriateness. Meaning is constituted by the horizon of expectations and the boundaries of acceptable responses anticipated by the actor \parencite{Carspecken1999, Carspecken2013aa}.
+
+\subsubsection{Truth, Power, and Consensus}\label{truth-power-and-consensus}
+
+Truth, then, is not a correspondence between a picture and reality, but a consensus reached through rational argumentation \parencite{Carspecken1995aa}. A validity claim gets validated when it wins the consent of a potentially universal audience. Here's what matters most: this consensus must be free from coercion. Carspecken emphasizes that unequal power relations invariably distort truth claims. True consensus presupposes equal power relations—a democratic principle inherent in the very concept of truth \parencite{Carspecken1995aa}. This links epistemology directly to the critical value orientation: the pursuit of truth requires the critique of power and the equalization of social relations.
+
+\subsection{Conclusion: The Critical Project as the Recovery of the Infinite}\label{conclusion-the-critical-project-as-the-recovery-of-the-infinite}
+
+Phil Carspecken's work offers a rigorous framework that moves beyond the limitations of both mainstream positivism and the nihilistic tendencies of some post-structuralism \parencite{Carspecken1995aa}. By grounding his epistemology in communicative action, intersubjectivity, and the phenomenology of the non-objective ``I,'' he provides a way to understand the intricate relationship between power, truth, and identity \parencite{Carspecken1999, Carspecken2013aa}. The critical project, in this view, is about recovering the missing infinite—recognizing the non-finite nature of the human subject that picture-thinking obscures, and fostering the conditions for genuine recognition and freedom \parencite{Carspecken1999, Carspecken2018}.
+
+\printbibliography
+
+\end{document}

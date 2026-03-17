@@ -1,0 +1,49 @@
+PML Core Framework Loaded.
+
+=== PML CORE FRAMEWORK: SIMPLE TESTS ===
+
+
+[TEST] Module Loading
+  All core modules loaded
+  PASS
+
+[TEST] Highlander Automaton
+  Accepts single element
+  PASS
+  Rejects multiple elements
+  PASS
+
+[TEST] Prime Utilities
+  Prime utilities working
+  PASS
+
+[TEST] Arche-Trace
+  Trace generation and resistance working
+  PASS
+
+[TEST] Identity Rule
+  Identity rule works with resource tracking
+  PASS
+
+[TEST] Explosion Rule
+  Explosion from contradiction works
+  PASS
+
+[TEST] Dialectical Rhythm: U -> A
+  First negation (U -> Box_down(A)) works
+  PASS
+
+[TEST] Oobleck Dynamic: S -> O
+  S-O transfer works
+  PASS
+
+[TEST] I-Feeling (Elusive Subject)
+  I-Feeling contains trace
+  PASS
+
+[TEST] Unsatisfiable Desire
+  Cannot represent I_f with finite claim
+  PASS
+
+=== ALL TESTS COMPLETE ===
+

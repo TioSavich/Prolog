@@ -1,0 +1,52 @@
+PML Core Framework Loaded.
+
+=== CRITIQUE MECHANISM TESTS ===
+
+
+[TEST] Stress Map: Recording Failures
+  Stress tracking working correctly
+  PASS
+
+[TEST] Commitment Extraction from Proof
+  Successfully extracted commitments from proof
+  PASS
+
+[TEST] Bad Infinite: Cycle Detection
+  Cycle detection requires proof generation
+  Structure defined (implementation pending)
+  PASS
+
+[TEST] Identify Most Stressed Commitment
+  Correctly identified most stressed commitment
+  PASS
+
+[TEST] Resource Exhaustion: Stress Recording
+Handling Resource Exhaustion for: [s(u)]=>[s(comp_nec(a))]
+  Incremented stress for: [s(u)]=>[s(comp_nec(a))]
+  Resource exhaustion recorded. External intervention required.
+  Resource exhaustion recorded in stress map
+  PASS
+
+[TEST] Incoherence: Belief Revision
+  Testing belief revision mechanism...
+Handling Incoherence in Commitments: [([a,b]=>c)]
+Retracting/Modifying stressed commitment: [a,b]=>c
+Blocking problematic commitment: [a,b]=>c
+  Belief revision attempted (dynamic assertion may vary)
+  PASS
+
+[TEST] Bad Infinite: Sublation Mechanism
+  Testing sublation mechanism...
+Handling Bad Infinite (Pathological Cycle): [node(pml_rhythm((s(t_b)=>s(comp_nec(t_n)))),([s(t_b)]=>[s(comp_nec(t_n))])),node(pml_rhythm((s(t_n)=>s(comp_nec(t_b)))),([s(t_n)]=>[s(comp_nec(t_b))]))]
+  Detected oscillation between: [([s(t_b)]=>[s(comp_nec(t_n))]),([s(t_n)]=>[s(comp_nec(t_b))])]
+  SUBLATION REQUIRED: Introduce higher-level concept to resolve oscillation
+  Example: Being <-> Nothing requires "Becoming"
+  System cannot auto-generate new concepts yet.
+    Marked as stressed: [s(t_b)]=>[s(comp_nec(t_n))] via pml_rhythm((s(t_b)=>s(comp_nec(t_n))))
+    Marked as stressed: [s(t_n)]=>[s(comp_nec(t_b))] via pml_rhythm((s(t_n)=>s(comp_nec(t_b))))
+  External conceptual intervention required.
+  Bad Infinite elements marked as stressed
+  PASS
+
+=== CRITIQUE TESTS COMPLETE ===
+

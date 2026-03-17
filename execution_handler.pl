@@ -114,7 +114,7 @@ handle_perturbation(perturbation(resource_exhaustion), Goal, Trace, Limit) :-
     writeln(''),
     
     % NEW: Consult the oracle to see how an expert would solve this
-    (   consult_oracle_for_solution(Goal, OracleResult, OracleInterpretation)
+    (   consult_oracle_for_solution(Goal, StrategyName, OracleResult, OracleInterpretation)
     ->  format('  Oracle Result: ~w~n', [OracleResult]),
         format('  Oracle Says: "~w"~n', [OracleInterpretation]),
         writeln(''),
@@ -126,7 +126,8 @@ handle_perturbation(perturbation(resource_exhaustion), Goal, Trace, Limit) :-
             goal: Goal,
             failed_trace: NormalizedTrace,
             target_result: OracleResult,
-            target_interpretation: OracleInterpretation
+            target_interpretation: OracleInterpretation,
+            strategy_name: StrategyName
         },
         
         % NEW: Instead of pattern matching, we synthesize from constraints
@@ -233,27 +234,29 @@ handle_perturbation(Error, _, _, _) :-
 %
 %       Attempts to consult the oracle for a solution to the failed goal.
 %       Converts between Peano numbers and integers as needed.
-%       Tries each available strategy until one succeeds.
+%       Tries each available strategy until one succeeds and is novel.
 %
-consult_oracle_for_solution(object_level:add(A, B, _), Result, Interpretation) :-
+consult_oracle_for_solution(object_level:add(A, B, _), StrategyName, Result, Interpretation) :-
     peano_to_int(A, IntA),
     peano_to_int(B, IntB),
-    % Try each available strategy until one succeeds
+    % Try each available strategy until one succeeds and is NOT already known
     oracle_server:list_available_strategies(add, Strategies),
     member(StrategyName, Strategies),
+    \+ clause(more_machine_learner:run_learned_strategy(_,_,_,StrategyName,_), _),
     catch(
         oracle_server:query_oracle(add(IntA, IntB), StrategyName, Result, Interpretation),
         _,
         fail
     ),
-    !.  % Cut after first successful strategy
+    !.  % Cut after first successful novel strategy
 
-consult_oracle_for_solution(add(A, B, _), Result, Interpretation) :-
+consult_oracle_for_solution(add(A, B, _), StrategyName, Result, Interpretation) :-
     % Handle case without object_level: prefix
     peano_to_int(A, IntA),
     peano_to_int(B, IntB),
     oracle_server:list_available_strategies(add, Strategies),
     member(StrategyName, Strategies),
+    \+ clause(more_machine_learner:run_learned_strategy(_,_,_,StrategyName,_), _),
     catch(
         oracle_server:query_oracle(add(IntA, IntB), StrategyName, Result, Interpretation),
         _,

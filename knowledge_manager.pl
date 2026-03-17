@@ -45,9 +45,14 @@ reset_learned_knowledge :-
     writeln(''),
     writeln('Clearing dynamic predicates...'),
     
-    % Abolish all learned strategy clauses
-    abolish(more_machine_learner:run_learned_strategy/5),
-    dynamic(more_machine_learner:run_learned_strategy/5),
+    % Retract all learned strategy clauses without destroying the predicate properties
+    retractall(more_machine_learner:run_learned_strategy(_,_,_,_,_)),
+    
+    % Restore object_level:add to its purely primordial state
+    % We use make/consult here to avoid namespace qualifier injection bugs
+    % resulting from using assertz across module boundaries.
+    retractall(object_level:add(_,_,_)),
+    consult('object_level.pl'),
     
     writeln('Deleting learned_knowledge.pl...'),
     
@@ -105,8 +110,7 @@ restore_learned_knowledge(BackupName) :-
     
     (   exists_file(BackupFile)
     ->  % Clear current knowledge
-        abolish(more_machine_learner:run_learned_strategy/5),
-        dynamic(more_machine_learner:run_learned_strategy/5),
+        retractall(more_machine_learner:run_learned_strategy(_,_,_,_,_)),
         
         % Copy backup to active file
         copy_file(BackupFile, 'learned_knowledge.pl'),

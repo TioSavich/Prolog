@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prolog Math Bootstrapping Shell</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="glass-panel">
+            <div class="header-content">
+                <h1>Prolog <span class="accent-glow">Cognitive</span> Shell</h1>
+                <p>Observe, Reorganize, Reflect (ORR) learning cycle visualization.</p>
+            </div>
+            <div class="header-controls">
+                <button id="resetBtn" class="btn btn-danger">↺ Reset Knowledge</button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="workspace">
+            <!-- Left Column: Controls & Dashboard -->
+            <section class="dashboard">
+                <div class="panel glass-panel query-panel">
+                    <h2>Execute Query</h2>
+                    <form id="queryForm">
+                        <div class="input-group">
+                            <label for="opSelect">Operation</label>
+                            <select id="opSelect" disabled>
+                                <option value="add" selected>Addition (+)</option>
+                                <option value="subtract" disabled>Subtraction (-)</option>
+                                <option value="multiply" disabled>Multiplication (*)</option>
+                            </select>
+                        </div>
+                        <div class="inputs-row">
+                            <div class="input-group">
+                                <label for="inputA">Input A</label>
+                                <input type="number" id="inputA" min="0" value="8" required>
+                            </div>
+                            <div class="input-group">
+                                <label for="inputB">Input B</label>
+                                <input type="number" id="inputB" min="0" value="5" required>
+                            </div>
+                        </div>
+                        <div class="inputs-row limit-row">
+                            <div class="input-group">
+                                <label for="inputLimit">Inference Budget Limit</label>
+                                <input type="number" id="inputLimit" min="1" value="20" required>
+                            </div>
+                        </div>
+                        <button type="submit" id="runBtn" class="btn btn-primary glow-btn">Execute Goal</button>
+                    </form>
+                </div>
+
+                <div class="panel glass-panel status-panel">
+                    <h2>Cognitive State</h2>
+                    <div class="budget-tracker">
+                        <div class="budget-header">
+                            <span>Inference Resource</span>
+                            <span id="budgetVisualLabel">100%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="budgetProgress"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="learned-strategies">
+                        <h3>Abstracted Strategies</h3>
+                        <ul id="strategyList" class="strategy-list">
+                            <li class="empty-state">Primordial State (No abstractions)</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Column: Terminal Output -->
+            <section class="terminal-container glass-panel">
+                <div class="terminal-header">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                    <span class="terminal-title">meta_interpreter ~ /brain</span>
+                </div>
+                <div id="terminalBody" class="terminal-body">
+                    <div class="terminal-line"><span class="prompt">swipl&gt;</span> <span class="text">System initialized. Waiting for goal...</span></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modals / Overlays -->
+    <div id="crisisOverlay" class="overlay hidden">
+        <div class="crisis-modal">
+            <h2 class="crisis-title">⚠️ SYSTEM CRISIS DETECTED ⚠️</h2>
+            <p id="crisisMessage">Resource exhausted on counting all.</p>
+            <div class="crisis-fx"></div>
+            <button id="dismissCrisisBtn" class="btn btn-outline">Consult Oracle</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+[Learner Init] Knowledge file not found. Starting fresh.
+
+╔════════════════════════════════════════════════════════════╗
+║  UMEDCA Full Learning Curriculum                           ║
+║  Learning ALL Oracle Strategies                            ║
+╚════════════════════════════════════════════════════════════╝
+
+═══════════════════════════════════════════════════════════
+Setup: Resetting to Primordial State
+═══════════════════════════════════════════════════════════
+Clearing all learned strategies for clean developmental test...
+╔════════════════════════════════════════════════════════════╗
+║  Resetting Learned Knowledge                               ║
+╚════════════════════════════════════════════════════════════╝
+
+Current learned strategies: 0
+
+Clearing dynamic predicates...
+Deleting learned_knowledge.pl...
+• learned_knowledge.pl not found (already clean)
+
+✓ System reset to primordial state
+  Only Counting All strategy remains
+
+✓ Reset complete - starting from primordial machine
+
+╔════════════════════════════════════════════════════════════╗
+║  Current Learned Knowledge                                 ║
+╚════════════════════════════════════════════════════════════╝
+
+Total Strategies: 0
+
+No strategies learned yet.
+System is in primordial state (Counting All only).
+
+Knowledge file: not found
+
+═══════════════════════════════════════════════════════════
+Stage 1: Sense-Certainty (Primordial Capability)
+═══════════════════════════════════════════════════════════
+Testing problems solvable with Counting All...
+
+  Testing: add(2, 1, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(0)) B=s(0) Res=_124452 Name=_124640 Trace=_124642
+      [DEBUG] run_learned_strategy FAILED
+      [Strategy Selection] No learned strategy applicable, using primordial add/3
+Computation successful.
+    ✓ Success
+  Testing: add(2, 2, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(0)) B=s(s(0)) Res=_125594 Name=_125786 Trace=_125788
+      [DEBUG] run_learned_strategy FAILED
+      [Strategy Selection] No learned strategy applicable, using primordial add/3
+Computation successful.
+    ✓ Success
+  Testing: add(3, 1, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(s(0))) B=s(0) Res=_126844 Name=_127036 Trace=_127038
+      [DEBUG] run_learned_strategy FAILED
+      [Strategy Selection] No learned strategy applicable, using primordial add/3
+═══════════════════════════════════════════════════════════
+  CRISIS: Resource Exhaustion Detected
+═══════════════════════════════════════════════════════════
+  Failed Goal: object_level:add(s(s(s(0))),s(0),_128)
+  Initiating Oracle Consultation...
+
+  Oracle Result: 4
+  Oracle Says: "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4"
+
+  Attempting to synthesize strategy from oracle guidance...
+    [Oracle-Backed Learning] Creating strategy from expert knowledge...
+      Strategy: COBO
+      Target Result: 4
+      Interpretation: "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4"
+      Creating oracle-backed predicate...
+      ✓ Asserted: object_level:add(_1806,_1812,_1818) :- <oracle call>
+      ✓ Asserted learned strategy: COBO
+[Oracle-Backed Learning] ✓ Learned COBO strategy for add
+      System can now perform this operation by consulting expert.
+      This represents genuine accommodation: capability expansion through crisis.
+  ✓ Successfully synthesized new strategy!
+  [DEBUG] running listing from execution_handler:
+    ✗ Error: error(existence_error(procedure,execution_handler:run_learned_strategy),context(toplevel,DWIM could not correct goal))
+✓ Stage 1 Complete - Primordial strategy works for small numbers
+
+═══════════════════════════════════════════════════════════
+Stage 2: First Crisis → Learn COBO
+═══════════════════════════════════════════════════════════
+Triggering crisis with add(8, 5)...
+Expected: Oracle teaches COBO (Count On from Bigger)
+
+  Testing: add(8, 5, R) [CRISIS]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(0)))))))) B=s(s(s(s(s(0))))) Res=_190 Name=_418 Trace=_420
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=8
+      [BODY TRACE] Built IntB=5
+      [BODY TRACE] Calling query_oracle with add(8,5)
+      [BODY TRACE] Result=13, Interp="Count on from bigger: Start at max(8,5), count up min(8,5) times to reach 13"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(8,5), count up min(8,5) times to reach 13"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+⚠️  COBO not learned (check synthesis engine)
+✓ Stage 2 Complete - First crisis resolved
+
+═══════════════════════════════════════════════════════════
+Stage 3: Generalization Test
+═══════════════════════════════════════════════════════════
+Testing if COBO generalizes...
+
+  Testing: add(7, 6, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(0))))))) B=s(s(s(s(s(s(0)))))) Res=_2722 Name=_2950 Trace=_2952
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=7
+      [BODY TRACE] Built IntB=6
+      [BODY TRACE] Calling query_oracle with add(7,6)
+      [BODY TRACE] Result=13, Interp="Count on from bigger: Start at max(7,6), count up min(7,6) times to reach 13"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(7,6), count up min(7,6) times to reach 13"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+  Testing: add(9, 4, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(0))))))))) B=s(s(s(s(0)))) Res=_5560 Name=_5788 Trace=_5790
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=9
+      [BODY TRACE] Built IntB=4
+      [BODY TRACE] Calling query_oracle with add(9,4)
+      [BODY TRACE] Result=13, Interp="Count on from bigger: Start at max(9,4), count up min(9,4) times to reach 13"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(9,4), count up min(9,4) times to reach 13"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+  Testing: add(3, 8, R) [commutative]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(0))) B=s(s(s(s(s(s(s(s(0)))))))) Res=_7782 Name=_8002 Trace=_8004
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=3
+      [BODY TRACE] Built IntB=8
+      [BODY TRACE] Calling query_oracle with add(3,8)
+      [BODY TRACE] Result=11, Interp="Count on from bigger: Start at max(3,8), count up min(3,8) times to reach 11"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(3,8), count up min(3,8) times to reach 11"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+✓ Stage 3 Complete - COBO generalizes
+
+═══════════════════════════════════════════════════════════
+Stage 4: Second Crisis → Learn RMB
+═══════════════════════════════════════════════════════════
+Forcing crisis with LARGE numbers...
+Expected: COBO exhausts resources, oracle teaches RMB
+
+Testing add(15, 9) - COBO must count 9 times (will exhaust)...
+  Testing: add(15, 9, R) [CRISIS]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0))))))))))))))) B=s(s(s(s(s(s(s(s(s(0))))))))) Res=_11002 Name=_11274 Trace=_11276
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=15
+      [BODY TRACE] Built IntB=9
+      [BODY TRACE] Calling query_oracle with add(15,9)
+      [BODY TRACE] Result=24, Interp="Count on from bigger: Start at max(15,9), count up min(15,9) times to reach 24"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(15,9), count up min(15,9) times to reach 24"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+Testing add(12, 8) - COBO must count 8 times (will exhaust)...
+  Testing: add(12, 8, R) [CRISIS]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))) B=s(s(s(s(s(s(s(s(0)))))))) Res=_16196 Name=_16452 Trace=_16454
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=12
+      [BODY TRACE] Built IntB=8
+      [BODY TRACE] Calling query_oracle with add(12,8)
+      [BODY TRACE] Result=20, Interp="Count on from bigger: Start at max(12,8), count up min(12,8) times to reach 20"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(12,8), count up min(12,8) times to reach 20"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+Current strategies learned: 1
+✓ Stage 4 Complete - Forced new crisis with larger numbers
+
+═══════════════════════════════════════════════════════════
+Stage 5: Third Crisis → Learn Chunking
+═══════════════════════════════════════════════════════════
+Forcing crisis with EVEN LARGER numbers...
+Expected: Previous strategies exhaust, oracle teaches Chunking
+
+Testing add(20, 15) - massive problem (35 total)...
+  Testing: add(20, 15, R) [CRISIS]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))))))))))) B=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0))))))))))))))) Res=_20554 Name=_20870 Trace=_20872
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=20
+      [BODY TRACE] Built IntB=15
+      [BODY TRACE] Calling query_oracle with add(20,15)
+      [BODY TRACE] Result=35, Interp="Count on from bigger: Start at max(20,15), count up min(20,15) times to reach 35"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(20,15), count up min(20,15) times to reach 35"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+Testing add(18, 12) - large decade problem...
+  Testing: add(18, 12, R) [CRISIS]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))))))))) B=s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))) Res=_25444 Name=_25740 Trace=_25742
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=18
+      [BODY TRACE] Built IntB=12
+      [BODY TRACE] Calling query_oracle with add(18,12)
+      [BODY TRACE] Result=30, Interp="Count on from bigger: Start at max(18,12), count up min(18,12) times to reach 30"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(18,12), count up min(18,12) times to reach 30"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+Current strategies learned: 1
+✓ Stage 5 Complete - Forced third crisis
+
+═══════════════════════════════════════════════════════════
+Stage 6: Fourth Crisis → Learn Rounding
+═══════════════════════════════════════════════════════════
+Forcing crisis with MASSIVE numbers...
+Expected: All previous strategies exhaust, oracle teaches Rounding
+
+Testing add(29, 18) - near 50, massive count...
+  Testing: add(29, 18, R) [CRISIS]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0))))))))))))))))))))))))))))) B=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))))))))) Res=_28440 Name=_28804 Trace=_28806
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=29
+      [BODY TRACE] Built IntB=18
+      [BODY TRACE] Calling query_oracle with add(29,18)
+      [BODY TRACE] Result=47, Interp="Count on from bigger: Start at max(29,18), count up min(29,18) times to reach 47"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(29,18), count up min(29,18) times to reach 47"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+Testing add(38, 21) - approaching 60...
+  Testing: add(38, 21, R) [CRISIS]
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))))))))))))))))))))))))))))) B=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0))))))))))))))))))))) Res=_36570 Name=_36982 Trace=_36984
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=38
+      [BODY TRACE] Built IntB=21
+      [BODY TRACE] Calling query_oracle with add(38,21)
+      [BODY TRACE] Result=59, Interp="Count on from bigger: Start at max(38,21), count up min(38,21) times to reach 59"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(38,21), count up min(38,21) times to reach 59"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+Current strategies learned: 1
+✓ Stage 6 Complete - Forced fourth crisis with extreme numbers
+
+═══════════════════════════════════════════════════════════
+Stage 7: Mastery Test
+═══════════════════════════════════════════════════════════
+Testing diverse problems with learned strategies...
+These should all succeed efficiently now!
+
+  Testing: add(13, 7, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(0))))))))))))) B=s(s(s(s(s(s(s(0))))))) Res=_41182 Name=_41438 Trace=_41440
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=13
+      [BODY TRACE] Built IntB=7
+      [BODY TRACE] Calling query_oracle with add(13,7)
+      [BODY TRACE] Result=20, Interp="Count on from bigger: Start at max(13,7), count up min(13,7) times to reach 20"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(13,7), count up min(13,7) times to reach 20"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+  Testing: add(25, 8, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0))))))))))))))))))))))))) B=s(s(s(s(s(s(s(s(0)))))))) Res=_45072 Name=_45380 Trace=_45382
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=25
+      [BODY TRACE] Built IntB=8
+      [BODY TRACE] Calling query_oracle with add(25,8)
+      [BODY TRACE] Result=33, Interp="Count on from bigger: Start at max(25,8), count up min(25,8) times to reach 33"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(25,8), count up min(25,8) times to reach 33"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+  Testing: add(16, 14, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))))))) B=s(s(s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))))) Res=_50888 Name=_51184 Trace=_51186
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=16
+      [BODY TRACE] Built IntB=14
+      [BODY TRACE] Calling query_oracle with add(16,14)
+      [BODY TRACE] Result=30, Interp="Count on from bigger: Start at max(16,14), count up min(16,14) times to reach 30"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(16,14), count up min(16,14) times to reach 30"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+  Testing: add(30, 19, R)
+      [DEBUG] Calling run_learned_strategy A=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0)))))))))))))))))))))))))))))) B=s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(s(0))))))))))))))))))) Res=_54808 Name=_55180 Trace=_55182
+      [BODY TRACE] Starting native strategy execution...
+      [BODY TRACE] Built IntA=30
+      [BODY TRACE] Built IntB=19
+      [BODY TRACE] Calling query_oracle with add(30,19)
+      [BODY TRACE] Result=49, Interp="Count on from bigger: Start at max(30,19), count up min(30,19) times to reach 49"
+[Warning] Interpretation mismatch: expected "Count on from bigger: Start at max(3,1), count up min(3,1) times to reach 4", got "Count on from bigger: Start at max(30,19), count up min(30,19) times to reach 49"
+      [Strategy Selection] Using learned strategy: COBO
+Computation successful.
+    ✓ Success
+✓ Stage 7 Complete - Mastery demonstrated with learned strategies
+
+
+╔════════════════════════════════════════════════════════════╗
+║  Full Curriculum Complete!                                 ║
+╚════════════════════════════════════════════════════════════╝
+
+Final Learning Summary:
+
+Total Strategies Learned: 1
+
+Strategies:
+  • COBO
+
+Oracle Strategies Available:
+  1. COBO (Count On from Bigger)
+  2. RMB (Rearrange to Make Base)
+  3. Chunking (Decades + Ones)
+  4. Rounding (Round to nearest ten)
+
+⚠️  System learned only 1 strategy.
+  May need more diverse crises to trigger additional learning.
+
+To reset and retry: reset_learned_knowledge.
+To backup current state: backup_learned_knowledge(curriculum_complete).
+

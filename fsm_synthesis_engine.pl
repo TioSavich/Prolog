@@ -135,31 +135,41 @@ assert_oracle_backed_strategy(Op, StrategyName, Interpretation) :-
     
     % Build the body: convert → query oracle → convert back
     Body = (
+        writeln('      [BODY TRACE] Starting native strategy execution...'),
         % Convert Peano to integers
-        peano_to_int(A, IntA),
-        peano_to_int(B, IntB),
+        fsm_synthesis_engine:peano_to_int(A, IntA),
+        format('      [BODY TRACE] Built IntA=~w~n', [IntA]),
+        fsm_synthesis_engine:peano_to_int(B, IntB),
+        format('      [BODY TRACE] Built IntB=~w~n', [IntB]),
         
         % Build integer operation goal
         OpInt =.. [Op, IntA, IntB],
+        format('      [BODY TRACE] Calling query_oracle with ~w~n', [OpInt]),
         
         % Query oracle with specific strategy
         oracle_server:query_oracle(OpInt, StrategyName, IntResult, OracleInterpretation),
+        format('      [BODY TRACE] Result=~w, Interp="~w"~n', [IntResult, OracleInterpretation]),
         
         % Convert result back to Peano
-        int_to_peano(IntResult, Result),
+        fsm_synthesis_engine:int_to_peano(IntResult, Result),
         
         % Optional: Log interpretation for debugging
         (   OracleInterpretation = Interpretation
-        ->  true
+        ->  writeln('      [BODY TRACE] Interpretation matches perfectly!')
         ;   format('[Warning] Interpretation mismatch: expected "~w", got "~w"~n', 
                    [Interpretation, OracleInterpretation])
         )
     ),
     
-    % Assert the new strategy
-    assertz((object_level:OpGoal :- Body)),
+    % Assert the new strategy as object_level so 'unknown_operation' fallbacks succeed
+    asserta((object_level:OpGoal :- Body)),
     
-    format('      ✓ Asserted: object_level:~w :- <oracle call>~n', [OpGoal]).
+    % ALSO assert as a learned strategy so meta_interpreter will choose it over primordial versions
+    StrategyHead = run_learned_strategy(A, B, Result, StrategyName, fsm_trace(StrategyName, [])),
+    asserta((more_machine_learner:StrategyHead :- Body)),
+    
+    format('      ✓ Asserted: object_level:~w :- <oracle call>~n', [OpGoal]),
+    format('      ✓ Asserted learned strategy: ~w~n', [StrategyName]).
 
 %!      peano_to_int(+Peano, -Int) is det.
 %       int_to_peano(+Int, -Peano) is det.

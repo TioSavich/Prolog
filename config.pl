@@ -30,12 +30,12 @@
 %
 %       This predicate is dynamic, so it can be changed at runtime if needed.
 %
-%       PRIMORDIAL MACHINE SETTING: Set to 10 to force early crisis.
+%       PRIMORDIAL MACHINE SETTING: Set to 20 to force early crisis.
 %       The "Counting All" strategy will fail on add(8,5) which requires
-%       5 enumeration steps, triggering resource_exhaustion and forcing
-%       the first dialectical progression.
+%       25 enumeration steps, triggering resource_exhaustion and forcing
+%       the first dialectical progression, while allowing 3+1 (11 steps) to pass.
 :- dynamic max_inferences/1.
-max_inferences(10).
+max_inferences(20).
 
 %!      max_retries(?Limit:integer) is nondet.
 %

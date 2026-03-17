@@ -96,8 +96,8 @@ stage_2_first_crisis_cobo :-
     test_problem('add(8, 5, R) [CRISIS]', add(8, 5, _), Limit),
     
     % Verify COBO was learned
-    (   clause(more_machine_learner:run_learned_strategy(_,_,_,count_on_bigger,_), _)
-    ->  writeln('✓ COBO strategy learned (count_on_bigger)')
+    (   clause(more_machine_learner:run_learned_strategy(_,_,_,'COBO',_), _)
+    ->  writeln('✓ COBO strategy learned')
     ;   writeln('⚠️  COBO not learned (check synthesis engine)')
     ),
     
@@ -140,12 +140,12 @@ stage_4_second_crisis_rmb :-
     
     config:max_inferences(Limit),
     
-    % LARGE problems where even COBO will exhaust (counting 9 or 8 steps)
-    writeln('Testing add(15, 9) - COBO must count 9 times (will exhaust)...'),
-    test_problem('add(15, 9, R) [CRISIS]', add(15, 9, _), Limit),
+    % LARGE problems where even COBO will exhaust (min(A,B) > 19)
+    writeln('Testing add(45, 25) - COBO must count 25 times (will exhaust)...'),
+    test_problem('add(45, 25, R) [CRISIS]', add(45, 25, _), Limit),
     
-    writeln('Testing add(12, 8) - COBO must count 8 times (will exhaust)...'),
-    test_problem('add(12, 8, R) [CRISIS]', add(12, 8, _), Limit),
+    writeln('Testing add(52, 21) - COBO must count 21 times (will exhaust)...'),
+    test_problem('add(52, 21, R) [CRISIS]', add(52, 21, _), Limit),
     
     % Check if new strategy learned
     findall(N, clause(more_machine_learner:run_learned_strategy(_,_,_,N,_), _), Strategies),
@@ -170,16 +170,16 @@ stage_5_chunking_crisis :-
     
     config:max_inferences(Limit),
     
-    % VERY LARGE problems that will exhaust any counting-based strategy
-    writeln('Testing add(20, 15) - massive problem (35 total)...'),
-    test_problem('add(20, 15, R) [CRISIS]', add(20, 15, _), Limit),
+    % VERY LARGE problems that will exhaust RMB (both far from 10)
+    writeln('Testing add(44, 45) - massive problem (both far from 10, dist 34 and 35)...'),
+    test_problem('add(44, 45, R) [CRISIS]', add(44, 45, _), Limit),
     
-    writeln('Testing add(18, 12) - large decade problem...'),
-    test_problem('add(18, 12, R) [CRISIS]', add(18, 12, _), Limit),
+    writeln('Testing add(55, 36) - large decade problem...'),
+    test_problem('add(55, 36, R) [CRISIS]', add(55, 36, _), Limit),
     
     findall(N, clause(more_machine_learner:run_learned_strategy(_,_,_,N,_), _), Strategies),
-    length(Strategies, Count),
-    format('Current strategies learned: ~w~n', [Count]),
+    length(Strategies, Count2),
+    format('Current strategies learned: ~w~n', [Count2]),
     
     writeln('✓ Stage 5 Complete - Forced third crisis'),
     writeln('').
@@ -198,11 +198,12 @@ stage_6_rounding_crisis :-
     config:max_inferences(Limit),
     
     % EXTREME problems near boundaries (these should trigger rounding)
-    writeln('Testing add(29, 18) - near 50, massive count...'),
-    test_problem('add(29, 18, R) [CRISIS]', add(29, 18, _), Limit),
+    % Chunking will exhaust on 94+95 (9+9 decades > 17)
+    writeln('Testing add(94, 95) - near 100, chunking mass count...'),
+    test_problem('add(94, 95, R) [CRISIS]', add(94, 95, _), Limit),
     
-    writeln('Testing add(38, 21) - approaching 60...'),
-    test_problem('add(38, 21, R) [CRISIS]', add(38, 21, _), Limit),
+    writeln('Testing add(98, 92) - approaching 100...'),
+    test_problem('add(98, 92, R) [CRISIS]', add(98, 92, _), Limit),
     
     findall(N, clause(more_machine_learner:run_learned_strategy(_,_,_,N,_), _), Strategies),
     length(Strategies, Count),
@@ -234,13 +235,30 @@ stage_7_mastery_test :-
     writeln('✓ Stage 7 Complete - Mastery demonstrated with learned strategies'),
     writeln('').
 
+% Helper to convert integer arguments to Peano numbers for object-level
+ensure_peano(Int, Peano) :-
+    integer(Int),
+    !,
+    int_to_peano(Int, Peano).
+ensure_peano(Peano, Peano).
+
+int_to_peano(0, 0).
+int_to_peano(I, s(P)) :-
+    I > 0,
+    I_prev is I - 1,
+    int_to_peano(I_prev, P).
+
 %!      test_problem(+Description, +Goal, +Limit) is det.
 %
 %       Helper to test a single problem and report results.
 test_problem(Description, Goal, Limit) :-
-    format('  Testing: ~w~n', [Description]),
+    Goal =.. [Op, A, B, R],
+    ensure_peano(A, PeanoA),
+    ensure_peano(B, PeanoB),
+    PeanoGoal =.. [Op, PeanoA, PeanoB, R],
+    format('  Testing: ~w [Limit: ~w]~n', [Description, Limit]),
     catch(
-        (   execution_handler:run_computation(object_level:Goal, Limit)
+        (   execution_handler:run_computation(object_level:PeanoGoal, Limit)
         ->  writeln('    ✓ Success')
         ;   writeln('    ✗ Failed')
         ),

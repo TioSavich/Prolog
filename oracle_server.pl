@@ -329,14 +329,10 @@ extract_interpretation(StrategyName, _Op, _Num1, _Num2, Result, _History, Interp
 %       @param Operation The operation type (add, subtract, multiply, divide)
 %       @param Strategies A list of strategy names (atoms)
 %
-list_available_strategies(add, Strategies) :-
-    hermeneutic_calculator:list_strategies(+, Strategies).
-list_available_strategies(subtract, Strategies) :-
-    hermeneutic_calculator:list_strategies(-, Strategies).
-list_available_strategies(multiply, Strategies) :-
-    hermeneutic_calculator:list_strategies(*, Strategies).
-list_available_strategies(divide, Strategies) :-
-    hermeneutic_calculator:list_strategies(/, Strategies).
+list_available_strategies(add, ['COBO', 'RMB', 'Chunking', 'Rounding']).
+list_available_strategies(subtract, ['COBO (Missing Addend)', 'CBBO (Take Away)', 'Decomposition', 'Rounding', 'Sliding', 'Chunking A', 'Chunking B', 'Chunking C']).
+list_available_strategies(multiply, ['C2C', 'CBO', 'Commutative Reasoning', 'DR']).
+list_available_strategies(divide, ['Dealing by Ones', 'CBO (Division)', 'IDP', 'UCR']).
 
 % ═══════════════════════════════════════════════════════════════════════
 % ORACLE INTERFACE BOUNDARY
