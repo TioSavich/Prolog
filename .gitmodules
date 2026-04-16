@@ -1,0 +1,3 @@
+[submodule "larql2"]
+	path = larql2
+	url = https://github.com/chrishayuk/larql.git
