@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UMEDCTA: Understanding Mathematics as an Emancipatory Discipline</title>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #110f08;
+            --surface: #1a1710;
+            --border: #3a3428;
+            --text: #d4cfc0;
+            --muted: #8a8470;
+            --accent: #e8a84c;
+            --link: #e0c88a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'IBM Plex Serif', serif;
+            font-size: 16px;
+            line-height: 1.7;
+            letter-spacing: 0.3px;
+        }
+
+        .container {
+            max-width: 760px;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+        }
+
+        header {
+            margin-bottom: 4rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .subtitle {
+            color: var(--muted);
+            font-style: italic;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .date-info {
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        section {
+            margin-bottom: 3.5rem;
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1.2rem;
+            color: var(--accent);
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        a {
+            color: var(--link);
+            text-decoration: none;
+            border-bottom: 1px solid var(--link);
+            transition: color 0.2s ease;
+        }
+
+        a:hover {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        .operators-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .operators-table th {
+            background-color: var(--surface);
+            border: 1px solid var(--border);
+            padding: 0.8rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .operators-table td {
+            border: 1px solid var(--border);
+            padding: 0.8rem;
+        }
+
+        .operators-table tbody tr:nth-child(odd) {
+            background-color: rgba(26, 23, 16, 0.5);
+        }
+
+        .mode-s {
+            color: #a8d5ba;
+        }
+
+        .mode-o {
+            color: #d4a574;
+        }
+
+        .mode-n {
+            color: #8fb3d4;
+        }
+
+        .example-block {
+            background-color: var(--surface);
+            border-left: 3px solid var(--accent);
+            padding: 1.2rem;
+            margin: 1.5rem 0;
+            font-size: 0.95rem;
+        }
+
+        .example-block strong {
+            color: var(--accent);
+        }
+
+        .example-label {
+            color: var(--muted);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .pipeline-section {
+            background-color: var(--surface);
+            padding: 1.5rem;
+            border: 1px solid var(--border);
+            margin: 1.5rem 0;
+        }
+
+        .pipeline-item {
+            margin-bottom: 1.2rem;
+        }
+
+        .pipeline-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .pipeline-title {
+            font-weight: 600;
+            color: var(--accent);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.4rem;
+        }
+
+        .research-list {
+            list-style: none;
+            margin: 1.2rem 0;
+        }
+
+        .research-list li {
+            padding-left: 1.5rem;
+            margin-bottom: 0.8rem;
+            position: relative;
+        }
+
+        .research-list li:before {
+            content: "▪";
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        footer {
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .footer-content {
+            margin-bottom: 1rem;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .footnote {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border);
+        }
+
+        strong {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        em {
+            font-style: italic;
+            color: var(--text);
+        }
+
+        .accent-text {
+            color: var(--accent);
+        }
+
+        @media (max-width: 640px) {
+            .container {
+                padding: 2rem 1.5rem;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            h2 {
+                font-size: 1.2rem;
+            }
+
+            .operators-table {
+                font-size: 0.85rem;
+            }
+
+            .operators-table th,
+            .operators-table td {
+                padding: 0.6rem;
+            }
+
+            .footer-links {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Understanding Mathematics as an Emancipatory Discipline</h1>
+            <p class="subtitle">A critical theory approach to discourse analysis and teacher development</p>
+            <p class="date-info">Research Overview — April 2026</p>
+        </header>
+
+        <section id="problem">
+            <h2>The Problem</h2>
+            <p>
+                Students in mathematics education courses are interesting, thoughtful people who are not talking to each other in ways commensurate with what they have to offer. When teachers elicit student thinking, they are doing something that feels collaborative but is often extractive—pulling ideas upward to be evaluated against unstated normative standards.
+            </p>
+            <p>
+                Existing instruments for studying classroom interaction—<em>TalkMoves</em>, professional noticing rubrics, the <em>Five Practices</em>—capture behavioral proxies for quality discourse. They identify what teachers <em>do</em>: they press for accuracy, they request evidence, they revoice. But they miss something crucial: the epistemic structure of what speakers commit to about the relationship between their own knowing, a student's knowing, and mathematical norms. They see the move without seeing the consciousness behind it.
+            </p>
+        </section>
+
+        <section id="framework">
+            <h2>The Framework: Polarized Modal Logic</h2>
+            <p>
+                Polarized Modal Logic (PML) is a 12-operator vocabulary for tracking the modal structure of discourse. It combines three dimensions:
+            </p>
+            <ul class="research-list">
+                <li><strong>Mode</strong> identifies whose validity claim is at stake—grounded in Habermas's formal pragmatics and Carspecken's meaning scenes. <em>Subjective</em> (S): first-person embodied experience—what the speaker feels, proprioceptively, as tension or release. <em>Objective</em> (O): the structure of the object as constituted for consciousness—what the mathematical claim, the histogram, the concept looks like when you examine it. <em>Normative</em> (N): intersubjectively binding rules—what counts as valid, what commitments and entitlements are in play. N mediates S and O: a thought is objective precisely because the subject recognizes it as normatively binding.</li>
+                <li><strong>Modality</strong> distinguishes necessity (□) from possibility (◇). A speaker who says "this is correct" operates in necessity—a closed commitment. A speaker who says "this could be interesting" operates in possibility—an open orientation.</li>
+                <li><strong>Polarity</strong> is the felt, temporal dimension. Compression (↓) is crystallization: contraction toward fixation, determination, the narrowing of a field. Expansion (↑) is liquefaction: release, integration, the opening of what was closed. This is not metaphor—it is proprioceptively real. A teacher compressing feels grounded, certain, resolved. A teacher expanding feels curious, off-balance, open to what might come.</li>
+            </ul>
+            <p>
+                These three dimensions combine to form 12 operators. Each captures a distinct way consciousness can orient toward experience in discourse—not just what is said, but the embodied posture from which it is said.
+            </p>
+
+            <table class="operators-table">
+                <thead>
+                    <tr>
+                        <th>Operator</th>
+                        <th>Mode</th>
+                        <th>Modality</th>
+                        <th>Polarity</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="mode-s">□S↓</span></td>
+                        <td>Subjective</td>
+                        <td>Necessity</td>
+                        <td>Compression</td>
+                        <td>Fixation: the narrowing of felt awareness into determination</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-s">□S↑</span></td>
+                        <td>Subjective</td>
+                        <td>Necessity</td>
+                        <td>Expansion</td>
+                        <td>Release: the inevitable softening that follows genuine letting-go</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-s">◇S↓</span></td>
+                        <td>Subjective</td>
+                        <td>Possibility</td>
+                        <td>Compression</td>
+                        <td>Temptation: the pull toward fixation, the lure of grasping</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-s">◇S↑</span></td>
+                        <td>Subjective</td>
+                        <td>Possibility</td>
+                        <td>Expansion</td>
+                        <td>Recognition that release is possible; the choice point</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-o">□O↓</span></td>
+                        <td>Objective</td>
+                        <td>Necessity</td>
+                        <td>Compression</td>
+                        <td>Crystallization: the object stabilizes as a bounded, determinate thing</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-o">□O↑</span></td>
+                        <td>Objective</td>
+                        <td>Necessity</td>
+                        <td>Expansion</td>
+                        <td>Liquefaction: the object dissolves into process, medium, multiplicity</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-o">◇O↓</span></td>
+                        <td>Objective</td>
+                        <td>Possibility</td>
+                        <td>Compression</td>
+                        <td>A pattern emerging from noise; diffuse conversation beginning to cohere</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-o">◇O↑</span></td>
+                        <td>Objective</td>
+                        <td>Possibility</td>
+                        <td>Expansion</td>
+                        <td>Inherent instability sensed in a seemingly solid claim or position</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-n">□N↓</span></td>
+                        <td>Normative</td>
+                        <td>Necessity</td>
+                        <td>Compression</td>
+                        <td>Solidification: norms harden into rigid rules, fixed procedures</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-n">□N↑</span></td>
+                        <td>Normative</td>
+                        <td>Necessity</td>
+                        <td>Expansion</td>
+                        <td>Liquefaction: rigid norms dissolve into more universal, reflexive forms</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-n">◇N↓</span></td>
+                        <td>Normative</td>
+                        <td>Possibility</td>
+                        <td>Compression</td>
+                        <td>Risk that liberation hardens into new orthodoxy</td>
+                    </tr>
+                    <tr>
+                        <td><span class="mode-n">◇N↑</span></td>
+                        <td>Normative</td>
+                        <td>Possibility</td>
+                        <td>Expansion</td>
+                        <td>Awareness that established norms are contingent, not absolute</td>
+                    </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section id="evidence">
+            <h2>What PML Reveals: A Concrete Example</h2>
+            <p>
+                In practice, coders identify these postures through linguistic markers. Hedging ("I think," "maybe," "it could be") signals possibility (◇). Categorical assertion ("it doesn't work," "there's no right or wrong answer") signals necessity (□). Self-referential language signals S-mode. Talk about objects, claims, and evidence signals O-mode. Framework invocations and evaluative standards signal N-mode. The felt phenomenology and the discourse markers are two descriptions of the same orientation — whether they are reliably the same thing is what the reliability study will test.
+            </p>
+            <p>
+                To test whether PML captures something real, we coded a publicly available transcript from the <em>TalkMoves</em> dataset (Suresh et al., 2022) — a whole-class mathematics debrief already annotated with standard discourse codes. The transcript is 24 turns long. Both frameworks agree on most interactions, but they diverge sharply on 6 moments. These divergences are not errors — they are the places where PML identifies epistemically relevant structure that behavioral categories collapse.
+            </p>
+
+            <div class="example-block">
+                <div class="example-label">Turn 6 — Teacher</div>
+                <p style="font-style: italic; margin-bottom: 0.8rem; color: var(--text);">"Ok. Um, what's the frequency for the bin that's the highest bar? I can't see it."</p>
+                <strong>TalkMoves codes:</strong> "Press for Accuracy"<br>
+                <strong>PML codes:</strong> ◇O↓ + ◇S↑<br>
+                <p style="margin-top: 0.6rem; font-size: 0.9rem;">
+                    The teacher asks for a specific datum (◇O↓), then discloses: "I can't see it." This is ◇S↑: the choice point where she could pretend to know but instead occupies uncertainty. TalkMoves captures the function (eliciting more speech) but misses the felt posture — embodied openness, the proprioceptive configuration of not-knowing. The next student mirrors this, hedging both source and claim: "According to me, it's approximately 42."
+                </p>
+            </div>
+
+            <div class="example-block">
+                <div class="example-label">Turn 17 — Student S (rebuttal)</div>
+                <p style="font-style: italic; margin-bottom: 0.8rem; color: var(--text);">"What I was thinking that it doesn't work because it's little to no people, not because some people might be like more than because it's real — it's more real to have 100 percent on histogram F while the lowest scores from 20 to 30, there's a bunch of people that has a low score."</p>
+                <strong>TalkMoves codes:</strong> "Providing Evidence / Explaining Reasoning"<br>
+                <strong>PML codes:</strong> ◇S↓ → □N↓ → □O↓<br>
+                <div class="example-label" style="margin-top: 1.2rem;">Turn 21 — Student SN (counter-rebuttal)</div>
+                <p style="font-style: italic; margin-bottom: 0.8rem; color: var(--text);">"I think that the situation you gave fits more to histogram A because, um, histogram A shows no people getting scores of 70 to 80 or higher and so that means that everybody got a very low score, whereas in histogram F a few people got a score that was 70 to 80, 80 to 90, 90 to 100."</p>
+                <strong>TalkMoves codes:</strong> "Providing Evidence / Explaining Reasoning"<br>
+                <strong>PML codes:</strong> ◇S↓ → ◇N↓ → □O↓<br>
+                <p style="margin-top: 0.6rem; font-size: 0.9rem;">
+                    Same TalkMoves code, but structurally different normative postures. Student S crystallizes a norm — "it doesn't work" (□N↓: the other interpretation <em>necessarily</em> fails). Student SN keeps the normative space fluid — "fits more to" (◇N↓: her interpretation <em>possibly</em> fits better). One solidifies; the other negotiates. The distinction matters for how students learn what counts as mathematical argument.
+                </p>
+            </div>
+
+            <div class="example-block">
+                <div class="example-label">Turn 24 — Teacher</div>
+                <p style="font-style: italic; margin-bottom: 0.8rem; color: var(--text);">"Oh, wow. Wow. That— I'm— Hey, you're not right or wrong answer. It's about the strength of your argument. I'm not— There's no right or wrong answer."</p>
+                <strong>TalkMoves codes:</strong> "Press for Accuracy"<br>
+                <strong>PML codes:</strong> ◇S↑ → □N↑<br>
+                <p style="margin-top: 0.6rem; font-size: 0.9rem;">
+                    The teacher's sentence breaks apart — "Oh, wow. That— I'm—" — consciousness expanding in real time (◇S↑), pre-reflective surprise. Then she commits: "It's about the strength of your argument." This is □N↑: normative liquefaction. The rigid norm (correctness) necessarily dissolves into a more universal, reflexive one (argumentation). TalkMoves codes this as "Press for Accuracy." The teacher is explicitly rejecting accuracy as the standard.
+                </p>
+            </div>
+
+            <p>
+                Across the full transcript, a pattern emerges: the teacher exhibits what we tentatively call a <span class="accent-text">decentering signature</span> — dominated by ◇ (possibility) in N-mode, with ◇S↑ present (the felt recognition that release is possible — she occupies not-knowing rather than performing certainty) and □N↓ absent (she never solidifies the norms into rigid, exclusionary rules). Her one moment of normative necessity (□N↑) is expansive — an assertion that the evaluative standard itself must liquefy. This is a hypothesis: if this pattern consistently appears in teaching episodes that experts judge as decentered, and is absent in episodes judged as centered, then PML captures something real about the structure of decentering as embodied practice.
+            </p>
+        </section>
+
+        <section id="pipeline">
+            <h2>The Research Pipeline</h2>
+            <p>
+                PML is not an end in itself. It is one moment in a larger pipeline that connects critical theory, empirical data analysis, formal logic, and pedagogical intervention.
+            </p>
+
+            <div class="pipeline-section">
+                <div class="pipeline-item">
+                    <div class="pipeline-title">Step 1: Data Cleaner</div>
+                    <p>
+                        Strips curricular template material from student written reflections on their own learning. This is material subtraction: identify what the student was <em>asked to say</em>, remove it, and isolate the reflective residue where identity-relevant discourse lives. Automated tagging preserves curriculum references so they can be studied separately.
+                    </p>
+                </div>
+
+                <div class="pipeline-item">
+                    <div class="pipeline-title">Step 2: Formalization (Prolog + LaTeX)</div>
+                    <p>
+                        PML provides a formal grammar. Prolog code implements the 12 operators, proves internal consistency, and models children's arithmetic strategies as finite state machines. The interesting part is not what the formalization captures—it is what breaks. We encounter synthesis gaps (where students cannot build new strategies from components), fraction crises (where ordinal intuitions fail), and an arche-trace erasure boundary (where formal proof goes hollow because subjective experience cannot be stabilized in the calculus). These breakages are not bugs—they are the places where formalization honestly encounters the limits of what it can say.
+                    </p>
+                </div>
+
+                <div class="pipeline-item">
+                    <div class="pipeline-title">Step 3: Portfolio Tools</div>
+                    <p>
+                        Interactive web tools that let educators experience the structures experientially rather than theoretically. The <a href="https://tiosavich.github.io/umedcta-portfolio/">More Machine</a> models tension and relaxation using Zeeman's catastrophe mathematics. The Hermeneutic Calculator makes visible how counting is a form of interpretation. These tools embody the theory—you understand by interacting with the thing itself.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="intervention">
+            <h2>The Intervention: Best Day</h2>
+            <p>
+                The Best Day intervention tests whether this pipeline works with real students and teachers. An AI system analyzes instructor feedback on student writing, identifies complementary positions — students whose PML profiles suggest they are compressing where the other is expanding, or operating in S-mode where the other operates in O-mode — and generates dyadic discussion prompts tailored to specific pairs.
+            </p>
+            <p>
+                A pair might consist of one student who reasons algebraically and one who reasons geometrically. Rather than asking both to adopt the standard approach, the prompt invites them to explain their reasoning to each other in real time. The AI does not interact with students. The AI does not tell them which thinking is "right." The AI simply creates conditions for intersubjective recognition—moments where students encounter a genuinely different way of knowing and have to negotiate what both ways are doing.
+            </p>
+            <p>
+                The contradiction—using AI to foster human connection—is the point. It expresses a conviction about what mathematical understanding actually is: not the internalization of norms, but the capacity to recognize and articulate the grounds on which different speakers are staking different claims about what counts as knowing.
+            </p>
+        </section>
+
+        <section id="directions">
+            <h2>Next Steps: Reliability and Validation</h2>
+            <p>
+                If PML captures epistemic structure that matters for teaching and learning, it should be reliable and predictive. We are pursuing four concurrent directions:
+            </p>
+            <ul class="research-list">
+                <li><strong>Reliability study:</strong> Train 2–3 independent human coders on the PML framework, code a subset of the <em>TalkMoves</em> dataset (~120 minutes of transcript), and measure inter-rater agreement. If the operators can be applied reliably, the framework is viable. If reliability is low, that tells us which operators need refinement—likely the □/◇ distinction, which requires the most interpretive judgment.</li>
+                <li><strong>Validation against outcomes:</strong> Access the NCTE corpus (1,660 classroom observations from multiple US school districts) linked to student outcome data. Test whether teachers with ◇-dominant, N-mode decentering signatures show different student trajectories (growth, persistence, equity gaps) than teachers with □-dominant, S-mode signatures.</li>
+                <li><strong>AI-assisted coding at scale:</strong> Fine-tune a language model on hand-coded exemplars, deploy it to code large video transcripts automatically, and compare against human codes. This is methodologically controversial but practically necessary—human coding alone cannot reach the scale needed for robust comparison.</li>
+                <li><strong>Intervention measurement:</strong> Track whether teachers who use PML-informed materials in their own classrooms shift their modal profiles. Do they talk differently after encountering the framework? Does student discourse change in response?</li>
+            </ul>
+        </section>
+
+        <footer>
+            <div class="footer-content">
+                <strong>Theodore M. Savich</strong><br>
+                Indiana University School of Education
+            </div>
+            <div class="footer-links">
+                <a href="https://tiosavich.github.io/umedcta-portfolio/">Portfolio & Interactive Tools</a>
+                <a href="https://github.com/TioSavich">GitHub</a>
+            </div>
+            <p class="footnote">
+                This is a working research overview. The UMEDCTA framework is under active development. All findings should be read as preliminary pending peer review and replication.
+            </p>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,43 @@
+# §4 Axioms for S-mode, with *Spirit of Trust* on the ground floor
+
+*Target: 1,200–1,500 words. The paper's code-describing section. Present axioms as dialectical movements, not Prolog syntax. Receipts for the specific Prolog clauses live in `docs/phase5/fact-sheet-pml.md`; this section does not require its reader to open that file.*
+
+---
+
+Polarized Modal Logic has twelve operator positions. Three *modes of validity* — subjective (`s`), objective (`o`), normative (`n`) — cross with two *polarities* — compressive (↓) and expansive (↑) — and two *strengths* — necessity (□) and possibility (◇). Twelve positions: `s□↓`, `s□↑`, `s◇↓`, `s◇↑`, `o□↓`, `o□↑`, `o◇↓`, `o◇↑`, `n□↓`, `n□↑`, `n◇↓`, `n◇↑`. In the code they appear as applied terms such as `s(comp_nec(a))` (a subjective compressive necessity of awareness) and `n(exp_nec(forgiveness(A, B)))` (a normative expansive necessity that two agents forgive each other). This paper focuses on the subjective mode. The objective and normative modes are present in the code but less developed. §6 reports on the imbalance.
+
+The modality is not a layer added on top of cognition. The paper takes from Brandom's *A Spirit of Trust* the position that modality is already the grammar of recognition — the shape of what it is to grant, contest, or revise someone's commitments. Compression and expansion are modes in which the space of reasons *tightens around* or *opens around* a claim. Necessity and possibility track how much room the current commitments leave for the claim to go otherwise. The Prolog's material inferences encode the moves a practitioner is licensed to make under this grammar. They do not encode what a practitioner *should* claim.
+
+## Seven axioms in plain English
+
+The S-mode axioms are material inferences. Each has the shape of a rule: *from this premise, the practitioner is licensed to this conclusion*. They are drawn from Hegel's *Science of Logic* as read through Brandom, with some of the dialectical vocabulary carried in the dissertation work that feeds this project. I present them here in English, with short names for the Prolog shorthand. A glossary appears in the appendix for readers who want the cross-reference to the code.
+
+**Unity compresses into awareness.** *From unity* (`u`), *the practitioner passes into a subjective compressive necessity of awareness* (`s(□↓ a)`). Lived through, this is the moment at which a state of simple being-without-reflection is pressed into the form of an object of awareness. Hegel's *Science of Logic* has this movement at the opening; Brandom's reading gives it the recognitive form. Two clauses in the Prolog, one for fresh unity (`u`) and one for transformed unity returned-to-from-release (`u'`), because PML tracks the Hegelian Aufhebung of unity across the cycle.
+
+**Awareness opens possibility of release.** *From awareness* (`s(a)`), *the practitioner is licensed to a subjective expansive possibility of letting-go* (`s(◇↑ lg)`). The awareness that has been compressed into form can open outward into release rather than remaining crystallized. The axiom does not claim release happens; it claims release is available. Possibility, not necessity.
+
+**Awareness opens possibility of fixation.** *From awareness* (`s(a)`), *the practitioner is also licensed to a subjective compressive possibility of temptation* (`s(◇↓ t)`). Compressive possibility rather than expansive: temptation is the direction in which awareness draws further inward on itself, closing rather than opening. The two possibilities — release and fixation — are the fork in the middle of the dialectical cycle. The code lets both be licensed from the same premise, without arbitrating between them. The practitioner chooses, or circumstances choose.
+
+**Temptation compresses into the negation of unity.** *From temptation* (`s(t)`), *the practitioner moves to a subjective compressive necessity of the negation of unity* (`s(□↓ ¬u)`). Fixation carried to its term cuts off the ground it came from. The unity from which awareness emerged is actively refused, not merely absent. This is the pathological end of the cycle.
+
+**Release expansively necessitates a transformed unity.** *From letting-go* (`s(lg)`), *the practitioner moves to a subjective expansive necessity of the transformed unity* (`s(□↑ u')`). Expansive where the other necessities are compressive: release is the only move in the cycle that necessitates expansion rather than contraction. The transformed unity (`u'`) is not identical to the starting unity (`u`); the practitioner who passed through awareness, faced the fork, and released returns to a unity that is aware-of-itself-as-having-been-released. This is Hegel's Aufhebung in the subjective register.
+
+**The bad-infinite cycle between being and nothing.** *From the being-in-tension* (`s(t_b)`), *the practitioner is pressed toward a subjective compressive necessity of the nothing-in-tension* (`s(□↓ t_n)`). And the reverse: from `s(t_n)` to `s(□↓ t_b)`. The Hegelian bad infinite, read into the subjective register: a cycle in which being and nothing alternate without synthesis, because the releasing move that would break the cycle is not taken. The two-way axiom is how the Prolog acknowledges cycling without claiming the cycle resolves.
+
+**Two confessions expansively necessitate forgiveness.** From an intersubjective register: *when two distinct agents each take up a confession-form commitment* (`n(confession(A))` and `n(confession(B))`, with `A ≠ B`), *the pair is licensed to a normative expansive necessity of forgiveness between them* (`n(□↑ forgiveness(A, B))`). This is Brandom's rendering of Hegel's magnanimity/forgiveness structure at the close of the *Phenomenology*: reciprocal confession is the condition under which mutual recognition becomes expansively necessary. The axiom is one rule, one arrow; the code does not model how confessions are sustained or revoked. The paper uses this axiom to connect the dialectical rhythm of S-mode to the pragmatic horizon of recognition that shows up in classrooms.
+
+## The trace mechanism as formal marker for hollow proof
+
+The S-mode axioms run through a sequent calculus. When a sequent contains a variable carrying the `arche_trace` attribute — the mechanism described in §3 as the formal analog of the feeling body's refusal of objectification — the proof object returned is not an ordinary proof but an `erasure`. The derivation still succeeds structurally; the rules fire, the sequent closes. The proof object marks that the content carried by the trace-bearing variable has not been pinned down.
+
+The Prolog tests check this explicitly. The test labeled *proof erasure: trace propagation* passes: when the I-feeling appears in a premise, the proof the engine returns is an `erasure`, not a `proof`. The point is not that the derivation fails. The point is that the derivation succeeds in a form that records its own limit.
+
+## What the paper does not claim about this code
+
+The Prolog tests establish internal consistency. Twenty-eight core tests pass. Seven dialectical rhythm sequents, five trace mechanism tests, and the full set of structural rules (identity, explosion, negation handling, resource bounds) all hold. This is what internal consistency looks like.
+
+Internal consistency is not empirical validation. The axioms do not fall out of the code; they fall into it, from Hegel and Brandom and the dissertation work. Whether the axioms track actual moves a speaker makes — whether a real claim under real conversational pressure really does compress or expand in the way the axioms say it does — is an open empirical question. §5 sketches what a test could look like. §6 names the gap.
+
+The code has one mode-connecting rule that landed during the audit this paper is building on: an objective proof now licenses a normative commitment (`o(P) → n(P)`). One direction, one rule, one arrow. The reverse rule — normative commitment licensing subjective embrace — is named in the surrounding prose and not yet coded. The objective-mode axioms are thin. The normative-mode axioms are thinner. The Prolog's S-mode is the developed fragment, and it is the fragment the paper presents.
+
+Readers interested in the line-by-line correspondence between the axioms above and the Prolog clauses will find it in `docs/phase5/fact-sheet-pml.md`, committed at tag `paper-reference-2026-04-16` in the project repository. The fact-sheet is a line-by-line record of what the code does; it is the receipt this section's claims rest on. This section's reader does not need the receipt to follow the argument. The argument is the dialectical rhythm, and the dialectical rhythm is what the axioms encode.

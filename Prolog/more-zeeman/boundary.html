@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="boundary">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boundary — Where Counting Stops</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #110f08; --surface: #1a1710; --surface-raised: #242014;
+      --border: #3a3428; --text: #d4cfc0; --muted: #8a8470;
+      --tension: #d4634a; --release: #5b9eae; --snap: #e8a84c;
+      --compressive: #d4634a; --expansive: #5b9eae;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); color: var(--text); font-family: 'IBM Plex Serif', Georgia, serif; font-size: 16px; line-height: 1.7; }
+    body { max-width: 680px; margin: 0 auto; padding: 1.5rem 1.5rem 4rem; }
+    .narrative { margin-top: 1.5rem; }
+    .narrative p { margin-bottom: 1.2rem; }
+    .interactive-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 1.5rem; margin: 2rem 0; text-align: center;
+    }
+    .try-it {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem;
+      color: var(--snap); cursor: pointer; background: none;
+      border: 1px solid var(--snap); padding: 0.4rem 1rem;
+      border-radius: 3px; margin: 0.25rem;
+    }
+    .try-it:hover { background: var(--snap); color: var(--bg); }
+    .interactive-label {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;
+      color: var(--muted); margin-top: 0.5rem;
+    }
+    .closing-question {
+      margin-top: 2rem; padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      font-style: italic; color: var(--muted);
+    }
+    .margin-note {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+      color: var(--muted); border-left: 2px solid var(--border);
+      padding-left: 0.75rem; margin: 1rem 0;
+    }
+    code { font-family: 'IBM Plex Mono', monospace; font-size: 0.9em; color: var(--snap); }
+    .tally-zone {
+      display: flex; justify-content: center; align-items: flex-end;
+      gap: 0.5rem; min-height: 120px; margin: 1rem 0;
+      font-family: 'IBM Plex Mono', monospace;
+    }
+    .tally-group {
+      display: flex; flex-direction: column; align-items: center; gap: 0.3rem;
+    }
+    .tally-marks {
+      font-size: 1.4rem; color: var(--muted); letter-spacing: 2px;
+      transition: color 0.5s, opacity 0.5s;
+    }
+    .tally-marks.confused { color: var(--tension); }
+    .tally-marks.grouped { color: var(--snap); }
+    .tally-label {
+      font-size: 0.7rem; color: var(--muted);
+    }
+    .question-mark {
+      font-size: 3rem; color: var(--tension); opacity: 0;
+      transition: opacity 0.8s; margin: 0.5rem 0;
+    }
+    .question-mark.visible { opacity: 1; }
+    .hint-zone {
+      margin-top: 1.5rem; padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+      opacity: 0; transition: opacity 0.8s;
+    }
+    .hint-zone.visible { opacity: 1; }
+    .base-group {
+      display: inline-flex; gap: 2px; padding: 0.3rem 0.5rem;
+      border: 1px solid var(--snap); border-radius: 3px;
+      margin: 0.2rem;
+    }
+    .status-text {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.85rem;
+      color: var(--muted); min-height: 1.5rem; margin: 0.5rem 0;
+      transition: color 0.3s;
+    }
+  </style>
+</head>
+<body>
+
+<div class="narrative">
+
+  <!-- === FRESHMAN === -->
+  <div data-discourse="freshman">
+    <p class="story-recap"><em>Previously: You watched the Prolog system's crisis drive the catastrophe geometry.</em></p>
+    <p>Everything so far works for whole numbers. Seven plus five. Thirty-eight
+       plus fifty-five. Ninety-nine plus ninety-nine. The counting PDA handles
+       all of these — expensively, but correctly.</p>
+
+    <p>But what about one-third?</p>
+
+    <p>The counting PDA counts by ones. Each tally mark is one unit. There is
+       no "one-third of a one." The system doesn't fail — it doesn't crash or
+       give a wrong answer. It has no way to even ask the question. The question
+       is outside its language.</p>
+
+    <div class="interactive-box">
+      <p>Try to count one-third</p>
+      <div class="tally-zone" id="tally-zone">
+        <div class="tally-group">
+          <div class="tally-marks" id="tallies-main">| | |</div>
+          <div class="tally-label">three ones</div>
+        </div>
+      </div>
+      <div class="question-mark" id="question-mark">?</div>
+      <div class="status-text" id="status">These are whole units. Where is one-third?</div>
+      <button class="try-it" id="try-btn" onclick="tryFraction()">Ask for 1/3</button>
+      <div class="hint-zone" id="hint-zone">
+        <p style="font-size: 0.9rem; color: var(--muted);">But what if the base were 3 instead of 10?</p>
+        <div class="tally-zone">
+          <div class="tally-group">
+            <div class="base-group">
+              <span class="tally-marks grouped">|</span>
+              <span class="tally-marks grouped">|</span>
+              <span class="tally-marks grouped">|</span>
+            </div>
+            <div class="tally-label">one group of three</div>
+          </div>
+          <div class="tally-group" style="margin-left: 1rem;">
+            <div class="tally-marks grouped" style="font-size: 1.8rem;">|</div>
+            <div class="tally-label">one-third of that group</div>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--snap); margin-top: 0.5rem;">
+          Three tally marks become one unit. One mark becomes a third. The base changed.
+        </p>
+      </div>
+      <p class="interactive-label">Not a crash. An edge.</p>
+    </div>
+
+    <p>The word "not yet" matters. This isn't a wall — it's an edge. The
+       system might grow past it. We just haven't figured out how. And figuring
+       out how requires something the flat counting machine doesn't have: a
+       way to change what counts as "one."</p>
+  </div>
+
+  <!-- === MATH ED === -->
+  <div data-discourse="mathEd">
+    <p>Hackenberg (2010) identifies three levels of unit coordination required
+       for fraction reasoning. The current system handles two levels: ones and
+       composite units (groups of ones, like a ten). Fractions require a third
+       level — a unit-of-units-of-units.</p>
+
+    <p>The fraction representation in the Prolog system, <code>fraction/2</code>,
+       is structurally incompatible with <code>recollection/1</code>. A
+       recollection stores a whole-number result. A fraction needs to store a
+       relationship between two quantities — the part and the whole — and
+       that relationship depends on a third quantity: the size of the
+       partitioning unit.</p>
+
+    <div class="margin-note">
+      Hackenberg, A. J. (2010). Students' reasoning with reversible multiplicative
+      relationships. <em>Cognition and Instruction, 28</em>(4), 383-432. Also:
+      Hackenberg (2007), <em>JMB, 26</em>(1), 27-47. Three levels of units
+      coordination: (1) the unit fraction (e.g., 1/11), (2) the composite unit
+      (e.g., 12/11 as twelve iterations of the unit fraction), (3) the referent
+      whole (e.g., 11/11 that defines the size of the unit fraction). Hackenberg's
+      key finding: construction of improper fractions requires having
+      <em>interiorized</em> three levels of units &mdash; splitting alone is not
+      sufficient.
+    </div>
+
+    <div class="margin-note">
+      Steffe, L. P., &amp; Olive, J. (2010). <em>Children's Fractional
+      Knowledge.</em> Springer. The <strong>reorganization hypothesis</strong>:
+      children construct fractional knowledge through reorganization of their
+      existing number sequences, not by learning a new kind of number from
+      scratch. Olive (1999) documents how the explicitly nested number sequence
+      (ENS) gets reorganized into a connected number sequence (CNS) when applied
+      to continuous quantities. The CNS is the bridge between counting and fractions.
+    </div>
+
+    <div class="margin-note">
+      Vamvakoussi, X., &amp; Vosniadou, S. (2004). Understanding the structure of
+      the set of rational numbers: A conceptual change approach. <em>Learning and
+      Instruction, 14</em>(5), 453-467. The framework theory approach describes
+      fraction learning as a "slow, gradual process" constrained by the
+      presupposition of discreteness. Children generate <strong>synthetic
+      concepts</strong> &mdash; intermediate states bridging whole-number and
+      rational-number perspectives. These misconceptions are not failures but
+      visible traces of the reorganization process.
+    </div>
+
+    <div class="interactive-box">
+      <p>The fraction boundary: what the counting PDA cannot represent</p>
+      <div class="tally-zone" id="tally-zone">
+        <div class="tally-group">
+          <div class="tally-marks" id="tallies-main">| | |</div>
+          <div class="tally-label">three ones — two levels</div>
+        </div>
+      </div>
+      <div class="question-mark" id="question-mark">?</div>
+      <div class="status-text" id="status">fraction/2 is incompatible with recollection/1</div>
+      <button class="try-it" id="try-btn" onclick="tryFraction()">Attempt fraction(1, 3)</button>
+      <div class="hint-zone" id="hint-zone">
+        <p style="font-size: 0.9rem; color: var(--muted);">Three levels of units: ones, composite units, and iterable units</p>
+        <div class="tally-zone">
+          <div class="tally-group">
+            <div class="base-group">
+              <span class="tally-marks grouped">|</span>
+              <span class="tally-marks grouped">|</span>
+              <span class="tally-marks grouped">|</span>
+            </div>
+            <div class="tally-label">Level 3: the whole (3 parts)</div>
+          </div>
+          <div class="tally-group" style="margin-left: 1rem;">
+            <div class="tally-marks grouped" style="font-size: 1.8rem;">|</div>
+            <div class="tally-label">Level 2: one part (1/3)</div>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--snap); margin-top: 0.5rem;">
+          Steffe's learning trajectory: fractions build on whole-number schemes
+          through iterative partitioning. The "not yet" is supported by research
+          showing continuity between whole-number and fraction understanding.
+        </p>
+      </div>
+      <p class="interactive-label">The representation problem: what does "encountering a fraction" mean for a system that started with tally marks?</p>
+    </div>
+
+    <div class="margin-note">
+      Steffe, L. P. (2002). A new hypothesis concerning children's fractional knowledge.
+      <em>Journal of Mathematical Behavior, 20</em>(3), 267-307. Fractions are not a
+      separate domain — they emerge from the coordination of whole-number operations,
+      specifically through recursive partitioning and iterating.
+    </div>
+
+    <p>But Steffe's learning trajectory suggests continuity — fractions build
+       on whole-number schemes through iterative partitioning. The gap between
+       <code>recollection/1</code> and <code>fraction/2</code> might not be a
+       break in the developmental sequence. It might be a break in the
+       formalization's ability to represent that sequence.</p>
+  </div>
+
+  <!-- === PHILOSOPHER === -->
+  <div data-discourse="philosophy">
+    <p>This is a Chomsky hierarchy boundary. Flat FSMs handle regular and
+       context-free operations — the counting PDA, the COBO decomposer, the
+       RMB compensator. These machines have fixed state sets and fixed-depth
+       stacks. Fractions require context-sensitive coordination: three levels
+       of units, a variable base, what the Prolog documentation calls
+       "metamorphic accommodation."</p>
+
+    <div class="interactive-box">
+      <p>The hierarchy boundary: FSM/PDA cannot represent <code>fraction(1, 3)</code></p>
+      <div class="tally-zone" id="tally-zone">
+        <div class="tally-group">
+          <div class="tally-marks" id="tallies-main">| | |</div>
+          <div class="tally-label">recollection/1 — flat</div>
+        </div>
+      </div>
+      <div class="question-mark" id="question-mark">?</div>
+      <div class="status-text" id="status">Context-free machines cannot coordinate three levels of units</div>
+      <button class="try-it" id="try-btn" onclick="tryFraction()">Attempt context-sensitive operation</button>
+      <div class="hint-zone" id="hint-zone">
+        <p style="font-size: 0.9rem; color: var(--muted);">The matrix produces spatial structure. With space, fractions might become representable.</p>
+        <div class="tally-zone">
+          <div class="tally-group">
+            <div class="base-group">
+              <span class="tally-marks grouped">|</span>
+              <span class="tally-marks grouped">|</span>
+              <span class="tally-marks grouped">|</span>
+            </div>
+            <div class="tally-label">spatial: partition into 3</div>
+          </div>
+          <div class="tally-group" style="margin-left: 1rem;">
+            <div class="tally-marks grouped" style="font-size: 1.8rem;">|</div>
+            <div class="tally-label">disembed: one part</div>
+          </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--snap); margin-top: 0.5rem;">
+          Variable base. The counting PDA's carry (ten ones -> one ten) was base-10.
+          A fraction needs arbitrary base. That's a different kind of machine.
+        </p>
+      </div>
+      <p class="interactive-label">FRACTION_CRISIS_ASSESSMENT.md documents three incompatibilities.</p>
+    </div>
+
+    <div class="margin-note">
+      Negarestani, R. (2018). <em>Intelligence and Spirit.</em> Urbanomic/Sequence
+      Press. The Chomsky hierarchy is not just a classification of formal
+      languages &mdash; it is a ladder of computational capacities. Each rung
+      requires resources the one below cannot provide. The "picturing regress"
+      is exactly what happens when the system tries to handle fractions with flat
+      automata: each new denominator demands a new mapping, and resources run out.
+    </div>
+
+    <div class="margin-note">
+      The continuity argument (Steffe/Olive, Siegler, Boyce &amp; Norton): three
+      converging lines of research support that fractions emerge from whole-number
+      crisis through reorganization, not categorical leap. Boyce &amp; Norton
+      (2016, <em>JMB</em>) confirm that the number of levels of units coordination
+      students achieve in whole-number contexts predicts their fraction scheme
+      construction. The transition is real but continuous: the learner's counting
+      scheme cannot partition the unit, and it needs to reorganize so it can.
+    </div>
+
+    <div class="margin-note">
+      The "automaton IS the denominator" framing: a counting PDA parameterized by
+      base-7 would treat 1/7 as its first tick, 3/7 as three ticks. The automaton
+      itself <em>is</em> the denominator, understood as a recollected process.
+      Common denominators then require synthesizing a meta-automaton that subsumes
+      both base-7 and base-5 counting &mdash; the LCM as dialectical synthesis.
+      Whether this is tractable as FSM synthesis or requires genuinely recursive
+      strategy composition is the open question (FRACTION_CRISIS_ASSESSMENT.md, Gap 3).
+    </div>
+
+    <p>Three incompatibilities documented in <code>FRACTION_CRISIS_ASSESSMENT.md</code>:</p>
+
+    <p><strong>Variable base.</strong> The counting PDA is hardcoded for base-10.
+       A fraction like 1/3 implies base-3 grouping. A fraction like 1/7 implies
+       base-7. The base is not a parameter of the current machine — it is
+       built into the transition table.</p>
+
+    <p><strong>Three-level unit coordination.</strong> Whole-number arithmetic
+       needs two levels (ones and composite units). Fractions need three: the
+       unit, the composite, and the iterable composite. The current stack depth
+       is insufficient.</p>
+
+    <p><strong>Metamorphic accommodation.</strong> The strategy doesn't just
+       need more states or a deeper stack. It needs to recursively compose
+       strategies — a strategy that can modify its own transition table. That
+       is not an FSM. That is something the formalization cannot currently
+       represent.</p>
+
+    <p>The boundary is where the formalization honestly stops. And that
+       honesty — that the system can mark its own limits — is the point of
+       contact with the manuscript's central argument. The interesting thing
+       is not what the system can do. It is where it stops and why.</p>
+  </div>
+
+  <p class="closing-question">
+    If the matrix builds space from time, and fractions need space...
+    what does the matrix know?
+  </p>
+</div>
+
+<script>
+let fractionState = 0;
+
+function tryFraction() {
+  const tallies = document.getElementById('tallies-main');
+  const question = document.getElementById('question-mark');
+  const status = document.getElementById('status');
+  const hint = document.getElementById('hint-zone');
+  const btn = document.getElementById('try-btn');
+
+  if (fractionState === 0) {
+    // Phase 1: tallies try to subdivide, fail
+    tallies.classList.add('confused');
+    tallies.textContent = '| | |';
+
+    let flicker = 0;
+    const flickerInterval = setInterval(() => {
+      flicker++;
+      if (flicker % 2 === 0) {
+        tallies.textContent = '| . | . | . |';
+      } else {
+        tallies.textContent = '|  ?  |  ?  |';
+      }
+      if (flicker >= 6) {
+        clearInterval(flickerInterval);
+        tallies.textContent = '| | |';
+        question.classList.add('visible');
+
+        const level = (typeof Discourse !== 'undefined') ? Discourse.current() : 'freshman';
+        if (level === 'philosophy') {
+          status.textContent = 'No transition defined for fraction/2 in the PDA state table.';
+        } else if (level === 'mathEd') {
+          status.textContent = 'Two-level coordination cannot represent a part-whole relationship.';
+        } else {
+          status.textContent = 'The tally marks don\'t know how to split. Not a crash — a silence.';
+        }
+        status.style.color = 'var(--tension)';
+
+        btn.textContent = 'But what if...?';
+        fractionState = 1;
+      }
+    }, 300);
+
+  } else if (fractionState === 1) {
+    // Phase 2: show the hint — variable base
+    hint.classList.add('visible');
+    question.classList.remove('visible');
+    tallies.classList.remove('confused');
+    tallies.classList.add('grouped');
+    tallies.textContent = '| | |';
+    status.textContent = 'Change the base. Three ones become one group. One mark becomes a third.';
+    status.style.color = 'var(--snap)';
+    btn.style.display = 'none';
+    fractionState = 2;
+  }
+}
+
+// Reset on discourse change
+window.addEventListener('discourse-change', () => {
+  fractionState = 0;
+  const tallies = document.getElementById('tallies-main');
+  const question = document.getElementById('question-mark');
+  const status = document.getElementById('status');
+  const hint = document.getElementById('hint-zone');
+  const btn = document.getElementById('try-btn');
+
+  if (tallies) {
+    tallies.classList.remove('confused', 'grouped');
+    tallies.textContent = '| | |';
+  }
+  if (question) question.classList.remove('visible');
+  if (hint) hint.classList.remove('visible');
+  if (btn) {
+    btn.style.display = '';
+    const level = (typeof Discourse !== 'undefined') ? Discourse.current() : 'freshman';
+    if (level === 'philosophy') {
+      btn.textContent = 'Attempt context-sensitive operation';
+    } else if (level === 'mathEd') {
+      btn.textContent = 'Attempt fraction(1, 3)';
+    } else {
+      btn.textContent = 'Ask for 1/3';
+    }
+  }
+  if (status) {
+    const level = (typeof Discourse !== 'undefined') ? Discourse.current() : 'freshman';
+    if (level === 'philosophy') {
+      status.textContent = 'Context-free machines cannot coordinate three levels of units';
+    } else if (level === 'mathEd') {
+      status.textContent = 'fraction/2 is incompatible with recollection/1';
+    } else {
+      status.textContent = 'These are whole units. Where is one-third?';
+    }
+    status.style.color = 'var(--muted)';
+  }
+});
+</script>
+<script src="shared.js"></script>
+</body>
+</html>

@@ -1,0 +1,1962 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="fractal">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>The Fractal — Nested Strategy Automata</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #110f08;
+      --surface: #1a1710;
+      --surface-raised: #242014;
+      --border: #3a3428;
+      --text: #d4cfc0;
+      --muted: #8a8470;
+      --tension: #d4634a;
+      --release: #5b9eae;
+      --snap: #e8a84c;
+      --m-color: #9b6b9e;
+      --w-color: #6b9e8c;
+      --compressive: #d4634a;
+      --expansive: #5b9eae;
+      --neutral: #8a8470;
+      --relaxation: #e8a84c;
+      --stable: #6b9e8c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    body {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem 1.5rem 4rem;
+    }
+
+    /* --- Header --- */
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .top-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .back-link {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .back-link:hover { color: var(--text); }
+
+    .page-title {
+      font-family: 'IBM Plex Serif', Georgia, serif;
+      font-size: 1.6rem;
+      font-weight: 600;
+      color: var(--snap);
+    }
+
+    .discourse-buttons {
+      display: flex;
+      gap: 0.35rem;
+      align-items: center;
+    }
+
+    .discourse-btn {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.2rem 0.5rem;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .discourse-btn:hover {
+      border-color: var(--muted);
+      color: var(--text);
+    }
+    .discourse-btn.active {
+      border-color: var(--snap);
+      color: var(--snap);
+    }
+
+    .top-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .server-status {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+    .server-status .live { color: var(--release); }
+    .server-status .dead { color: var(--tension); }
+
+    /* --- Intro --- */
+    .intro {
+      max-width: 640px;
+      margin: 0 auto 1.5rem;
+      text-align: center;
+    }
+    .intro p {
+      font-size: 0.92rem;
+      line-height: 1.65;
+      color: #b8b0a0;
+      margin-bottom: 0.5rem;
+    }
+    .intro p:last-child { margin-bottom: 0; }
+
+    /* --- Main layout --- */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* --- Canvas wrapper --- */
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .snap-flash {
+      position: absolute;
+      inset: 0;
+      border-radius: 8px;
+      pointer-events: none;
+      background: radial-gradient(circle, rgba(232,168,76,0.35) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 0.4s;
+    }
+    .snap-flash.active { opacity: 1; transition: none; }
+
+    /* --- Right column --- */
+    .right-column {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+    }
+
+    .label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    /* --- Presets --- */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.4rem;
+    }
+
+    .preset-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.4rem 0.5rem;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .preset-btn:hover { border-color: var(--release); background: var(--surface-raised); }
+    .preset-btn.active { border-color: var(--snap); }
+    .preset-btn.boundary-btn {
+      grid-column: 1 / -1;
+      border-color: rgba(212,99,74,0.3);
+    }
+    .preset-btn.boundary-btn:hover { border-color: var(--tension); }
+
+    .preset-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 500;
+      color: var(--text);
+      display: block;
+      margin-bottom: 0.1rem;
+    }
+
+    .preset-desc {
+      font-size: 0.68rem;
+      color: var(--muted);
+      line-height: 1.3;
+      display: block;
+    }
+
+    /* --- Controls --- */
+    .controls-row {
+      display: flex;
+      gap: 0.4rem;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+
+    .field label {
+      display: block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.15rem;
+    }
+    .field select, .field input {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.25rem 0.35rem;
+      border-radius: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+    }
+    .field select { width: 80px; }
+    .field input[type=number] { width: 42px; }
+
+    .spacer { flex: 1; }
+
+    button.run {
+      background: var(--tension);
+      color: #fff;
+      border: none;
+      padding: 0.3rem 0.8rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      transition: filter 0.15s;
+    }
+    button.run:hover { filter: brightness(1.15); }
+    button.run:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    button.secondary {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+    }
+    button.secondary:hover { border-color: var(--muted); color: var(--text); }
+
+    .speed-control {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .speed-control input[type=range] {
+      width: 50px; height: 3px;
+      border-radius: 2px;
+      background: var(--border);
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .speed-control input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: var(--release);
+      cursor: pointer;
+    }
+
+    .replay-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      margin-top: 0.4rem;
+      overflow: hidden;
+    }
+    .replay-fill {
+      height: 100%;
+      background: var(--snap);
+      border-radius: 3px;
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* --- Event log --- */
+    .event-log {
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.68rem;
+      line-height: 1.5;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .event-log::-webkit-scrollbar { width: 4px; }
+    .event-log::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .event-entry {
+      padding: 0.15rem 0;
+      border-bottom: 1px solid rgba(58, 52, 40, 0.3);
+      display: flex;
+      gap: 0.4rem;
+    }
+    .event-entry .step { color: var(--muted); min-width: 2em; text-align: right; }
+    .event-entry .ctx { min-width: 4.5em; }
+    .event-entry .ctx.compressive { color: var(--compressive); }
+    .event-entry .ctx.expansive { color: var(--expansive); }
+    .event-entry .ctx.neutral { color: var(--neutral); }
+    .event-entry .ctx.relaxation { color: var(--relaxation); }
+    .event-entry .vals { color: var(--text); }
+    .event-entry .desc { color: var(--muted); font-style: italic; }
+
+    /* --- Lower area: tension chart + matrix + tape --- */
+    .lower-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .lower-area .panel-full {
+      grid-column: 1 / -1;
+    }
+
+    #tension-canvas {
+      display: block;
+      width: 100%;
+      height: 180px;
+      border-radius: 6px;
+    }
+
+    /* --- Matrix --- */
+    #matrix-grid {
+      display: grid;
+      gap: 3px;
+      justify-content: center;
+    }
+    .matrix-cell {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'IBM Plex Mono', monospace;
+      font-weight: 500;
+      border-radius: 3px;
+      transition: transform 0.2s;
+    }
+    .matrix-cell.m-cell { background: var(--m-color); color: #ede8f2; }
+    .matrix-cell.w-cell { background: var(--w-color); color: #ede8f2; }
+    .matrix-cell.diagonal { outline: 2px solid var(--snap); outline-offset: -2px; }
+    .matrix-cell:hover { transform: scale(1.08); }
+
+    /* --- Tape --- */
+    .tape-container {
+      display: flex;
+      align-items: flex-end;
+      gap: 2px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 0.5rem 0;
+      min-height: 60px;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .tape-container::-webkit-scrollbar { height: 4px; }
+    .tape-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+    .tape-event {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+    .tape-letter {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+    }
+    .tape-bar {
+      width: 8px;
+      border-radius: 2px 2px 0 0;
+    }
+
+    /* --- Footer note --- */
+    .footer-note {
+      text-align: center;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    .footer-note p {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* --- Responsive --- */
+    @media (max-width: 900px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+      .lower-area {
+        grid-template-columns: 1fr;
+      }
+      .lower-area .panel-full {
+        grid-column: 1;
+      }
+      .preset-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 500px) {
+      body { padding: 1rem 1rem 3rem; }
+      .page-title { font-size: 1.3rem; }
+      .controls-row { flex-direction: column; align-items: stretch; }
+      .controls-row .spacer { display: none; }
+    }
+
+    .margin-note {
+      font-family: 'IBM Plex Mono', monospace; font-size: 0.75rem;
+      color: var(--muted); border-left: 2px solid var(--border);
+      padding-left: 0.75rem; margin: 1rem 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div class="status-area">
+      <div class="server-status">
+        prolog: <span id="server-status" class="dead">checking...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="intro">
+    <p>Four arithmetic strategies, each built from the one inside it. Counting lives at the core. COBO invokes counting for its ones phase. Rearrange to Make Bases invokes COBO for recombination. Chunking invokes COBO for each chunk.</p>
+    <p>The rings breathe with tension data from the Prolog server. Compression tightens the inner rings; expansion loosens the outer ones. When the learner snaps, the rings pulse outward.</p>
+  </div>
+
+  <div class="intro" style="margin-bottom:1.5rem;">
+    <div data-discourse="freshman">
+      <p class="story-recap"><em>Previously: You discovered shortcuts — counting-on, COBO, RMB. Each one faster than the last.</em></p>
+      <p>You have seen that each strategy is a machine. But here is the thing &mdash;
+         each machine uses the one inside it. COBO does not just "know" addition.
+         It calls the counting machine to do the adding. RMB calls COBO.
+         Chunking calls COBO. They nest like Russian dolls, but the dolls
+         are alive &mdash; each one is running.</p>
+      <p>The innermost ring in this visualization is counting. Each outer ring
+         is a strategy that wraps it. When COBO needs to add ones, it reaches
+         inward to the counting ring. When RMB needs to recombine, it reaches
+         inward to COBO. The springs connecting the rings are those calls &mdash;
+         one machine delegating to a smaller, simpler machine inside it.</p>
+      <p>This is the architecture the strategies page hinted at: flat machines
+         calling flat machines, stacked deeper and deeper. The question is
+         whether this stacking can go on forever &mdash; or whether there is a
+         depth where flat machines stop being enough.</p>
+    </div>
+    <div data-discourse="mathEd">
+      <p>This fractal architecture models the developmental prerequisite structure documented in CGI (Carpenter et al., 1999). Counting-on cannot exist without counting-all. COBO (bases-then-ones) cannot exist without counting-on. Each strategy is an FSM that invokes inner strategies as subroutines — the computational analogue of what Steffe calls "scheme coordination."</p>
+      <div class="margin-note">
+        Norton, A. (2008). Josh's operational conjectures. <em>JRME, 39</em>(4),
+        401-430. Steffe (1991). Norton and Steffe describe <strong>metamorphic
+        accommodation</strong> as the most profound type of crisis-driven
+        reorganization: driven by a "recursive and persistent perturbation" that
+        projects operations from a lower plane of knowledge to a completely new,
+        higher plane. The fractal nesting visible here is the geometric analogue
+        &mdash; each outer ring is a higher plane that presupposes the inner rings.
+        When the nesting exceeds what flat FSMs can represent, metamorphic
+        accommodation is required: not just adding another ring, but changing what
+        a ring <em>is</em>.
+      </div>
+    </div>
+    <div data-discourse="philosophy">
+      <p>Each ring is a strategy automaton. The springs connecting rings (the dashed bezier curves) are <code>invokesCore</code> relations — the outer machine's state transition delegates to the inner machine. This is the fractal architecture from Chapter 9 of the manuscript. The nesting is not arbitrary: it follows the Chomsky hierarchy. Counting is regular. COBO/RMB are context-free (they invoke subroutines). The fraction crisis occurs at the context-sensitive boundary, where flat FSM nesting breaks.</p>
+      <div class="margin-note">
+        Negarestani, R. (2018). <em>Intelligence and Spirit.</em> Urbanomic/Sequence
+        Press. Following Brandom's "laughing Santa" example, Negarestani describes
+        finite-state machines as "automatic laughing bags" that recognize and produce
+        regular languages. But "higher levels of syntactic and semantic complexity
+        require more powerful abstract automata (context-free, context-sensitive,
+        recursively enumerable)." The fractal rings show this hierarchy spatially:
+        each outer ring requires stack depth the inner ring does not. What the
+        visualization cannot show is the boundary where nesting itself breaks
+        &mdash; where the system would need to modify its own transition table.
+        That is the context-sensitive boundary, and it is where fractions live.
+      </div>
+    </div>
+  </div>
+
+  <div class="main-layout">
+    <!-- Left: fractal canvas -->
+    <div class="canvas-wrap">
+      <canvas id="fractal-canvas"></canvas>
+      <div class="snap-flash" id="snap-flash"></div>
+    </div>
+
+    <!-- Right: controls + event log -->
+    <div class="right-column">
+      <!-- Presets -->
+      <div class="panel">
+        <p class="label">Scenarios</p>
+        <div class="preset-grid">
+          <button class="preset-btn" onclick="loadPreset('kindergarten')">
+            <span class="preset-title">K: Counting</span>
+            <span class="preset-desc">add 3 + 2, limit 50</span>
+          </button>
+          <button class="preset-btn" onclick="loadPreset('grade1')">
+            <span class="preset-title">Gr 1: First Crisis</span>
+            <span class="preset-desc">add 8 + 5, limit 8</span>
+          </button>
+          <button class="preset-btn" onclick="loadPreset('grade2')">
+            <span class="preset-title">Gr 2: Place Value</span>
+            <span class="preset-desc">add 28 + 35, limit 10</span>
+          </button>
+          <button class="preset-btn" onclick="loadPreset('grade3')">
+            <span class="preset-title">Gr 3: Multiply</span>
+            <span class="preset-desc">multiply 4 x 3, limit 20</span>
+          </button>
+          <button class="preset-btn boundary-btn" onclick="loadPreset('boundary')">
+            <span class="preset-title" style="color:var(--tension);">The Fraction Boundary</span>
+            <span class="preset-desc">Cannot represent fractions.</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="panel" id="controls-panel">
+        <p class="label">Parameters</p>
+        <div class="controls-row">
+          <div class="field">
+            <label>Op</label>
+            <select id="op">
+              <option value="add">add</option>
+              <option value="subtract">subtract</option>
+              <option value="multiply">multiply</option>
+              <option value="divide">divide</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>A</label>
+            <input type="number" id="inp-a" value="3" min="0" max="99">
+          </div>
+          <div class="field">
+            <label>B</label>
+            <input type="number" id="inp-b" value="2" min="0" max="99">
+          </div>
+          <div class="field">
+            <label>Limit</label>
+            <input type="number" id="inp-limit" value="50" min="5" max="500">
+          </div>
+        </div>
+        <div class="controls-row" style="margin-top:0.4rem;">
+          <div class="speed-control">
+            <label>speed</label>
+            <input type="range" id="replay-speed" min="1" max="10" value="3">
+            <span id="speed-val">3</span>
+          </div>
+          <div class="spacer"></div>
+          <button class="run" id="btn-run" onclick="runComputation()">Run</button>
+          <button class="secondary" onclick="resetAll()">Reset</button>
+        </div>
+        <div class="replay-bar"><div class="replay-fill" id="replay-fill"></div></div>
+      </div>
+
+      <!-- Event Log -->
+      <div class="panel" style="flex:1; min-height:120px;">
+        <p class="label">Event Log</p>
+        <div class="event-log" id="event-log"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lower area: tension chart + matrix + tape -->
+  <div class="lower-area">
+    <div class="panel panel-full">
+      <p class="label">Tension &amp; Stability</p>
+      <canvas id="tension-canvas" width="560" height="180"></canvas>
+    </div>
+    <div class="panel">
+      <p class="label">The Memory</p>
+      <div id="matrix-grid"></div>
+    </div>
+    <div class="panel">
+      <p class="label">The Tape</p>
+      <div class="tape-container" id="tape-container"></div>
+    </div>
+  </div>
+
+  <div style="max-width:640px;margin:1.5rem auto 0;padding:0 0.5rem;">
+    <div data-discourse="freshman" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);font-style:italic;color:var(--muted);font-size:0.92rem;line-height:1.65;">
+      <p>You can see the nesting. But can you feel it? What happens when you grab
+         one of these nodes and drag it &mdash; when you put tension into one machine
+         and watch it spread through the springs to the machines around it?</p>
+    </div>
+    <div data-discourse="mathEd" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);font-style:italic;color:var(--muted);font-size:0.92rem;line-height:1.65;">
+      <p>The developmental prerequisite structure is visible in the ring geometry.
+         But what does perturbation propagation look like when each node is itself
+         a catastrophe machine?</p>
+    </div>
+    <div data-discourse="philosophy" style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);font-style:italic;color:var(--muted);font-size:0.92rem;line-height:1.65;">
+      <p>The nesting shows the Chomsky hierarchy spatially. But the catastrophe
+         physics &mdash; the snap at each node &mdash; is not yet coupled to the nesting.
+         What happens when every node in the ring is itself a Zeeman machine?</p>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    <p>Phase 4 coming: narration layer</p>
+  </div>
+
+<script>
+// =======================================================================
+// COLORS
+// =======================================================================
+const C = {
+  bg: '#110f08', tension: '#d4634a', release: '#5b9eae', snap: '#e8a84c',
+  mColor: '#9b6b9e', wColor: '#6b9e8c', muted: '#8a8470', text: '#d4cfc0',
+  compressive: '#d4634a', expansive: '#5b9eae', neutral: '#8a8470',
+  relaxation: '#e8a84c', stable: '#6b9e8c', gridLine: '#201c14',
+  wheelBorder: '#3a3428', slack: '#3a3428',
+};
+
+// =======================================================================
+// DISCOURSE SYSTEM (Phase 2)
+// =======================================================================
+const DiscourseSystem = {
+  current: 'mathEd',
+
+  bundles: {
+    mathEd: {
+      layerNames: {
+        counting: 'Counting PDA',
+        cobo: 'COBO (Bases then Ones)',
+        rmb: 'Rearrange to Make Bases',
+        chunking: 'Chunking'
+      },
+      stateLabels: {
+        'counting.q_idle': 'counting',
+        'counting.q_inc_tens': 'carry',
+        'counting.q_inc_hundreds': 'carry 100s',
+        'counting.q_halt': 'done',
+        'cobo.q_initialize': 'decompose',
+        'cobo.q_add_bases': 'add tens',
+        'cobo.q_add_ones': 'add ones',
+        'cobo.q_accept': 'result',
+        'rmb.q_init': 'read',
+        'rmb.q_calc_K': 'find gap',
+        'rmb.q_decompose_B': 'split',
+        'rmb.q_recombine': 'recombine',
+        'rmb.q_accept': 'result',
+        'chunking.q_partition': 'partition',
+        'chunking.q_iterate': 'next chunk',
+        'chunking.q_accumulate': 'accumulate',
+        'chunking.q_accept': 'result'
+      },
+      eventDescriptions: {
+        compressive: 'Cognitive load increasing -- counting steps accumulating.',
+        expansive: 'Load easing -- strategy is handling the problem.',
+        relaxation: 'Crisis resolved -- new strategy acquired.',
+        neutral: 'Computing.'
+      }
+    },
+    philosophy: {
+      layerNames: {
+        counting: 'counting (the ground)',
+        cobo: 'the first shortcut',
+        rmb: 'rearranging what you know',
+        chunking: 'breaking it apart'
+      },
+      stateLabels: {
+        'counting.q_idle': 'one, two, three...',
+        'counting.q_inc_tens': '...ten!',
+        'counting.q_inc_hundreds': '...hundred!',
+        'counting.q_halt': 'arrived',
+        'cobo.q_initialize': 'begin',
+        'cobo.q_add_bases': 'tens first',
+        'cobo.q_add_ones': 'then ones',
+        'cobo.q_accept': 'arrived',
+        'rmb.q_init': 'what if...',
+        'rmb.q_calc_K': 'how far to go?',
+        'rmb.q_decompose_B': 'pull apart',
+        'rmb.q_recombine': 'put together',
+        'rmb.q_accept': 'made whole',
+        'chunking.q_partition': 'pieces',
+        'chunking.q_iterate': 'piece by piece',
+        'chunking.q_accumulate': 'gathering',
+        'chunking.q_accept': 'all here'
+      },
+      eventDescriptions: {
+        compressive: 'Tension builds. The old way is struggling.',
+        expansive: 'Room opens up.',
+        relaxation: 'Something broke. Something new.',
+        neutral: 'Holding.'
+      }
+    },
+    freshman: {
+      layerNames: {
+        counting: 'just counting',
+        cobo: 'tens then ones',
+        rmb: 'make a nice number',
+        chunking: 'break it into pieces'
+      },
+      stateLabels: {
+        'counting.q_idle': 'count',
+        'counting.q_inc_tens': 'ten!',
+        'counting.q_inc_hundreds': 'hundred!',
+        'counting.q_halt': 'stop',
+        'cobo.q_initialize': 'start',
+        'cobo.q_add_bases': '+10',
+        'cobo.q_add_ones': '+1',
+        'cobo.q_accept': 'done',
+        'rmb.q_init': 'look',
+        'rmb.q_calc_K': 'how far?',
+        'rmb.q_decompose_B': 'move ones',
+        'rmb.q_recombine': 'add up',
+        'rmb.q_accept': 'done',
+        'chunking.q_partition': 'split',
+        'chunking.q_iterate': 'next part',
+        'chunking.q_accumulate': 'add it',
+        'chunking.q_accept': 'done'
+      },
+      eventDescriptions: {
+        compressive: 'Working harder -- counting is getting expensive.',
+        expansive: 'Getting easier.',
+        relaxation: 'Found a better way!',
+        neutral: 'Thinking.'
+      }
+    }
+  },
+
+  getBundle() {
+    return this.bundles[this.current];
+  },
+
+  getLayerName(key) {
+    return this.getBundle().layerNames[key] || key;
+  },
+
+  getStateLabel(key, state) {
+    const label = this.getBundle().stateLabels[key + '.' + state];
+    if (label) return label;
+    return state.replace(/^q_/, '');
+  },
+
+  getEventDescription(context) {
+    return this.getBundle().eventDescriptions[context] || '';
+  }
+};
+
+function setDiscourse(name) {
+  DiscourseSystem.current = name;
+  // Update buttons
+  document.querySelectorAll('.discourse-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.trim() === {
+      mathEd: 'math ed', philosophy: 'philosophy', freshman: 'freshman'
+    }[name]);
+  });
+  // Recompute label positions (labels depend on text width)
+  needsLabelRecompute = true;
+}
+
+// Listen for discourse changes from shared.js navigation bar
+window.addEventListener('discourse-change', (e) => {
+  const level = e.detail.level;
+  if (level !== DiscourseSystem.current) {
+    setDiscourse(level);
+  }
+});
+
+// =======================================================================
+// STRATEGY DEFINITIONS
+// =======================================================================
+const STRATEGY_DEFS = {
+  counting: {
+    label: 'Counting PDA',
+    radius: 90,
+    color: '#5b9eae',
+    states: ['q_idle', 'q_inc_tens', 'q_inc_hundreds', 'q_halt'],
+    startAccept: 'q_idle',
+    transitions: [
+      { from: 'q_idle', to: 'q_idle', label: 'tick' },
+      { from: 'q_idle', to: 'q_inc_tens', label: 'carry' },
+      { from: 'q_inc_tens', to: 'q_idle', label: 'reset' },
+      { from: 'q_inc_tens', to: 'q_inc_hundreds', label: 'carry' },
+      { from: 'q_inc_hundreds', to: 'q_idle', label: 'reset' },
+      { from: 'q_idle', to: 'q_halt', label: 'done' },
+    ]
+  },
+  cobo: {
+    label: 'COBO (Bases then Ones)',
+    radius: 160,
+    color: '#e8a84c',
+    states: ['q_initialize', 'q_add_bases', 'q_add_ones', 'q_accept'],
+    startAccept: 'q_initialize',
+    transitions: [
+      { from: 'q_initialize', to: 'q_add_bases', label: 'decompose' },
+      { from: 'q_add_bases', to: 'q_add_bases', label: '+base' },
+      { from: 'q_add_bases', to: 'q_add_ones', label: 'bases done' },
+      { from: 'q_add_ones', to: 'q_add_ones', label: '+one' },
+      { from: 'q_add_ones', to: 'q_accept', label: 'ones done' },
+    ],
+    invokesCore: { target: 'counting', fromState: 'q_add_ones', toState: 'q_idle' }
+  },
+  rmb: {
+    label: 'Rearrange to Make Bases',
+    radius: 230,
+    color: '#9b6b9e',
+    states: ['q_init', 'q_calc_K', 'q_decompose_B', 'q_recombine', 'q_accept'],
+    startAccept: 'q_init',
+    transitions: [
+      { from: 'q_init', to: 'q_calc_K', label: 'analyze gap' },
+      { from: 'q_calc_K', to: 'q_decompose_B', label: 'K found' },
+      { from: 'q_decompose_B', to: 'q_recombine', label: 'split' },
+      { from: 'q_recombine', to: 'q_accept', label: 'combine' },
+    ],
+    invokesCore: { target: 'cobo', fromState: 'q_recombine', toState: 'q_initialize' }
+  },
+  chunking: {
+    label: 'Chunking',
+    radius: 300,
+    color: '#6b9e8c',
+    states: ['q_partition', 'q_iterate', 'q_accumulate', 'q_accept'],
+    startAccept: 'q_partition',
+    transitions: [
+      { from: 'q_partition', to: 'q_iterate', label: 'split' },
+      { from: 'q_iterate', to: 'q_accumulate', label: 'add chunk' },
+      { from: 'q_accumulate', to: 'q_iterate', label: 'more chunks' },
+      { from: 'q_accumulate', to: 'q_accept', label: 'done' },
+    ],
+    invokesCore: { target: 'cobo', fromState: 'q_iterate', toState: 'q_initialize' }
+  }
+};
+
+const RING_ORDER = ['counting', 'cobo', 'rmb', 'chunking'];
+
+// =======================================================================
+// BREATHING STATE (Phase 3)
+// =======================================================================
+const layers = {};
+for (const key of RING_ORDER) {
+  const phaseOffsets = { counting: 0, cobo: Math.PI / 3, rmb: 2 * Math.PI / 3, chunking: Math.PI };
+  layers[key] = {
+    breathScale: 1.0,
+    breathTarget: 1.0,
+    breathPhase: 0,
+    phaseOffset: phaseOffsets[key],
+    currentStateIndex: 0, // index into STRATEGY_DEFS[key].states
+  };
+}
+
+// Spring breathing state
+let springBreathOpacity = 0.4;
+let springBreathWidth = 1.5;
+let springBreathOpacityTarget = 0.4;
+let springBreathWidthTarget = 1.5;
+
+// State transition animation
+// Each layer tracks a fractional index that interpolates toward the target
+for (const key of RING_ORDER) {
+  layers[key].displayStateIndex = 0; // fractional index for smooth animation
+  layers[key].dimFactor = 1.0; // 1.0 = normal, <1.0 = dimmed during snap on other rings
+  layers[key].dimTarget = 1.0;
+}
+
+// =======================================================================
+// CANVAS SETUP
+// =======================================================================
+function setupCanvas(canvas, logicalW, logicalH) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const w = rect.width;
+  const aspect = logicalH / logicalW;
+  const h = w * aspect;
+  canvas.style.height = h + 'px';
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { w, h, ctx };
+}
+
+// =======================================================================
+// GEOMETRY COMPUTATION
+// =======================================================================
+function computeGeometry(cx, cy, scale) {
+  const geo = {};
+  for (const key of RING_ORDER) {
+    const def = STRATEGY_DEFS[key];
+    const breathScale = layers[key].breathScale;
+    const r = def.radius * scale * breathScale;
+    const n = def.states.length;
+    const statePositions = {};
+    for (let i = 0; i < n; i++) {
+      const angle = -Math.PI / 2 + (2 * Math.PI * i) / n;
+      statePositions[def.states[i]] = {
+        x: cx + r * Math.cos(angle),
+        y: cy + r * Math.sin(angle),
+        angle: angle
+      };
+    }
+    geo[key] = statePositions;
+  }
+  return geo;
+}
+
+// Static geometry for label computation (no breathing applied)
+function computeStaticGeometry(cx, cy, scale) {
+  const geo = {};
+  for (const key of RING_ORDER) {
+    const def = STRATEGY_DEFS[key];
+    const r = def.radius * scale;
+    const n = def.states.length;
+    const statePositions = {};
+    for (let i = 0; i < n; i++) {
+      const angle = -Math.PI / 2 + (2 * Math.PI * i) / n;
+      statePositions[def.states[i]] = {
+        x: cx + r * Math.cos(angle),
+        y: cy + r * Math.sin(angle),
+        angle: angle
+      };
+    }
+    geo[key] = statePositions;
+  }
+  return geo;
+}
+
+// =======================================================================
+// LABEL COMPUTATION (separate from drawing -- cached)
+// =======================================================================
+let cachedLabels = null;
+let needsLabelRecompute = true;
+let lastLabelCx = 0, lastLabelCy = 0, lastLabelScale = 0;
+
+const NODE_RADIUS = 7;
+const LABEL_FONT = '500 10px "IBM Plex Mono", monospace';
+const RING_LABEL_FONT = '600 12px "IBM Plex Mono", monospace';
+
+function computeLabels(ctx, cx, cy, scale) {
+  const staticGeo = computeStaticGeometry(cx, cy, scale);
+  const labels = [];
+
+  // Ring labels
+  for (const key of RING_ORDER) {
+    const def = STRATEGY_DEFS[key];
+    const r = def.radius * scale;
+    const text = DiscourseSystem.getLayerName(key);
+    ctx.font = RING_LABEL_FONT;
+    const tw = ctx.measureText(text).width;
+    labels.push({
+      text,
+      x: cx,
+      y: cy - r - 18,
+      w: tw + 8,
+      h: 14,
+      anchorX: cx,
+      anchorY: cy - r - 18,
+      font: RING_LABEL_FONT,
+      color: hexAlpha(def.color, 0.85),
+      align: 'center',
+      baseline: 'bottom',
+      isRing: true,
+      ringKey: key,
+    });
+  }
+
+  // State labels
+  for (const key of RING_ORDER) {
+    const def = STRATEGY_DEFS[key];
+    const positions = staticGeo[key];
+    ctx.font = LABEL_FONT;
+
+    for (const state of def.states) {
+      const pos = positions[state];
+      const angle = pos.angle;
+      const labelOffset = 16;
+      const lx = pos.x + labelOffset * Math.cos(angle);
+      const ly = pos.y + labelOffset * Math.sin(angle);
+      const displayName = DiscourseSystem.getStateLabel(key, state);
+      const tw = ctx.measureText(displayName).width;
+
+      let align, baseline;
+      if (Math.abs(Math.cos(angle)) < 0.3) align = 'center';
+      else if (Math.cos(angle) > 0) align = 'left';
+      else align = 'right';
+
+      if (Math.sin(angle) > 0.3) baseline = 'top';
+      else if (Math.sin(angle) < -0.3) baseline = 'bottom';
+      else baseline = 'middle';
+
+      labels.push({
+        text: displayName,
+        x: lx,
+        y: ly,
+        w: tw + 4,
+        h: 11,
+        anchorX: lx,
+        anchorY: ly,
+        font: LABEL_FONT,
+        color: hexAlpha(def.color, 0.6),
+        align,
+        baseline,
+        isRing: false,
+        ringKey: key,
+        stateKey: state,
+      });
+    }
+  }
+
+  // Force-directed repulsion
+  const padding = 3;
+  for (let iter = 0; iter < 12; iter++) {
+    for (let i = 0; i < labels.length; i++) {
+      for (let j = i + 1; j < labels.length; j++) {
+        const a = labels[i], b = labels[j];
+        const ax = a.align === 'center' ? a.x - a.w / 2 : a.align === 'right' ? a.x - a.w : a.x;
+        const bx = b.align === 'center' ? b.x - b.w / 2 : b.align === 'right' ? b.x - b.w : b.x;
+        const ay = a.baseline === 'bottom' ? a.y - a.h : a.baseline === 'middle' ? a.y - a.h / 2 : a.y;
+        const by = b.baseline === 'bottom' ? b.y - b.h : b.baseline === 'middle' ? b.y - b.h / 2 : b.y;
+
+        const overlapX = Math.max(0, Math.min(ax + a.w + padding, bx + b.w + padding) - Math.max(ax - padding, bx - padding));
+        const overlapY = Math.max(0, Math.min(ay + a.h + padding, by + b.h + padding) - Math.max(ay - padding, by - padding));
+
+        if (overlapX > 0 && overlapY > 0) {
+          const dx = (a.x - b.x) || 0.5;
+          const dy = (a.y - b.y) || 0.5;
+          const dist = Math.hypot(dx, dy) || 1;
+          const pushX = (dx / dist) * overlapX * 0.3;
+          const pushY = (dy / dist) * overlapY * 0.3;
+          if (!a.isRing) { a.x += pushX; }
+          a.y += pushY;
+          if (!b.isRing) { b.x -= pushX; }
+          b.y -= pushY;
+        }
+      }
+    }
+    for (const l of labels) {
+      l.x += (l.anchorX - l.x) * 0.15;
+      l.y += (l.anchorY - l.y) * 0.15;
+    }
+  }
+
+  return labels;
+}
+
+// =======================================================================
+// DRAWING
+// =======================================================================
+
+function drawFrame(ctx, w, h) {
+  ctx.clearRect(0, 0, w, h);
+
+  const cx = w / 2;
+  const cy = h / 2;
+  const maxRadius = 300;
+  const margin = 60;
+  const available = Math.min(w, h) / 2 - margin;
+  const scale = available / maxRadius;
+
+  // Update breath
+  updateBreathing();
+
+  // Compute breathing geometry for drawing
+  const geo = computeGeometry(cx, cy, scale);
+
+  // Recompute labels only when needed (discourse change, resize)
+  if (needsLabelRecompute || lastLabelCx !== cx || lastLabelCy !== cy || lastLabelScale !== scale) {
+    cachedLabels = computeLabels(ctx, cx, cy, scale);
+    lastLabelCx = cx;
+    lastLabelCy = cy;
+    lastLabelScale = scale;
+    needsLabelRecompute = false;
+  }
+
+  // 1. Draw ring circles (breathing radius, with dim factor)
+  for (const key of RING_ORDER) {
+    const def = STRATEGY_DEFS[key];
+    const r = def.radius * scale * layers[key].breathScale;
+    const dim = layers[key].dimFactor;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.strokeStyle = hexAlpha(def.color, 0.15 * dim);
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  // 2. Transition arcs
+  for (const key of RING_ORDER) {
+    drawTransitions(ctx, key, geo, cx, cy, scale);
+  }
+
+  // 3. Spring connections (breathing opacity/width)
+  drawSprings(ctx, geo, scale, cx, cy);
+
+  // 4. State nodes (with current-state highlighting)
+  for (const key of RING_ORDER) {
+    drawNodes(ctx, key, geo);
+  }
+
+  // 5. Draw cached labels at their repelled positions
+  if (cachedLabels) {
+    for (const l of cachedLabels) {
+      ctx.font = l.font;
+      ctx.fillStyle = l.color;
+      ctx.textAlign = l.align;
+      ctx.textBaseline = l.baseline;
+      ctx.fillText(l.text, l.x, l.y);
+    }
+  }
+}
+
+function drawTransitions(ctx, key, geo, cx, cy, scale) {
+  const def = STRATEGY_DEFS[key];
+  const positions = geo[key];
+  const r = def.radius * scale * layers[key].breathScale;
+
+  for (const t of def.transitions) {
+    const from = positions[t.from];
+    const to = positions[t.to];
+
+    if (t.from === t.to) {
+      drawSelfLoop(ctx, from, r, cx, cy, def.color);
+    } else {
+      drawArc(ctx, from, to, r, cx, cy, def.color);
+    }
+  }
+}
+
+function drawSelfLoop(ctx, pos, ringRadius, cx, cy, color) {
+  const dx = pos.x - cx;
+  const dy = pos.y - cy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const nx = dx / dist;
+  const ny = dy / dist;
+  const loopR = 10;
+  const loopCx = pos.x + nx * (loopR + 3);
+  const loopCy = pos.y + ny * (loopR + 3);
+  ctx.beginPath();
+  ctx.arc(loopCx, loopCy, loopR, 0, 2 * Math.PI);
+  ctx.strokeStyle = hexAlpha(color, 0.4);
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+}
+
+function drawArc(ctx, from, to, ringRadius, cx, cy, color) {
+  const mx = (from.x + to.x) / 2;
+  const my = (from.y + to.y) / 2;
+  const dx = mx - cx;
+  const dy = my - cy;
+  const dist = Math.sqrt(dx * dx + dy * dy);
+  const nx = dx / dist;
+  const ny = dy / dist;
+  const bow = 12;
+  const cpx = mx + nx * bow;
+  const cpy = my + ny * bow;
+
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.quadraticCurveTo(cpx, cpy, to.x, to.y);
+  ctx.strokeStyle = hexAlpha(color, 0.45);
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+
+  drawArrowhead(ctx, cpx, cpy, to.x, to.y, color);
+}
+
+function drawArrowhead(ctx, fromX, fromY, toX, toY, color) {
+  const angle = Math.atan2(toY - fromY, toX - fromX);
+  const headLen = 7;
+  ctx.beginPath();
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(
+    toX - headLen * Math.cos(angle - Math.PI / 6),
+    toY - headLen * Math.sin(angle - Math.PI / 6)
+  );
+  ctx.moveTo(toX, toY);
+  ctx.lineTo(
+    toX - headLen * Math.cos(angle + Math.PI / 6),
+    toY - headLen * Math.sin(angle + Math.PI / 6)
+  );
+  ctx.strokeStyle = hexAlpha(color, 0.5);
+  ctx.lineWidth = 1.2;
+  ctx.stroke();
+}
+
+function drawSprings(ctx, geo, scale, canvasCx, canvasCy) {
+  const springColor = '#3a3428';
+
+  for (const key of RING_ORDER) {
+    const def = STRATEGY_DEFS[key];
+    if (!def.invokesCore) continue;
+
+    const { target, fromState, toState } = def.invokesCore;
+    const fromPos = geo[key][fromState];
+    const toPos = geo[target][toState];
+    if (!fromPos || !toPos) continue;
+
+    const mx = (fromPos.x + toPos.x) / 2;
+    const my = (fromPos.y + toPos.y) / 2;
+    const cx_ = fromPos.x * 0.5 + mx * 0.2 + canvasCx * 0.3;
+    const cy_ = fromPos.y * 0.5 + my * 0.2 + canvasCy * 0.3;
+    const cx2 = toPos.x * 0.5 + mx * 0.2 + canvasCx * 0.3;
+    const cy2 = toPos.y * 0.5 + my * 0.2 + canvasCy * 0.3;
+
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(fromPos.x, fromPos.y);
+    ctx.bezierCurveTo(cx_, cy_, cx2, cy2, toPos.x, toPos.y);
+    ctx.strokeStyle = hexAlpha(springColor, springBreathOpacity);
+    ctx.lineWidth = springBreathWidth;
+    ctx.setLineDash([5, 4]);
+    ctx.stroke();
+    ctx.restore();
+
+    // Diamond
+    const mt = 0.5;
+    const smx = cubicBezierPoint(fromPos.x, cx_, cx2, toPos.x, mt);
+    const smy = cubicBezierPoint(fromPos.y, cy_, cy2, toPos.y, mt);
+    drawSpringDiamond(ctx, smx, smy, springColor);
+  }
+}
+
+function cubicBezierPoint(p0, p1, p2, p3, t) {
+  const mt = 1 - t;
+  return mt * mt * mt * p0 + 3 * mt * mt * t * p1 + 3 * mt * t * t * p2 + t * t * t * p3;
+}
+
+function drawSpringDiamond(ctx, x, y, color) {
+  const s = 4;
+  ctx.beginPath();
+  ctx.moveTo(x, y - s);
+  ctx.lineTo(x + s, y);
+  ctx.lineTo(x, y + s);
+  ctx.lineTo(x - s, y);
+  ctx.closePath();
+  ctx.fillStyle = hexAlpha(color, 0.6);
+  ctx.fill();
+}
+
+function drawNodes(ctx, key, geo) {
+  const def = STRATEGY_DEFS[key];
+  const positions = geo[key];
+  const dimFactor = layers[key].dimFactor;
+  const displayIdx = layers[key].displayStateIndex;
+  const n = def.states.length;
+
+  // Draw all hollow nodes first
+  for (let i = 0; i < n; i++) {
+    const state = def.states[i];
+    const pos = positions[state];
+    const isStartAccept = state === def.startAccept;
+
+    if (isStartAccept) {
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, NODE_RADIUS + 3, 0, 2 * Math.PI);
+      ctx.strokeStyle = hexAlpha(def.color, 0.6 * dimFactor);
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+
+    // Hollow circle for every node
+    ctx.beginPath();
+    ctx.arc(pos.x, pos.y, NODE_RADIUS, 0, 2 * Math.PI);
+    ctx.fillStyle = '#110f08';
+    ctx.fill();
+    ctx.strokeStyle = hexAlpha(def.color, 0.7 * dimFactor);
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  }
+
+  // Draw the animated filled node at the interpolated position
+  // displayIdx is fractional — interpolate between the two nearest nodes
+  const floorIdx = Math.floor(displayIdx);
+  const frac = displayIdx - floorIdx;
+  const idxA = ((floorIdx % n) + n) % n;
+  const idxB = ((floorIdx + 1) % n + n) % n;
+  const posA = positions[def.states[idxA]];
+  const posB = positions[def.states[idxB]];
+  const ix = posA.x + (posB.x - posA.x) * frac;
+  const iy = posA.y + (posB.y - posA.y) * frac;
+
+  ctx.beginPath();
+  ctx.arc(ix, iy, NODE_RADIUS, 0, 2 * Math.PI);
+  ctx.fillStyle = hexAlpha(def.color, 0.5 * dimFactor);
+  ctx.fill();
+  ctx.strokeStyle = hexAlpha(def.color, dimFactor);
+  ctx.lineWidth = 2;
+  ctx.stroke();
+}
+
+// =======================================================================
+// BREATHING (Phase 3)
+// =======================================================================
+
+function updateBreathing() {
+  for (const key of RING_ORDER) {
+    const layer = layers[key];
+    // Advance phase (inner rings breathe faster)
+    const speedMult = key === 'counting' ? 1.0 : key === 'cobo' ? 0.7 : key === 'rmb' ? 0.5 : 0.35;
+    layer.breathPhase += 0.02 * speedMult;
+
+    // Resting oscillation (visible even at rest)
+    const restOsc = 1.0 + 0.015 * Math.sin(layer.breathPhase + layer.phaseOffset);
+
+    // Lerp toward target — slower when far from target (snap decay ~800ms)
+    const effectiveTarget = layer.breathTarget * restOsc;
+    const distance = Math.abs(layer.breathScale - effectiveTarget);
+    const lerpRate = distance > 0.1 ? 0.04 : 0.08;
+    layer.breathScale += (effectiveTarget - layer.breathScale) * lerpRate;
+  }
+
+  // Spring breathing lerp
+  springBreathOpacity += (springBreathOpacityTarget - springBreathOpacity) * 0.08;
+  springBreathWidth += (springBreathWidthTarget - springBreathWidth) * 0.08;
+
+  // Animate state index and dim factor for each layer
+  for (const key of RING_ORDER) {
+    const layer = layers[key];
+    const n = STRATEGY_DEFS[key].states.length;
+    // Smoothly advance displayStateIndex toward currentStateIndex
+    let target = layer.currentStateIndex;
+    let current = layer.displayStateIndex;
+    // Handle wraparound: if target wrapped to 0 and current is near n, go forward
+    if (target === 0 && current > n - 1.5) {
+      current -= n; // allow smooth wrap
+    }
+    const newDisplay = current + (target - current) * 0.12;
+    layer.displayStateIndex = ((newDisplay % n) + n) % n;
+    // Dim factor lerp
+    layer.dimFactor += (layer.dimTarget - layer.dimFactor) * 0.1;
+  }
+}
+
+function feedTension(entry) {
+  const context = entry.context;
+
+  if (context === 'compressive') {
+    // Inner rings contract visibly, springs tighten
+    layers.counting.breathTarget = 0.92;
+    layers.cobo.breathTarget = 0.95;
+    layers.rmb.breathTarget = 0.97;
+    layers.chunking.breathTarget = 1.0;
+    springBreathOpacityTarget = 0.85;
+    springBreathWidthTarget = 3.0;
+  } else if (context === 'expansive') {
+    // Outer rings expand visibly, springs loosen
+    layers.counting.breathTarget = 1.0;
+    layers.cobo.breathTarget = 1.04;
+    layers.rmb.breathTarget = 1.06;
+    layers.chunking.breathTarget = 1.08;
+    springBreathOpacityTarget = 0.2;
+    springBreathWidthTarget = 0.8;
+  } else if (context === 'relaxation') {
+    // Snap: all rings pulse outward dramatically, then settle back
+    for (const key of RING_ORDER) {
+      layers[key].breathScale = 1.25;
+      layers[key].breathTarget = 1.0;
+    }
+    springBreathOpacity = 0.9;
+    springBreathOpacityTarget = 0.4;
+    springBreathWidth = 4.0;
+    springBreathWidthTarget = 1.5;
+
+    // Advance outermost active ring's state, dim the others
+    const snappedRing = advanceOutermostState();
+    triggerFlash();
+
+    // Dim non-snapping rings briefly
+    for (const key of RING_ORDER) {
+      layers[key].dimTarget = (key === snappedRing) ? 1.0 : 0.3;
+    }
+    setTimeout(() => {
+      for (const key of RING_ORDER) {
+        layers[key].dimTarget = 1.0;
+      }
+    }, 600);
+
+    // Record snap in matrix and tape
+    const letter = totalSnaps % 2 === 0 ? 'M' : 'W';
+    totalSnaps++;
+    matrixAuto.grow(letter);
+    tapeRenderer.addEvent(letter, entry.level || 0);
+  } else {
+    // Neutral: gentle resting
+    for (const key of RING_ORDER) {
+      layers[key].breathTarget = 1.0;
+    }
+    springBreathOpacityTarget = 0.4;
+    springBreathWidthTarget = 1.5;
+  }
+}
+
+function advanceOutermostState() {
+  // Find outermost ring and advance its current state; return the ring key
+  for (let i = RING_ORDER.length - 1; i >= 0; i--) {
+    const key = RING_ORDER[i];
+    const def = STRATEGY_DEFS[key];
+    layers[key].currentStateIndex = (layers[key].currentStateIndex + 1) % def.states.length;
+    return key;
+  }
+  return RING_ORDER[0];
+}
+
+// =======================================================================
+// UTILITY
+// =======================================================================
+function hexAlpha(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+// =======================================================================
+// MATRIX AUTOMATON (copied from bridge.html)
+// =======================================================================
+class MatrixAutomaton {
+  constructor() {
+    this.gridContainer = document.getElementById('matrix-grid');
+    this.matrix = [['M']];
+    this.maxSize = 8;
+    this.render();
+  }
+
+  grow(ch) {
+    let base = this.matrix;
+    let newSize = this.matrix.length + 1;
+    if (this.matrix.length >= this.maxSize) {
+      newSize = this.maxSize;
+      base = [];
+      for (let i = 1; i < this.matrix.length; i++) base.push(this.matrix[i].slice(1));
+    }
+    const n = base.length;
+    const m = Array(newSize).fill(null).map(() => Array(newSize).fill(null));
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++) m[i][j] = base[i][j];
+    const diag = [];
+    for (let i = 0; i < n; i++) diag.push(base[i][i]);
+    const neg = diag.map(c => c === 'M' ? 'W' : 'M');
+    for (let i = 0; i < n; i++) { m[n][i] = neg[i]; m[i][n] = neg[i]; }
+    m[n][n] = ch;
+    this.matrix = m;
+    this.render();
+  }
+
+  render() {
+    this.gridContainer.innerHTML = '';
+    const size = this.matrix.length;
+    const cellPx = size <= 4 ? 36 : size <= 6 ? 30 : 26;
+    this.gridContainer.style.gridTemplateColumns = `repeat(${size}, ${cellPx}px)`;
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        const cell = document.createElement('div');
+        cell.classList.add('matrix-cell');
+        cell.style.width = cellPx + 'px';
+        cell.style.height = cellPx + 'px';
+        cell.style.fontSize = (cellPx <= 26 ? 0.72 : 0.88) + 'rem';
+        const v = this.matrix[i][j] || '';
+        cell.textContent = v;
+        cell.classList.add(v === 'M' ? 'm-cell' : 'w-cell');
+        if (i === j) cell.classList.add('diagonal');
+        this.gridContainer.appendChild(cell);
+      }
+    }
+  }
+}
+
+// =======================================================================
+// TAPE (copied from bridge.html)
+// =======================================================================
+class TapeRenderer {
+  constructor() { this.container = document.getElementById('tape-container'); }
+  addEvent(letter, tensionLevel) {
+    const el = document.createElement('div');
+    el.classList.add('tape-event');
+    const lt = document.createElement('span');
+    lt.classList.add('tape-letter');
+    lt.textContent = letter;
+    lt.style.color = letter === 'M' ? C.mColor : C.wColor;
+    const bar = document.createElement('div');
+    bar.classList.add('tape-bar');
+    const h = Math.min(45, Math.max(5, (tensionLevel / 50) * 45));
+    bar.style.height = h + 'px';
+    const ratio = Math.min(1, tensionLevel / 50);
+    bar.style.background = ratio > 0.5 ? C.tension : C.release;
+    bar.style.opacity = 0.4 + ratio * 0.6;
+    el.appendChild(lt);
+    el.appendChild(bar);
+    this.container.appendChild(el);
+    this.container.scrollLeft = this.container.scrollWidth;
+  }
+  clear() { this.container.innerHTML = ''; }
+}
+
+// =======================================================================
+// TENSION CHART (copied from bridge.html, adapted)
+// =======================================================================
+class TensionChart {
+  constructor() {
+    this.canvas = document.getElementById('tension-canvas');
+    this.data = [];
+    this.playhead = 0;
+    this.resize();
+  }
+
+  resize() {
+    const s = setupCanvas(this.canvas, 560, 180);
+    this.w = s.w; this.h = s.h; this.ctx = s.ctx;
+    this.draw();
+  }
+
+  setData(history) {
+    this.data = history;
+    this.draw();
+  }
+
+  setPlayhead(idx) {
+    this.playhead = idx;
+    this.draw();
+  }
+
+  draw() {
+    const ctx = this.ctx, w = this.w, h = this.h;
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    if (this.data.length === 0) {
+      ctx.fillStyle = C.muted;
+      ctx.font = '11px IBM Plex Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('run a computation to see tension data', w / 2, h / 2);
+      return;
+    }
+
+    const pad = { l: 40, r: 12, t: 14, b: 20 };
+    const pw = w - pad.l - pad.r;
+    const ph = h - pad.t - pad.b;
+
+    let maxLevel = 0, maxStab = 0, minStab = 0;
+    for (const d of this.data) {
+      if (d.level > maxLevel) maxLevel = d.level;
+      if (d.stability > maxStab) maxStab = d.stability;
+      if (d.stability < minStab) minStab = d.stability;
+    }
+    maxLevel = Math.max(maxLevel, 1);
+    const stabRange = Math.max(Math.abs(maxStab), Math.abs(minStab), 1);
+
+    const midY = pad.t + ph * 0.6;
+    ctx.fillStyle = 'rgba(107, 158, 140, 0.04)';
+    ctx.fillRect(pad.l, pad.t, pw, midY - pad.t);
+    ctx.fillStyle = 'rgba(212, 99, 74, 0.04)';
+    ctx.fillRect(pad.l, midY, pw, pad.t + ph - midY);
+
+    // Stability zero line
+    ctx.strokeStyle = 'rgba(138, 132, 112, 0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 4]);
+    ctx.beginPath();
+    ctx.moveTo(pad.l, midY);
+    ctx.lineTo(pad.l + pw, midY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Grid
+    ctx.strokeStyle = C.gridLine;
+    ctx.lineWidth = 1;
+    for (let i = 1; i <= 3; i++) {
+      const y = pad.t + (i / 4) * ph;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(pad.l + pw, y); ctx.stroke();
+    }
+
+    // Tension line
+    const tensionH = ph * 0.55;
+    ctx.beginPath();
+    ctx.strokeStyle = C.tension;
+    ctx.lineWidth = 2;
+    for (let i = 0; i < this.data.length; i++) {
+      const x = pad.l + (i / Math.max(1, this.data.length - 1)) * pw;
+      const y = pad.t + tensionH - (this.data[i].level / maxLevel) * tensionH;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Stability line
+    const stabH = ph * 0.35;
+    ctx.beginPath();
+    ctx.strokeStyle = C.release;
+    ctx.lineWidth = 1.5;
+    for (let i = 0; i < this.data.length; i++) {
+      const x = pad.l + (i / Math.max(1, this.data.length - 1)) * pw;
+      const y = midY - (this.data[i].stability / stabRange) * (stabH / 2);
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Relaxation dots
+    for (let i = 0; i < this.data.length; i++) {
+      const d = this.data[i];
+      if (d.context === 'relaxation') {
+        const x = pad.l + (i / Math.max(1, this.data.length - 1)) * pw;
+        const y = pad.t + tensionH - (d.level / maxLevel) * tensionH;
+        ctx.beginPath();
+        ctx.arc(x, y, 4, 0, 2 * Math.PI);
+        ctx.fillStyle = C.relaxation;
+        ctx.fill();
+      }
+    }
+
+    // Playhead
+    if (this.playhead > 0 && this.playhead < this.data.length) {
+      const x = pad.l + (this.playhead / Math.max(1, this.data.length - 1)) * pw;
+      ctx.strokeStyle = 'rgba(240, 234, 216, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, pad.t);
+      ctx.lineTo(x, pad.t + ph);
+      ctx.stroke();
+    }
+
+    // Labels
+    ctx.fillStyle = C.muted;
+    ctx.font = '9px IBM Plex Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('tension', pad.l + 4, pad.t + 11);
+    ctx.fillStyle = C.release;
+    ctx.fillText('stability', pad.l + 4, midY - 4);
+    ctx.fillStyle = 'rgba(212, 99, 74, 0.4)';
+    ctx.fillText('unstable', pad.l + 4, midY + 11);
+    ctx.fillStyle = C.muted;
+    ctx.textAlign = 'center';
+    ctx.fillText('inference step', pad.l + pw / 2, h - 4);
+  }
+}
+
+// =======================================================================
+// SNAP FLASH
+// =======================================================================
+function triggerFlash() {
+  const flash = document.getElementById('snap-flash');
+  flash.classList.add('active');
+  setTimeout(() => flash.classList.remove('active'), 400);
+}
+
+// =======================================================================
+// EVENT LOG
+// =======================================================================
+const eventLogEl = document.getElementById('event-log');
+
+function logTensionEntry(entry) {
+  const div = document.createElement('div');
+  div.classList.add('event-entry');
+  const desc = DiscourseSystem.getEventDescription(entry.context);
+  div.innerHTML = `
+    <span class="step">${entry.step}</span>
+    <span class="ctx ${entry.context}">${entry.context}</span>
+    <span class="vals">T=${entry.level.toFixed(1)}</span>
+    <span class="desc">${desc}</span>
+  `;
+  eventLogEl.appendChild(div);
+  eventLogEl.scrollTop = eventLogEl.scrollHeight;
+}
+
+function clearEventLog() {
+  eventLogEl.innerHTML = '';
+}
+
+// =======================================================================
+// STATE
+// =======================================================================
+let totalSnaps = 0;
+let totalRuns = 0;
+let tensionData = [];
+let replayIndex = 0;
+let isReplaying = false;
+let replayTimer = null;
+
+// =======================================================================
+// PRESET SCENARIOS
+// =======================================================================
+const presets = {
+  kindergarten: { op: 'add', a: 3, b: 2, limit: 50 },
+  grade1: { op: 'add', a: 8, b: 5, limit: 8 },
+  grade2: { op: 'add', a: 28, b: 35, limit: 10 },
+  grade3: { op: 'multiply', a: 4, b: 3, limit: 20 },
+  boundary: null
+};
+
+function loadPreset(name) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+
+  if (name === 'boundary') {
+    const div = document.createElement('div');
+    div.classList.add('event-entry');
+    div.innerHTML = `<span class="step">--</span><span class="ctx" style="color:${C.tension}">boundary</span><span class="vals">fraction/2 incompatible with recollection/1</span>`;
+    eventLogEl.appendChild(div);
+    return;
+  }
+
+  const preset = presets[name];
+  if (!preset) return;
+  document.getElementById('op').value = preset.op;
+  document.getElementById('inp-a').value = preset.a;
+  document.getElementById('inp-b').value = preset.b;
+  document.getElementById('inp-limit').value = preset.limit;
+}
+
+// =======================================================================
+// REPLAY ENGINE
+// =======================================================================
+function getReplayDelay() {
+  // speed 1 → 400ms, speed 5 → 150ms, speed 10 → 80ms
+  const speed = parseInt(document.getElementById('replay-speed').value) || 3;
+  return Math.max(80, 440 - speed * 40);
+}
+
+function startReplay() {
+  if (tensionData.length === 0) return;
+
+  isReplaying = true;
+  replayIndex = 0;
+  const fillBar = document.getElementById('replay-fill');
+
+  function step() {
+    if (replayIndex >= tensionData.length) {
+      isReplaying = false;
+      fillBar.style.width = '100%';
+      return;
+    }
+
+    const entry = tensionData[replayIndex];
+    const isSnap = entry.context === 'relaxation';
+
+    // Feed one step at a time so each is perceptible
+    feedTension(entry);
+
+    // Log more frequently so the user sees activity
+    if (replayIndex % Math.max(1, Math.floor(tensionData.length / 80)) === 0 || isSnap) {
+      logTensionEntry(entry);
+    }
+
+    replayIndex++;
+
+    chart.setPlayhead(replayIndex);
+
+    const pct = (replayIndex / tensionData.length) * 100;
+    fillBar.style.width = pct + '%';
+
+    // Snap events get a longer pause so the user can see the pulse
+    const delay = isSnap ? getReplayDelay() + 300 : getReplayDelay();
+    replayTimer = setTimeout(step, delay);
+  }
+
+  step();
+}
+
+function stopReplay() {
+  if (replayTimer) clearTimeout(replayTimer);
+  isReplaying = false;
+}
+
+// =======================================================================
+// API
+// =======================================================================
+const API = 'http://localhost:8080';
+
+async function checkServer() {
+  const el = document.getElementById('server-status');
+  try {
+    const res = await fetch(API + '/api/knowledge', { signal: AbortSignal.timeout(2000) });
+    if (res.ok) {
+      el.textContent = 'connected';
+      el.className = 'live';
+      return true;
+    }
+  } catch (e) {}
+  el.textContent = 'offline';
+  el.className = 'dead';
+  return false;
+}
+
+async function runComputation() {
+  const btn = document.getElementById('btn-run');
+  btn.disabled = true;
+  stopReplay();
+  clearEventLog();
+
+  const alive = await checkServer();
+  if (!alive) {
+    btn.disabled = false;
+    const div = document.createElement('div');
+    div.classList.add('event-entry');
+    div.innerHTML = `<span class="step">--</span><span class="ctx" style="color:${C.tension}">offline</span><span class="vals">start: swipl prolog/server.pl</span>`;
+    eventLogEl.appendChild(div);
+    return;
+  }
+
+  const op = document.getElementById('op').value;
+  const a = parseInt(document.getElementById('inp-a').value);
+  const b = parseInt(document.getElementById('inp-b').value);
+  const limit = parseInt(document.getElementById('inp-limit').value);
+
+  try {
+    const res = await fetch(API + '/api/compute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ operation: op, a, b, limit })
+    });
+    const data = await res.json();
+
+    tensionData = data.tension_history || [];
+    chart.setData(tensionData);
+    totalRuns++;
+
+    const summary = document.createElement('div');
+    summary.classList.add('event-entry');
+    summary.innerHTML = `
+      <span class="step">--</span>
+      <span class="ctx" style="color:${data.success ? C.stable : C.tension}">
+        ${data.success ? 'ok' : 'fail'}
+      </span>
+      <span class="vals">${a} ${op} ${b} | ${tensionData.length} steps</span>
+    `;
+    eventLogEl.appendChild(summary);
+
+    if (tensionData.length > 0) {
+      startReplay();
+    }
+  } catch (e) {
+    const div = document.createElement('div');
+    div.classList.add('event-entry');
+    div.innerHTML = `<span class="step">--</span><span class="ctx" style="color:${C.tension}">error</span><span class="vals">${e.message}</span>`;
+    eventLogEl.appendChild(div);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+async function resetAll() {
+  stopReplay();
+  tensionData = [];
+  replayIndex = 0;
+  totalSnaps = 0;
+  totalRuns = 0;
+  chart.setData([]);
+  chart.setPlayhead(0);
+  clearEventLog();
+  tapeRenderer.clear();
+  document.getElementById('replay-fill').style.width = '0%';
+
+  // Reset breathing and animation state
+  for (const key of RING_ORDER) {
+    layers[key].breathScale = 1.0;
+    layers[key].breathTarget = 1.0;
+    layers[key].breathPhase = 0;
+    layers[key].currentStateIndex = 0;
+    layers[key].displayStateIndex = 0;
+    layers[key].dimFactor = 1.0;
+    layers[key].dimTarget = 1.0;
+  }
+  springBreathOpacity = 0.4;
+  springBreathWidth = 1.5;
+  springBreathOpacityTarget = 0.4;
+  springBreathWidthTarget = 1.5;
+
+  // Reset matrix
+  matrixAuto = new MatrixAutomaton();
+
+  // Unhighlight presets
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+
+  // Reset server
+  try {
+    await fetch(API + '/api/reset', { method: 'POST' });
+  } catch (e) {}
+}
+
+// =======================================================================
+// ANIMATION LOOP
+// =======================================================================
+const fractalCanvas = document.getElementById('fractal-canvas');
+let canvasState = {};
+
+function resizeCanvas() {
+  canvasState = setupCanvas(fractalCanvas, 700, 700);
+  needsLabelRecompute = true;
+}
+
+function animate() {
+  if (canvasState.ctx) {
+    drawFrame(canvasState.ctx, canvasState.w, canvasState.h);
+  }
+  requestAnimationFrame(animate);
+}
+
+// =======================================================================
+// INIT
+// =======================================================================
+var matrixAuto = new MatrixAutomaton();
+var tapeRenderer = new TapeRenderer();
+var chart = new TensionChart();
+
+// Speed display
+document.getElementById('replay-speed').addEventListener('input', e => {
+  document.getElementById('speed-val').textContent = e.target.value;
+});
+
+// Check server on load
+checkServer();
+
+// Resize handling
+let rTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(rTimer);
+  rTimer = setTimeout(() => {
+    resizeCanvas();
+    chart.resize();
+  }, 200);
+});
+
+// Initial setup + start animation loop
+resizeCanvas();
+animate();
+</script>
+<script src="shared.js"></script>
+
+</body>
+</html>
