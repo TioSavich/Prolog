@@ -321,6 +321,40 @@ input:focus, select:focus {
 .oracle-text { color: #d29922; }
 .debug-text { color: var(--text-secondary); opacity: 0.8; }
 
+.calculator-result {
+    margin-top: 1rem;
+    background: var(--terminal-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1rem;
+    min-height: 100px;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.9rem;
+}
+
+.calc-meta {
+    margin: 0.5rem 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    display: flex;
+    gap: 0.4rem;
+}
+
+.calc-history {
+    margin-top: 0.5rem;
+    padding-left: 1.25rem;
+    color: var(--text-primary);
+}
+
+.calc-history code {
+    color: var(--accent);
+}
+
+.error-text {
+    color: var(--danger);
+    font-weight: 600;
+}
+
 /* Modal Overlay */
 .overlay {
     position: fixed;

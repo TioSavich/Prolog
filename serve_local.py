@@ -12,7 +12,7 @@ from pathlib import Path
 
 # Configuration
 PORT = 3000
-DIRECTORY = Path(__file__).parent
+DIRECTORY = (Path(__file__).parent / "public").resolve()
 
 class CORSHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     """HTTP request handler with CORS headers enabled."""

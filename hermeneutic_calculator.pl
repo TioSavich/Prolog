@@ -16,37 +16,44 @@
           , list_strategies/2
           ]).
 
+setup_math_path :-
+    prolog_load_context(directory, Dir),
+    directory_file_path(Dir, 'Prolog/math', MathDir),
+    (   exists_directory(MathDir),
+        \+ user:file_search_path(math, MathDir)
+    ->  asserta(user:file_search_path(math, MathDir))
+    ;   true
+    ).
+
+:- initialization(setup_math_path, now).
+
 % Addition Strategies
-:- use_module(sar_add_cobo, [run_cobo/4]).
-:- use_module(sar_add_chunking, [run_chunking/4]).
-:- use_module(sar_add_rmb, [run_rmb/4]).
-:- use_module(sar_add_rounding, [run_rounding/4]).
+:- use_module(math(sar_add_cobo), [run_cobo/4]).
+:- use_module(math(sar_add_chunking), [run_chunking/4]).
+:- use_module(math(sar_add_rmb), [run_rmb/4]).
+:- use_module(math(sar_add_rounding), [run_rounding/4]).
 
 % Subtraction Strategies  
-:- use_module(sar_sub_cobo_missing_addend, [run_cobo_ma/4]).
-:- use_module(sar_sub_cbbo_take_away, [run_cbbo_ta/4]).
-:- use_module(sar_sub_decomposition, [run_decomposition/4]).
-:- use_module(sar_sub_rounding, [run_sub_rounding/4]).
-:- use_module(sar_sub_sliding, [run_sliding/4]).
-:- use_module(sar_sub_chunking_a, [run_chunking_a/4]).
-:- use_module(sar_sub_chunking_b, [run_chunking_b/4]).
-:- use_module(sar_sub_chunking_c, [run_chunking_c/4]).
+:- use_module(math(sar_sub_cobo_missing_addend), [run_cobo_ma/4]).
+:- use_module(math(sar_sub_cbbo_take_away), [run_cbbo_ta/4]).
+:- use_module(math(sar_sub_decomposition), [run_decomposition/4]).
+:- use_module(math(sar_sub_rounding), [run_sub_rounding/4]).
+:- use_module(math(sar_sub_sliding), [run_sliding/4]).
+:- use_module(math(sar_sub_chunking_a), [run_chunking_a/4]).
+:- use_module(math(sar_sub_chunking_b), [run_chunking_b/4]).
+:- use_module(math(sar_sub_chunking_c), [run_chunking_c/4]).
 
 % Multiplication Strategies
-:- use_module(smr_mult_c2c, [run_c2c/4]).
-:- use_module(smr_mult_cbo, [run_cbo_mult/5]).
-:- use_module(smr_mult_commutative_reasoning, [run_commutative_mult/4]).
-:- use_module(smr_mult_dr, [run_dr/4]).
+:- use_module(math(smr_mult_c2c), [run_c2c/4]).
+:- use_module(math(smr_mult_cbo), [run_cbo_mult/5]).
+:- use_module(math(smr_mult_commutative_reasoning), [run_commutative_mult/4]).
+:- use_module(math(smr_mult_dr), [run_dr/4]).
 
 % Division Strategies
-:- use_module(smr_div_cbo, [run_cbo_div/5]).
-:- use_module(smr_div_dealing_by_ones, [run_dealing_by_ones/4]).
-:- use_module(smr_div_idp, [run_idp/5]).
-:- use_module(smr_div_ucr, [run_ucr/4]).
-
-% Counting Automata
-:- use_module(counting2, [run_counting2/4]).
-:- use_module(counting_on_back, [run_counting_on_back/4]).
+:- use_module(math(smr_div_cbo), [run_cbo_div/5]).
+:- use_module(math(smr_div_dealing_by_ones), [run_dealing_by_ones/4]).
+:- use_module(math(smr_div_idp), [run_idp/5]).
+:- use_module(math(smr_div_ucr), [run_ucr/4]).
 
 % --- Strategy Lists ---
 

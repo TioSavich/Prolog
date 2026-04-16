@@ -11,11 +11,17 @@
 :- use_module(library(http/thread_httpd)).
 :- use_module(library(http/http_dispatch)).
 :- use_module(library(http/http_json)).
+:- use_module(library(http/http_error)).
+:- use_module(library(http/http_parameters)).
 
 % Define API endpoints
 :- http_handler(root(analyze_semantics), analyze_semantics_handler, [method(post)]).
 :- http_handler(root(analyze_strategy), analyze_strategy_handler, [method(post)]).
 :- http_handler(root(test), test_handler, [method(get)]).
+:- http_handler(root(calculator/strategies), calculator_strategies_handler, [method(get)]).
+:- http_handler(root(calculator/calculate), calculator_calculate_handler, [method(post)]).
+
+:- use_module(hermeneutic_calculator).
 
 %!      start_server(+Port:integer) is det.
 %
@@ -42,6 +48,11 @@ test_handler(_Request) :-
     format('Content-type: application/json~n~n'),
     format('{"status": "ok", "message": "Prolog server is running"}~n').
 
+add_cors_headers :-
+    format('Access-Control-Allow-Origin: *~n'),
+    format('Access-Control-Allow-Methods: GET, POST, OPTIONS~n'),
+    format('Access-Control-Allow-Headers: Content-Type~n').
+
 
 %!      analyze_semantics_handler(+Request:list) is det.
 %
@@ -53,10 +64,7 @@ test_handler(_Request) :-
 %       @error reply_json_dict(_{error: "Invalid JSON input"}) if the request body is not valid JSON.
 
 analyze_semantics_handler(Request) :-
-    % Add CORS headers
-    format('Access-Control-Allow-Origin: *~n'),
-    format('Access-Control-Allow-Methods: POST, OPTIONS~n'),
-    format('Access-Control-Allow-Headers: Content-Type~n'),
+    add_cors_headers,
     
     (   http_read_json_dict(Request, In) ->
         Statement = In.statement,
@@ -76,10 +84,7 @@ analyze_semantics_handler(Request) :-
 %       @error reply_json_dict(_{error: "Invalid JSON input"}) if the request body is not valid JSON.
 
 analyze_strategy_handler(Request) :-
-    % Add CORS headers
-    format('Access-Control-Allow-Origin: *~n'),
-    format('Access-Control-Allow-Methods: POST, OPTIONS~n'),
-    format('Access-Control-Allow-Headers: Content-Type~n'),
+    add_cors_headers,
     
     (   http_read_json_dict(Request, In) ->
         ProblemContext = In.problemContext,
@@ -87,6 +92,57 @@ analyze_strategy_handler(Request) :-
         analyze_cgi_strategy(ProblemContext, StrategyDescription, Analysis),
         reply_json_dict(Analysis)
     ;   reply_json_dict(_{error: "Invalid JSON input"})
+    ).
+
+calculator_strategies_handler(Request) :-
+    add_cors_headers,
+    (   catch(http_parameters(Request, [op(OpParam, [default("+")])]), _, fail)
+    ->  true
+    ;   reply_json_dict(_{error: "Missing op parameter"}, [status(400)]), !
+    ),
+    normalize_op(OpParam, Op),
+    (   valid_op(Op),
+        hermeneutic_calculator:list_strategies(Op, Strategies)
+    ->  maplist(atom_string, Strategies, StrategyStrings),
+        atom_string(Op, OpString),
+        reply_json_dict(_{op: OpString, strategies: StrategyStrings})
+    ;   reply_json_dict(_{error: "Unsupported operator"}, [status(400)])
+    ).
+
+calculator_calculate_handler(Request) :-
+    add_cors_headers,
+    (   http_read_json_dict(Request, In) ->
+        (   get_dict(op, In, OpParam),
+            get_dict(num1, In, Num1Val),
+            get_dict(num2, In, Num2Val),
+            get_dict(strategy, In, StrategyParam)
+        ->  true
+        ;   reply_json_dict(_{error: "Missing required fields"}, [status(400)]), !
+        )
+    ;   reply_json_dict(_{error: "Invalid JSON input"}, [status(400)]), !
+    ),
+    normalize_op(OpParam, Op),
+    (   valid_op(Op) -> true ; reply_json_dict(_{error: "Unsupported operator"}, [status(400)]), !),
+    (   integer(Num1Val) -> Num1 = Num1Val ; number(Num1Val) -> Num1 is round(Num1Val) ; reply_json_dict(_{error: "num1 must be numeric"}, [status(400)]), !),
+    (   integer(Num2Val) -> Num2 = Num2Val ; number(Num2Val) -> Num2 is round(Num2Val) ; reply_json_dict(_{error: "num2 must be numeric"}, [status(400)]), !),
+    normalize_strategy(StrategyParam, StrategyAtom),
+    (   hermeneutic_calculator:list_strategies(Op, StrategyList),
+        member(StrategyAtom, StrategyList)
+    ->  true
+    ;   reply_json_dict(_{error: "Strategy not available for operator"}, [status(400)]), !
+    ),
+    (   hermeneutic_calculator:calculate(Num1, Op, Num2, StrategyAtom, Result, History)
+    ->  maplist(term_string, History, HistoryStrings),
+        atom_string(Op, OpString),
+        atom_string(StrategyAtom, StrategyString),
+        Reply = _{
+            op: OpString,
+            strategy: StrategyString,
+            result: Result,
+            history: HistoryStrings
+        },
+        reply_json_dict(Reply)
+    ;   reply_json_dict(_{error: "Calculation failed for the requested strategy"}, [status(422)])
     ).
 
 
@@ -156,6 +212,21 @@ get_incompatibilities(Statement, 'The shape has exactly 3 sides') :-
     sub_atom(Statement, _, _, _, square).
 get_incompatibilities(Statement, 'The negation of this statement') :-
     Statement \= ''.
+
+normalize_op(Value, Atom) :-
+    (   string(Value)
+    ->  atom_string(Atom0, Value)
+    ;   Atom0 = Value
+    ),
+    Atom = Atom0.
+
+normalize_strategy(Value, Atom) :-
+    (   string(Value)
+    ->  atom_string(Atom, Value)
+    ;   Atom = Value
+    ).
+
+valid_op(Op) :- member(Op, [+, -, *, /]).
 
 
 %!      analyze_cgi_strategy(+ProblemContext:string, +StrategyDescription:string, -Analysis:dict) is det.

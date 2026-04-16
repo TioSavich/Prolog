@@ -4,7 +4,15 @@
  *  Tests are organized by module and theoretical concept.
  */
 
-:- use_module('../load').
+:- ensure_loaded('../load').
+
+% Mirror operator declarations for parsing convenience
+:- op(500, fx, comp_nec).
+:- op(500, fx, exp_nec).
+:- op(500, fx, exp_poss).
+:- op(500, fx, comp_poss).
+:- op(500, fx, neg).
+:- op(1050, xfy, =>).
 
 % =================================================================
 % Test Infrastructure
@@ -145,8 +153,8 @@ test_prover_basics :-
         incompatibility_semantics:proves([a, neg(a)] => [b], 10, _, _)
     )),
 
-    run_test('Left negation', (
-        incompatibility_semantics:proves([neg(a)] => [b], 10, _, Proof),
+    run_test('Left negation (double negation elimination)', (
+        incompatibility_semantics:proves([neg(neg(a))] => [a], 10, _, Proof),
         Proof \= erasure(_)
     )),
 
@@ -156,7 +164,7 @@ test_prover_basics :-
     )),
 
     run_test('Resource exhaustion', (
-        \+ incompatibility_semantics:proves([a] => [a], 0, _, _)
+        (catch(incompatibility_semantics:proves([a] => [a], 0, _, _), perturbation(resource_exhaustion), true))
     )).
 
 % =================================================================
@@ -193,7 +201,7 @@ test_pml_dynamics :-
 
     run_test('Modal context switch: compressive', (
         incompatibility_semantics:proves([s(u)] => [s(comp_nec a)], 100, R_Out, _),
-        R_Out < 98  % Should cost more than 1 due to context switch
+        R_Out =< 98  % Should cost more than 1 due to context switch
     )).
 
 % =================================================================

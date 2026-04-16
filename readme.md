@@ -252,9 +252,9 @@ To experiment with the system's learning capabilities, you need to run the full 
 
 ### Example: Learning Subtraction- **Frontend & Visualization**:
 
-  - `index.html`, `script.js`, `style.css`: Frontend files for the web GUI.
+  - `public/index.html`, `public/app.js`, `public/styles.css`: Frontend files for the web GUI (served via `serve_local.py` or your preferred static host).
 
-**1. Initial State**  - `cognition_viz.html`: Advanced cognitive visualization interface.
+**1. Initial State**  - *(Legacy `cognition_viz.html` has been retired in favor of the new interface.)*
 
 ```prolog  - `serve_local.py`: A simple Python HTTP server for the frontend.
 

@@ -9,15 +9,29 @@ document.addEventListener('DOMContentLoaded', () => {
     const budgetLabel = document.getElementById('budgetVisualLabel');
     const resetBtn = document.getElementById('resetBtn');
     const runBtn = document.getElementById('runBtn');
+    const calcOp = document.getElementById('calcOp');
+    const calcStrategy = document.getElementById('calcStrategy');
+    const calcOperandA = document.getElementById('calcOperandA');
+    const calcOperandB = document.getElementById('calcOperandB');
+    const calcResult = document.getElementById('calcResult');
+    const calcRunBtn = document.getElementById('calcRunBtn');
     
-    // API endpoint base URL (assuming Prolog runs locally on standard port)
+    // API endpoints
     const API_BASE = 'http://localhost:8080/api';
+    const HERMENEUTIC_API = 'http://localhost:8083';
 
     // State tracker
     let isComputing = false;
 
     // Load initial state
     fetchState();
+    if (calcOp && calcStrategy) {
+        loadHermeneuticStrategies();
+        calcOp.addEventListener('change', loadHermeneuticStrategies);
+    }
+    if (calcRunBtn) {
+        calcRunBtn.addEventListener('click', runHermeneuticCalculation);
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -168,5 +182,78 @@ document.addEventListener('DOMContentLoaded', () => {
         dismissBtn.onclick = () => {
             modal.classList.add('hidden');
         };
+    }
+
+    async function loadHermeneuticStrategies() {
+        if (!calcStrategy || !calcOp) return;
+        calcStrategy.innerHTML = '<option>Loading strategies...</option>';
+        calcStrategy.disabled = true;
+        try {
+            const response = await fetch(`${HERMENEUTIC_API}/calculator/strategies?op=${encodeURIComponent(calcOp.value)}`);
+            const data = await response.json();
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Unable to load strategies');
+            }
+            calcStrategy.innerHTML = '';
+            data.strategies.forEach((name) => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                calcStrategy.appendChild(option);
+            });
+            calcStrategy.disabled = false;
+        } catch (error) {
+            calcStrategy.innerHTML = `<option>${error.message}</option>`;
+        }
+    }
+
+    async function runHermeneuticCalculation(event) {
+        event.preventDefault();
+        if (!calcStrategy || calcStrategy.disabled || !calcResult || !calcOp || !calcOperandA || !calcOperandB) {
+            return;
+        }
+
+        const num1 = Number(calcOperandA.value);
+        const num2 = Number(calcOperandB.value);
+        if (Number.isNaN(num1) || Number.isNaN(num2)) {
+            calcResult.innerHTML = '<span class="error-text">Please enter numeric operands.</span>';
+            return;
+        }
+
+        calcResult.innerHTML = '<i>Running hermeneutic strategy...</i>';
+
+        try {
+            const response = await fetch(`${HERMENEUTIC_API}/calculator/calculate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    op: calcOp.value,
+                    num1,
+                    num2,
+                    strategy: calcStrategy.value
+                })
+            });
+            const data = await response.json();
+            if (!response.ok || data.error) {
+                throw new Error(data.error || 'Calculation failed');
+            }
+            renderHermeneuticResult(data);
+        } catch (error) {
+            calcResult.innerHTML = `<span class="error-text">${error.message}</span>`;
+        }
+    }
+
+    function renderHermeneuticResult(payload) {
+        if (!calcResult) return;
+        let html = `<div><strong>Result:</strong> ${payload.result}</div>`;
+        html += `<div class="calc-meta"><span>${payload.op}</span> • <span>${payload.strategy}</span></div>`;
+        if (payload.history && payload.history.length) {
+            html += '<ol class="calc-history">';
+            payload.history.forEach((step) => {
+                html += `<li><code>${step}</code></li>`;
+            });
+            html += '</ol>';
+        }
+        calcResult.innerHTML = html;
     }
 });

@@ -25,41 +25,23 @@
 :- multifile incompatibility_semantics:material_inference/3.
 
 % =================================================================
-% The Dialectical Engine (The Rhythm of Thought)
+% Dialectical Rhythm (Data-Driven)
 % =================================================================
-% The fundamental rhythm: U -> Box_down(A) -> Diamond_up(LG) -> Box_up(U')
-% (Synthesis_1, Chapter 4.2)
+% Each fact encodes a row from the Section 5 table in synthesized_paper.md:
+% Stage -> Modal transition. The generic material_inference clause below
+% keeps the implementation concise and prevents duplicate definitions.
 
-% 2. First Negation (Compression ↓): Emergence of Awareness/Tension (A)
-% [s(u)] => [s(comp_nec a)]
-incompatibility_semantics:material_inference([s(u)], s(comp_nec a), true).
-incompatibility_semantics:material_inference([s(u_prime)], s(comp_nec a), true).
+dialectical_transition(u,        comp_nec(a)).        % Emergence of tension from unity
+dialectical_transition(u_prime,  comp_nec(a)).        % Re-entry into the next cycle
+dialectical_transition(a,        exp_poss(lg)).       % Letting-go option
+dialectical_transition(a,        comp_poss(t)).       % Temptation to fixate
+dialectical_transition(lg,       exp_nec(u_prime)).   % Sublation / release
+dialectical_transition(t,        comp_nec(neg(u))).   % Pathological contraction
+dialectical_transition(t_b,      comp_nec(t_n)).      % Bad infinite (Being -> Nothing)
+dialectical_transition(t_n,      comp_nec(t_b)).      % Bad infinite (Nothing -> Being)
 
-% 4. Choice Point (Possibility ↑): Recognizing the instability.
-% [s(a)] => [s(exp_poss lg)] (Possibility of Letting Go)
-incompatibility_semantics:material_inference([s(a)], s(exp_poss lg), true).
-% [s(a)] => [s(comp_poss t)] (Temptation of Fixation T)
-incompatibility_semantics:material_inference([s(a)], s(comp_poss t), true).
-
-% 5. Second Negation/Sublation (Expansion ↑) or Fixation (Pathology)
-
-% 5a. Sublation: Letting go results in necessary release (U')
-% [s(lg)] => [s(exp_nec u_prime)]
-incompatibility_semantics:material_inference([s(lg)], s(exp_nec u_prime), true).
-
-% 5b. Fixation (Pathology): Deepened Contraction
-% [s(t)] => [s(comp_nec neg(u))]
-incompatibility_semantics:material_inference([s(t)], s(comp_nec neg(u)), true).
-
-
-% =================================================================
-% The Bad Infinite (Closed Compressive Cycle)
-% =================================================================
-% Example: Hegel's Being (t_b) and Nothing (t_n) oscillation.
-% (Synthesis_1, Chapter 4.4, Definition 1)
-
-incompatibility_semantics:material_inference([s(t_b)], s(comp_nec t_n), true).
-incompatibility_semantics:material_inference([s(t_n)], s(comp_nec t_b), true).
+incompatibility_semantics:material_inference([s(Stage)], s(ModalTerm), true) :-
+    dialectical_transition(Stage, ModalTerm).
 
 
 % =================================================================

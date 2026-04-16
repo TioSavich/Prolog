@@ -27,26 +27,25 @@
 % =================================================================
 % The Oobleck Dynamic (Inter-Agent S-O Transfer)
 % =================================================================
-% Principle: Applying compressive force (Box_down_S) by Agent A
-% will predictably lead to the crystallization (Box_down_O) of Agent B's position.
-% (Synthesis_1, Principle 2 and Chapter 5.3)
+% Principle 2 (Oobleck) captured as a compact rule table
 
-% [s(comp_nec(action(A, aggressive)))] => [o(comp_nec(position(B, crystallized)))]
-incompatibility_semantics:material_inference(
-    [s(comp_nec(action(A, aggressive)))],
-    o(comp_nec(position(B, crystallized))),
-    (A \= B) % Body ensures agents are distinct
+oobleck_transition(
+    comp_nec(action(A, aggressive)),
+    comp_nec(position(B, crystallized)),
+    A, B
+).
+oobleck_transition(
+    exp_nec(action(A, listening)),
+    exp_nec(position(B, liquefied)),
+    A, B
 ).
 
-% Principle: Introducing subjective expansion (Box_up_S) by Agent A
-% will predictably encourage the liquefaction (Box_up_O) of Agent B's position.
-
-% [s(exp_nec(action(A, listening)))] => [o(exp_nec(position(B, liquefied)))]
 incompatibility_semantics:material_inference(
-    [s(exp_nec(action(A, listening)))],
-    o(exp_nec(position(B, liquefied))),
+    [s(LHS)],
+    o(RHS),
     (A \= B)
-).
+) :-
+    oobleck_transition(LHS, RHS, A, B).
 
 % =================================================================
 % Recognition (Anerkennung)

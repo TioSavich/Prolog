@@ -74,6 +74,39 @@
                         </ul>
                     </div>
                 </div>
+
+                <div class="panel glass-panel calculator-panel">
+                    <h2>Hermeneutic Calculator</h2>
+                    <div class="input-group">
+                        <label for="calcOp">Operation</label>
+                        <select id="calcOp">
+                            <option value="+">Addition (+)</option>
+                            <option value="-">Subtraction (-)</option>
+                            <option value="*">Multiplication (×)</option>
+                            <option value="/">Division (÷)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label for="calcStrategy">Strategy</label>
+                        <select id="calcStrategy" disabled>
+                            <option>Loading strategies...</option>
+                        </select>
+                    </div>
+                    <div class="inputs-row">
+                        <div class="input-group">
+                            <label for="calcOperandA">Input A</label>
+                            <input type="number" id="calcOperandA" min="0" value="8">
+                        </div>
+                        <div class="input-group">
+                            <label for="calcOperandB">Input B</label>
+                            <input type="number" id="calcOperandB" min="0" value="5">
+                        </div>
+                    </div>
+                    <button id="calcRunBtn" class="btn btn-outline">Run Strategy</button>
+                    <div id="calcResult" class="calculator-result">
+                        <i>Select an operation to load its strategies.</i>
+                    </div>
+                </div>
             </section>
 
             <!-- Right Column: Terminal Output -->
