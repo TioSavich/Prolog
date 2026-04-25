@@ -1,0 +1,638 @@
+\documentclass[12pt]{book}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{xcolor}
+\usepackage[normalem]{ulem}
+\usepackage{graphicx}
+\usepackage{cancel}
+\usepackage{soul}
+\usepackage{float}
+\usepackage[autostyle]{csquotes}
+\usepackage{fontspec}
+\usepackage{tikz}
+\usetikzlibrary{automata,positioning,backgrounds,calc,arrows.meta,shapes.geometric,fit,shadows}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{multirow}
+\usepackage{minted}
+\usepackage{caption}
+%\setmainfont{Times New Roman}
+
+\usepackage[style=apa, backend=biber]{biblatex}
+\addbibresource{/Users/tio/Documents/GitHub/September_UMEDCA/references.bib}
+
+\newenvironment{abstract}
+    { % Code executed at the beginning of the environment
+      \begin{center} % Center the "Abstract" title
+        \textbf{Abstract} % Make the title bold
+      \end{center}
+      \vspace{\baselineskip} % Add some space after the title
+      \begin{quotation} % Indent the abstract text
+      \small % Optional: Make the abstract text slightly smaller
+    }
+    { % Code executed at the end of the environment
+      \end{quotation} % End the indentation
+      \bigskip % Add some vertical space after the abstract
+    }
+
+%  --  Custom Macros for consistent notation  -- 
+\newcommand{\SBox}{\Box_{\mathsf{S}}}
+\newcommand{\OBox}{\Box_{\mathsf{O}}}
+\newcommand{\NBox}{\Box_{\mathsf{N}}}
+\newcommand{\SDia}{\Diamond_{\mathsf{S}}}
+\newcommand{\ODia}{\Diamond_{\mathsf{O}}}
+\newcommand{\NDia}{\Diamond_{\mathsf{N}}}
+
+% Subjective polarity operators
+\newcommand{\SBoxUp}{\Box_{\mathsf{S}}^{\uparrow}}
+\newcommand{\SBoxDown}{\Box_{\mathsf{S}}^{\downarrow}}
+
+% Naming and Sublation
+\newcommand{\name}[1]{\ulcorner #1 \urcorner}
+\newcommand{\sublate}[1]{\cancel{#1}} % Simplified for pedagogical clarity
+
+\title{Chapter 2: Inferential Movement}
+\author{Theodore M. Savich}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\chapter{Inferential Movement}\label{inferential-movement}
+
+\begin{abstract}
+  
+
+This chapter examines how meaning arises through inferential movement, drawing on Robert Brandom's inferentialism. Beginning with an embodied experiment of children classifying shapes by touch, the chapter demonstrates how concepts gain content through patterns of inference rather than reference to pre-given objects. The analysis explores material versus formal inference, symmetric versus asymmetric substitution, and the role of incompatibility in determining conceptual content. Using quadrilateral classification as a sustained case study, the chapter reveals how each moment of conceptual differentiation can become a site where the I-feeling fuses with mathematical understanding. The traditional hierarchy of quadrilaterals gives way to a fractal-like structure revealing the reciprocal, self-determining nature of concepts. The chapter culminates in arguing that mathematical ``units'' function not as singular terms (names) but as anaphoric terms (pronouns) that recollect the ``I think.'' This analysis lays groundwork for understanding how numerals function as first-person pronouns, developed fully in Chapter 7.
+
+\end{abstract}
+
+
+\section{Introduction: The Puzzle of Hybridized Models}\label{introduction-the-puzzle-of-hybridized-models}
+
+In the previous chapter, you experienced how immediate bodily awareness reveals its own mediation. The attempt to grasp the ``now'' of your toes immediately showed that even direct experience depends on conceptual structures. This chapter continues that investigation, but shifts focus from temporal immediacy to conceptual content. Within the inferentialist Scene we're establishing here, we might ask: How do concepts like ``square'' or ``two'' gain their content? What makes one inference materially appropriate and another inappropriate?
+
+The guiding question is: What are mathematical beings? That is, what grammatical role do mathematical beings play within a philosophy of language?
+
+Before proceeding, a methodological note: The inferentialist Scene we're establishing here draws on Robert Brandom's work, which itself develops Hegel's insights for philosophers in the analytic tradition. Within this Scene, concepts gain content through inferential relations rather than by reference to pre-given objects. This framework serves our investigation while remaining open to revision---there is no claim to final systematization.
+
+To make this question compelling, consider the student work samples in Figure 1. While I was a graduate student, I worked on a research project with Erik Jacobson collecting work samples from fourth and fifth graders. I was tasked with analyzing these samples and writing up what students were doing as algorithms. About 50 samples could not be easily reconstructed algorithmically. At first, we set those aside as statistically insignificant. But I was taking an Arts-Based Educational Research course with Gus Weltsek and a course on critical theory, so I decided to interpret those ``outliers'' as if they were artistic expressions. I felt drawn to these oddities---the kids behind the work felt like kindred spirits.
+
+\begin{figure}[h!]
+\includegraphics[width=0.8\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_Hybridized_Not_Fractions.pdf}
+\caption{\textit{Note.} Two student work samples that purport to illustrate the fraction $\frac{2}{3}$ but that fail two tests.}
+\label{fig:hybridized_not_fractions}
+\end{figure}
+
+Let me establish that the fractions in Figure 1 are not fractions in the mathematical sense. The first sample fails a measurement test: folding the circle along the vertical bars yields a figure with overlaps, indicating the parts are not equivalent in area. Both fail an iteration test: iterating one part three times does not return the unit. I call these representations \emph{hybridized models} because they take a respectable unit (a circle) and a respectable partitioning scheme (equi-distant vertical bars) but combine them in ways that violate the norms of fraction representation.
+
+While not statistically significant, several samples seemed to follow a pattern (see Figure 2).
+
+\begin{figure}[h!]
+\includegraphics[width=0.8\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_Chart_Hybridized_Models.pdf}
+\caption{\textit{Note.} The hybridized models are not fractions. While not statistically significant in the context I found them in, this pattern of reasoning is not uncommon}
+\label{fig:Chart_Hybridized_Models}
+\end{figure}
+
+I reasoned that a teacher might think they are adding complexity linearly---introducing one model at a time---but from a student's position, complexity might grow exponentially. If there are \(n\) models and \(n\) partitioning strategies, the teacher experiences complexity as \(C = n\), while the student prone to hybridization may experience it as \(C = 2^n\) (loosely). I articulate this relationship in Figure 3.
+
+\begin{figure}[h!]
+\includegraphics[width=0.8\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_Hybridized_Exponential_Growth.pdf}
+\caption{\textit{Note.} As the teacher introduces a new model, moving from the number of possible models $n$ to $n+1$, students prone to hybridization may experience exponential growth $2^n \rightarrow 2^{n+1}$. For $n=3$, there are at least 8 possible hybridized models.}
+\label{fig:Hybridized_Exponential_Growth}
+\end{figure}
+
+I call this loosely exponential relationship the \emph{phenomenology of confusion}. When I feel confused, it is often due to lack of \emph{information}---the negation of possibilities. While everyone else seems to be dealing with \(n\) possibilities, I am tangling with \(2^n\) possibilities. But simply telling me ``no, you can't mix and match'' (providing that information) does not dissipate confusion. I have to understand \emph{why} good premises lead to bad conclusions. Furthermore, simply naming an inference fallacious---``Tio, you're making a category error''---does not help me untangle my confusion. Mixing metaphors or categories sometimes manifests what is lauded as ``creativity,'' so it cannot be universally improper.
+
+This puzzle---why do these hybridized models fail?---will lead us to a surprising conclusion about the nature of mathematical units. But to get there, we need to understand how meaning works.
+
+\section{The Bag Experiment: Touching Possibility}\label{the-bag-experiment-touching-possibility}
+
+The puzzle of the hybridized models introduced in the previous section presents a fundamental tension: how do we move from a state of confusion, where possibilities seem overwhelming, to a state of clarity? The phenomenology of confusion experienced with the fraction models is characterized by this modal ambiguity---the sense that different systems could perhaps be combined, resulting in the exponential growth of possibilities. This state of holding incompatible possibilities simultaneously is inherently unstable and carries a felt tension. It resonates with the temporal compression explored in Chapter 1---the fixation of attention required to hold the ambiguity.
+
+To understand how this ambiguity is resolved---how possibilities collapse into determinate actualities---we shift from the complex domain of fractions to the more constrained environment of geometric classification. The following experiment provides a setting to explore how information functions to negate possibilities and guide understanding. This movement from confusion to clarity is fundamentally a process of negation. It is not an accumulation of positive facts but a sharpening of boundaries by ruling out what the thing is not. This negation is productive, leading to a corresponding release---an expansion in the feeling-body. This rhythm, moving from an open field of superpositioned states to a determinate actuality through negation, is the sound of time manifesting in the domain of conceptual determination.
+
+In the spring of 2025, I taught a class focused on problem-solving in elementary school classrooms. I asked the preservice teachers to design lessons appropriate for my stepdaughters, who were in kindergarten. One group's lesson focused on classifying quadrilaterals. They asked \(\mathcal{M}\) and \(\exists\) to reach into a bag holding several quadrilaterals, circles, and triangles. Their task: classify the shapes only by touch.
+
+As the children reached into the bag of unknowns, their knowledge of the bag's contents was \emph{modally structured} in relations of possibility and necessity. In grasping an object, it could have possibly been a square (\(\diamond\text{Square}(x)\)), a rectangle, or a circle. When a feature like ``rounded sides'' was discerned, the modal structure changed---from possibly a square to necessarily not-square (\(\square\neg\text{Square}(x)\)). If they discerned four perpendicular corners, the shape became a possible rectangle or square. Discerning equal sides would then change the structure to necessarily a square.
+
+While I introduce formal modal operators \(\diamond\) (possibly) and \(\square\) (necessarily) as shorthand, the children were not using those symbols or explicitly using modal concepts. Their inferences were \emph{material}, not formal. They were reasoning from the meanings of ``four sides,'' ``equal,'' and ``corners''---not from logical form alone.
+
+I mention this experiment to realize Brandom's reading of Hegel as ``building modality in at the metaphysical ground floor'' \parencite[144-145]{Brandom:2019aa}. Few readers take modal logic as primordial---I didn't study it until deep into my dissertation, despite symbolic logic courses and a mathematics degree. In the history of logic, modal logic is a relative latecomer, reaching systematic formal description only mid-20th century.
+
+An open question: to what extent is this modal structure primarily psychological? I claim their \emph{knowledge} of the bag's contents was modal, but were the contents themselves modal? On the objective side, it might help to consider the shapes as superpositioned---like Schrödinger's Cat, both alive and dead until observed. That said, quantum superpositioning at the scale of plastic shapes feels outlandish.
+
+The subjective experience is closer to home---what I name the \emph{phenomenology of confusion}. Commitment to a shape being possibly a square \emph{and} possibly a circle is to possibly be confused. I might recognize these ``superpositioned'' states as ambiguous and seek more information to negate possibilities. Information negates possibilities and can be disambiguating. But commitment to a shape \emph{necessarily} being both square and circle is to necessarily be confused.
+
+The children's experience was similar: until reaching into the bag, shapes were unknown possibilia superpositioned on each other. As they reached in, possibilities collapsed into determinate actualities. The field of possibilities was \emph{realized}. In this sense, possibility is more primordial than actuality---the latter is a realization of the former.
+
+\subsection*{The Experience of Error}\label{the-experience-of-error}
+
+The children made mistakes. They would pull out a shape they thought was a square, but it turned out to be a rectangle. They had to correct their understanding through further interaction---by pulling the shape out and looking at it.
+
+This concrete example shows how material inferences work in practice: children made inferences based on tactile experiences, corrected through further interactions with objects. But let me be clear about what ``material'' means here. Material inference does not mean the inference depends on physical material or tactile experience. Rather, a \emph{material inference} is one whose goodness depends on the \emph{meanings} of the terms involved, not just on logical form.
+
+The children's tactile experience provided an \emph{embodied context} for understanding how material inferences work. But the inferences themselves---``four equal sides, so square''---are material because they depend on what ``four,'' ``equal,'' ``sides,'' and ``square'' \emph{mean}, not because they come from touching.
+
+Robert Brandom \parencite*{Brandom:2019aa} has a lovely example involving a stick partially submerged in water. The stick appears bent due to light refraction, but when removed, is recognized as straight. Whoops!
+
+Three structural roles emerge in this experience. First, for the experience to be taken as error, the subject must recognize it's the \emph{same} stick whether submerged or removed---and that it had been straight all along. The stick \emph{in-itself} is straight. The stick has \emph{authority} that representations of it---how it appears \emph{for-consciousness}---must acknowledge. Being a rational agent involves submitting to the authority of a mutable reality.
+
+Second, merely perceiving the movement from stick-as-bent to stick-as-straight would not involve changing commitment from ``the stick is bent'' to ``the stick is straight.'' The authority of the object in-itself underwrites the normative change in commitment.
+
+Third, what emerges is a ``new, true object''---the appearance becomes, \emph{to-consciousness}, a stick-that-appears-bent-when-submerged-but-is-actually-straight. The appearance of the new object has a learning experience compressed into it.
+
+The same processes operated in the quadrilateral experiment. A child who thinks a rectangle is a square is like the person seeing the bent stick. The ``new, true object'' that emerges is the concept ``rectangle-that-I-initially-misrecognized-as-a-square''---a richer, more robust concept.
+
+With modality built into the bedrock of mathematics philosophy, a role for teaching and learning emerges. If learning begins in confusion---essentially beginning with \emph{incoherent} commitments---the process involves recognizing those incoherences through misrecognition and then disambiguating or repairing them. My kids weren't learning quadrilaterals by memorizing definitions. They were learning to disambiguate their modal commitments about shapes in the bag. They were learning that a shape cannot be both square and circle. This disambiguation process allows correct classification.
+
+The experience of error, as articulated through the bent-stick example, reveals the normative structure of reality. Recognizing an error requires acknowledging the authority of the object---the way things actually are---over our initial attitudes or commitments. This submission to the authority of the object is not a passive reception but an active restructuring of our commitments. When the child corrects their initial assessment of the shape, they are not just changing a label; they are transforming their understanding of the conceptual space. The ``new, true object'' that emerges carries the history of this learning experience compressed within it.
+
+This process of disambiguation is not merely about acquiring facts; it is about learning to navigate the space of reasons. The children were not applying formal logical rules; they were engaged in \emph{material} inference. Their reasoning relied on the content of their concepts---``four sides,'' ``equal,'' ``corners''---developed through their embodied engagement with the shapes. The goodness of their inferences depended not on abstract form but on the material consequences of their commitments within the practice of classification. Understanding how these content-driven inferences function, and how they structure our conceptual commitments, is the task we turn to next.
+
+\section{Material Inference: Content Over Form}\label{material-inference-content-over-form}
+
+Having experienced the phenomenology of confusion and error correction through the bag experiment, we can now articulate what makes an inference \emph{material} rather than formal.
+
+Formal mathematical systems are usually defined by fixed axioms and inference rules. Axioms are statements taken as true without proof; inference rules are logical steps allowing us to derive new statements from axioms. Formal systems are built on \emph{formal inferences}---inferences following purely from syntactic structure.
+
+These axioms and inference rules are like castle walls keeping logical contradiction at bay. However, this rigidity means the system itself is static---it cannot learn or adapt. An ``error'' within a proof is simply a deviation to be discarded, not an experience from which the system grows. Foundational challenges like paradoxes or incompleteness aren't resolved by the system adapting but by mathematicians abandoning it and building a new one.
+
+However, formal inferences are not the only kind we make. Most everyday reasoning relies on what Wilfrid Sellars \parencite*{Sellars:1953aa} called \textbf{material inferences}. A material inference is licensed not by pure logical form (like \emph{modus ponens}) but by virtue of being taken as good by a recognitive community, thereby lending content to the concepts involved.
+
+This may take a few passes to understand how different material inferences are from formal ones. By taking a material inference to be good, the terms involved accrue conceptual content.
+
+The meaning of ``goodness'' here will be discussed below---importantly, ``taking as good'' is not meant subjunctively. The hypotheticals in subjunctive reasoning codify temporally antecedent material inferences---inferences almost spontaneously agreed to or denied.
+
+For example, consider: ``Pokey is a dog, so Pokey is a mammal'' or ``It's raining; therefore, the streets will be wet'' \parencite[313]{Sellars:1953aa}. These are not formally valid in pure logic (nothing in the form ``\(P\); therefore \(Q\)'' guarantees truth), yet they are perfectly good inferences in practice given our knowledge about rain and wet streets, or dogs and mammals. Such inferences are widely treated as reasonable---even obvious---carrying normative force in ordinary discourse. If someone says ``it's raining'' but refuses to accept ``the streets will be wet,'' that refusal typically signals incomplete grasp of what ``raining'' means.
+
+Perhaps they're being sarcastic. In Carspecken's critical ethnographic methodology \parencite*{Carspecken1995aa}, meaning is structured as a field of next possible speech acts. A qualitative researcher hearing a participant state ``It is raining'' would reconstruct possible next acts: ``the streets will be wet,'' ``I will bring an umbrella,'' or, if sarcastic, ``it is \emph{not} raining.'' This horizonal structure means there's no way to say with certainty what an assertion means---especially in everyday empirical speech.
+
+That's one reason I'll spend much of this chapter discussing quadrilateral classification---it offers a relatively regimented set of material consequences. In that regimented context, the speaker must justify refusing to accept the consequent or risk being taken as playing by different rules. This articulates Sellars's insight, extensively developed by Brandom: \emph{material inferences} are those whose normative goodness or acceptability lends content to the terms caught up in them.
+
+For Brandom \parencite*{Brandom2000}, concept content is given by the network of material inferences it participates in. To know what \emph{Dog} means is to know that ``\(\text{Dog}(\text{Pokey})\)'' licenses ``\(\text{Mammal}(\text{Pokey})\)'' and is incompatible with ``\(\text{Reptile}(\text{Pokey})\)''. The web of what follows from, and what is ruled out by, a claim is what gives it meaning. Meaning is not a static mapping from word to world but the dynamic ability to move in the space of reasons.
+
+\subsection*{Three Features of Material Inferences}\label{three-features-of-material-inferences}
+
+Several features of material inferences are worth noting.
+
+\textbf{First, they are often non-monotonic} \parencite[88]{Brandom2000}. Adding new information can flip a good inference to bad \emph{and} turn a bad inference into good. Formally, adding a premise to an antecedent doesn't turn bad inferences good. The conjunction operator restricts consequents; it doesn't open new possibilities. Non-monotonic material inferences differ.
+
+For example, I was driving \(\mathcal{M}\) and \(\exists\) to their Aunt Rachel and Uncle Phil's house. One said ``We're going to Rachel's!'' The other corrected: ``We're going to Rachel \emph{and} Phil's house.'' I usually ignore such corrections as quixotic desires for completeness, but I was writing about material inferences right before we got in the car.
+
+Rachel can't make balloon animals; Phil can. So the inference ``We're going to Rachel's, so you might get a balloon animal'' might feel like a bad inference to the corrector, while ``We're going to Rachel \emph{and} Phil's, so you might get a balloon animal'' feels better. Adding Phil adds to the field of possibilities the antecedent holds. Implicitly, those possibilities exist within the truncated antecedent ``We're going to Rachel's,'' but explicating them by adding Phil brings them closer to actualization.
+
+This contrasts with formal inferences, generally monotonic. If \(P \rightarrow Q\) is formally true, then (assuming \(R\) is true) \(P \land R \rightarrow Q\) remains true because \(P\) sufficiently grounds \(Q\). Brandom \parencite[88]{Brandom2000} illustrates nonmonotonicity (using \(\neg\) for negation):
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+
+\item
+  If I strike this dry, well-made match, then it will light. (\(p \rightarrow q\))
+\item
+  If \(p\) and the match is in a very strong electromagnetic field, then it will \emph{not} light. (\(p \land r \rightarrow \neg q\))
+\item
+  If \(p\) and \(r\) and the match is in a Faraday cage, then it will light. (\(p \land r \land s \rightarrow q\))
+\item
+  If \(p\) and \(r\) and \(s\) and the room is evacuated of oxygen, then it will \emph{not} light. (\(p \land r \land s \land t \rightarrow \neg q\))
+\end{enumerate}
+
+A mathematics philosophy suitable for educational contexts must include nonmonotonic material inferences. Recall the confusion about whether cartesian plane orientation mattered when computing slope. ``Just remember rise over run'' unless the paper is upside-down, unless held to strong light, unless rotated 90 degrees, etc. Each additional antecedent can change a materially good inference into a materially bad one.
+
+This capacity for reversal---where adding information changes the goodness of an inference---is what distinguishes living, embodied practice from the static architecture of formal systems. Formal logic, by insisting on monotonicity, purchases certainty at the cost of adaptability. It constructs a closed world where every consequence is predetermined. But the world we inhabit, and the mathematical practices we develop within it, are inherently open. New information, new contexts, and new commitments constantly reshape the inferential landscape.
+
+The non-monotonicity of material inference is not a flaw to be overcome but the very structure that allows understanding to evolve. It reflects the ``built to break'' philosophy articulated in the prelude: our conceptual frameworks must be capable of rupture and reorganization when they encounter realities they cannot accommodate. A mathematics education that honors this structure does not teach rigid rules but cultivates the capacity to navigate shifting inferential commitments, recognizing that what counts as a good reason in one context may not hold in another. This adaptability is the essence of mathematical creativity and the ground of genuine understanding.
+
+\textbf{Second, material inferences are often context-sensitive.} The same statement can have different meanings in different contexts. When reading philosophy, ``practical'' generally involves ethical or moral reasoning. In other contexts, it implies a proposed solution is viable or efficient. In mathematics, ``practical'' might refer to solutions computable in reasonable time or with available resources. Context significantly affects material inferences we draw.
+
+\textbf{Finally, material inferences often support bi-modal reading} \parencite[73-74]{Brandom:2019aa}. They can express both objective validity claims in the alethic modality of ``possibility and natural necessity'' and subjective or normative validity claims in the deontic modality of ``obligation or practical necessity.'' The difference between ``practical'' and ``natural'' necessity is encoded in ``you must brush your teeth now'' versus ``you must have teeth in order to brush them.'' The former trades in authority; the latter states fact.
+
+\emph{Incompatibility} (Brandom's term for determinate negation) is amphibious to either modality. It's impossible to brush teeth one doesn't have, so tooth-brushing is incompatible with not-having-teeth. This duality allows richer understanding of how inferences operate within different contexts.
+
+This analysis of material inference reveals three key features distinguishing mathematical meaning from formal logical manipulation: defeasibility (inferences can be overridden by additional information), context-sensitivity (meaning depends on situational factors), and bi-modality (inferences operate across both factual and normative domains). These properties explain why mathematical concepts cannot be reduced to formal definitions but must be understood through patterns of use in concrete contexts.
+
+\section{Syntactic Well-Formedness and Substitution}\label{syntactic-well-formedness-and-substitution}
+
+The dynamism of material inference---its sensitivity to context, its capacity for revision, its rootedness in the content of concepts---raises a crucial question: How is reliable communication possible at all? If inferences are non-monotonic, how can we project the meaning of an expression from one context to another? The movement of thought requires structure to be communicable; the spontaneity of inference requires constraints to be rational. We turn now to the structural mechanisms that make this possible. This is not a departure from the dynamism of meaning but an exploration of the scaffolding that supports it. To understand how concepts function inferentially, we must understand the syntactic structures that allow expressions to be combined and substituted. This machinery is what enables us to track commitments and entitlements across different contexts, making explicit the implicit rules that govern our practices.
+
+Having established the dynamic, context-sensitive nature of material inference, the analysis now turns to structural constraints making reliable inferential projection possible. To understand the technical distinction between singular terms and predicates, I begin with sentence structure and substitution rules preserving well-formed sentences.
+
+Consider these preliminary sentences about animals:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+
+\item
+  Pokey is a dog.
+\item
+  Felix is a cat.
+\item
+  Buddy is a dog.
+\item
+  Pokey and Buddy are distinct dogs.
+\item
+  Slider the Spider only speaks gibberish.
+\end{enumerate}
+
+Brandom imagines the substitutional ``machinery'' opened full-bore. Can ``the'' take the place of ``is''? ``Dog'' for ``a''? \(\exists\) (my stepdaughter) recently requested I tell her a story about Slider the Spider who only speaks gibberish. In that context, the answer is ``sure!'' ``Is a Spider is a dog, is, is, a cat,'' Slider might say.
+
+But mathematics mostly concerns well-formed sentences (often called well-formed formulas, or WFFs). Filtering out ``gibberish'' is complicated, but an intuitive sense for how such a process might begin implicitly involves discerning syntactic categories by examining which substitutions result in sentences implicitly recognized as well-formed.
+
+For instance, replacing ``Pokey'' with ``Felix'' in (1) yields ``Felix is a dog,'' which, while incompatible with (2), is still syntactically valid. However, consider substitutions that break well-formedness. Substituting the predicate ``is a cat'' for the singular term ``Pokey'' results in a non-sentence: ``is a cat is a dog.'' This fails to preserve structure because it violates syntactic roles.
+
+\begin{figure}[h!]
+\includegraphics[width=0.8\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/Ch02_Substitutions.pdf}
+\caption{\textit{Note.} Substitution patterns illustrating symmetric and asymmetric cases.}
+\label{fig:substitution_patterns}
+\end{figure}
+
+In contrast, consider substitutions maintaining syntactic structure like the second set in Figure 4. The original sentences are substituted-in, repeatedly, and the singular terms \{Pokey, Felix, Buddy, Slider\} are substituted-fors.
+
+Upon reflecting on many such substitutions, \emph{sentence frames} (predicates) can be discerned as a ``substitutional remainder.'' Those sentence frames, like ``\(\square\) is a dog,'' allow transition from simple assertions to algebraic formulas: \(f_{\text{dog}}(X)\), where \(X\) is a variable replaceable by any singular term.
+
+After discerning those syntactic categories, subsentential expressions can be classified by their inferential roles. Singular terms are those substitutable-for one another in symmetric ways, while predicates are those substitutable-in but may not allow symmetric substitution.
+
+This technical machinery---understanding what makes sentences well-formed and how different expressions can be systematically substituted---is essential. Later in this book, when we encounter Gödel's incompleteness theorem, substitution will play a crucial role. Gödel's proof depends on creating sentences that refer to themselves through clever substitution, showing that any sufficiently rich formal system must be incomplete. Understanding substitution now prepares us for that profound result.
+
+\section{Symmetric vs.~Asymmetric Substitution}\label{symmetric-vs.-asymmetric-substitution}
+
+Brandom's analysis \parencite*[Ch. 4]{Brandom2000} articulates how subsentential expressions can be classified by substitution patterns they participate in. In ordinary language, some substitutions work both ways (\emph{symmetric}), while others work only one way (\emph{asymmetric}).
+
+I don't know whether a term is a name or a predicate until I reflect on how it can be used. Upon reflection, the term's behavior in different substitution contexts can be analyzed. This analysis involves positing patterns of use, but further reflection can generate new contexts that break those patterns.
+
+A \emph{singular term} (like a name or definite description) is defined by its role in symmetric substitution. For example, if ``\(\text{Benjamin Franklin}\) was an ambassador to France,'' then ``\(\text{The inventor of bifocals}\) was an ambassador to France'' and vice versa, because the singular term \emph{Benjamin Franklin} and the definite description \emph{the inventor of bifocals} refer to the same person.
+
+It's not necessary to know every possible appropriate sense for that referent for the symmetry to hold. Perhaps you didn't know Benjamin Franklin invented bifocals. Accruing elements of the symmetrically intersubstitutable (co-referential) terms is often accompanied by body-feelings associated with ``letting go,'' described in the previous chapter. ``Aha!'' you might say, as that great mystery unfolds as the differentiation between ``Benjamin Franklin'' and ``the inventor of bifocals'' relaxes. The experience of undifferentiating between symmetric terms is one way to interpret the ``aha!'' moment math teachers and students often experience when two seemingly different expressions are taken to be ``the same.''
+
+When I discovered through proof that \(e^{i\pi}\) and \(-1\) were symmetrically intersubstitutable, the incommensurable difference between the two terms relaxed. That doesn't mean I must teach sixth graders about \(e^{i\pi}\) when introducing \(-1\). What I'm trying to get at is that samenesses are not static---they are the relaxation of difference.
+
+This experience of undifferentiation---the felt realization that two distinct expressions articulate the same content---is structurally identical to the movement of release practiced in Chapter 1. When we hold two concepts as distinct, there is a tension, a temporal compression required to maintain the boundary between them. Recognizing their symmetric intersubstitutability allows that tension to dissolve. The ``aha'' moment is the expansion that follows the release of a maintained difference. Sameness, in this sense, is not a static property but the dynamic experience of relaxed differentiation. When this relaxation is rationally binding, as often occurs through mathematical proof, the obligatory aspect of the proof transforms into the felt satisfaction of conceptual alignment.
+
+When that undifferentiation is rationally binding, as it often is through mathematical proof, the obligatory aspect of proof can transform into desire.
+
+A \emph{predicate} typically serves as the frame in which singular terms are inserted, but predicates themselves can also be substituted. Crucially, predicates can stand in asymmetric substitution relations. For example, ``Pokey is a dog'' \emph{incompatibility entails} (\(\vDash_I\)) ``Pokey is a mammal'' but not the other way around \parencite{Brandom2008}.
+
+Everything incompatible with ``Pokey is a mammal,'' like ``Pokey is a spider,'' is also incompatible with ``Pokey is a dog.'' The predicate ``is a dog'' is \emph{inferentially stronger} than ``is a mammal'' precisely because it is more exclusive. Incompatibility entailment is how Brandom defines the conditional (``if\ldots{} then\ldots{}'').
+
+\subsection*{Polarity Inversion}\label{polarity-inversion}
+
+What happens when the material inference about Pokey is embedded in a conditional statement or negation? Brandom's argument is that logical operators \emph{invert} the polarity of inferences, which is incompatible with the idea that singular terms can be used in asymmetric substitution.
+
+Strengthening the antecedent of a conditional---moving from ``If Pokey is a Dog then Pokey has four legs'' to ``If Pokey is a Retriever then Pokey has four legs''---makes the resulting conditional easier to satisfy. It is a weaker claim than the original conditional.
+
+Alternatively, weakening the antecedent---``If Pokey is an animal then Pokey has four legs''---makes the new conditional harder to satisfy. It is a stronger claim, in this case a false one, than the original conditional.
+
+The same reasoning works with negation: ``Pokey is not a dog'' is a weaker claim than ``Pokey is not an animal.'' More possibilities are ruled out by the latter, so it's a stronger claim.
+
+Brandom's argument turns schematic at this point, as he must contemplate a (fantasy) language that has those logical operators but allows substituted-for expressions to have asymmetric inferential significance. He notes that ``any language containing a conditional or negation thereby has the expressive resources to formulate, given any sentence frame, a sentence frame that behaves inferentially in a complementary fashion'' \parencite[146]{Brandom2000}.
+
+Suppose term \(a\) is stronger than \(b\), so that projection from \(Q(a)\) to \(Q(b)\) by substituting \(b\) for \(a\) is good. Those projections become incoherent in polarity-inverting contexts like negation (\(Q'\)). The inference from \(Q'(a)\) to \(Q'(b)\) (e.g., ``Pokey is not a dog so Pokey is not an animal'') is not good. If a good inference can be turned into bad with a supposedly good substitution, something has gone awry.
+
+Either we maintain a language with logical expressions and reliable projections of subsentential expressions---where singular terms have symmetric inferential significance and predicates have asymmetric significance---or we get an incoherent mess. Brandom's argument shows singular terms must be used in symmetric substitution classes, while predicates can be used in asymmetric substitution classes.
+
+I treat inferential projection as answering a metaphysical question: How is it possible for language to be both productive (generating novel sentences from existing parts) and logical? The conversation below about quadrilaterals is mostly \emph{curricular}. How inferential projection works is illuminated through the concept of inferential strength. In part three of the book, where I introduce the \emph{hermeneutic calculator}, I'll return to projection to discuss making it \emph{methodologically} useful for researchers in math education.
+
+\section{Quadrilateral Classification: A Study in Inferential Strength}\label{quadrilateral-classification-a-study-in-inferential-strength}
+
+Now we apply these abstract concepts to the concrete case of classifying quadrilaterals. This extended example will show how material inferences work, how incompatibility structures concept content, and ultimately why the mathematical ``unit'' cannot be a singular term.
+
+\subsection*{The Traditional Approach}\label{the-traditional-approach}
+
+The classification of quadrilaterals provides opportunity to explore substitution inferences, particularly as they apply to predicates ascribing quadrilateral types (e.g., ``\(X\) is a Square,'' ``\(X\) is a Rectangle''). The traditional hierarchy (Figure 5) is often presented as a tree structure reflecting entailments between predicates. For example, ``\(X\) is a Square'' entails ``\(X\) is a Rectangle,'' which in turn entails ``\(X\) is a Parallelogram.''
+
+\begin{figure}[h!]
+\includegraphics[width=0.8\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_Combined_Traditional_Circular.pdf}
+\caption{\textit{Note.} Traditional and Circular Hierarchies of Quadrilaterals. The circular hierarchy (right) is \textit{im}proper until justified.}
+\label{fig:traditional_quad_hierarchy_ch2}
+\end{figure}
+
+This hierarchical approach can be both clarifying and confusing. Young children typically begin learning about quadrilaterals using exclusive definitions, often disagreeing with statements like ``a square is a rectangle'' because visually, these shapes appear distinct \parencite{van_hiele}. \emph{Canonical} versions---like equilateral triangles or non-square rectangles---tend to be emphasized early in development.
+
+As geometric understanding develops, children learn inclusive definitions, making inferences such as ``if \(X\) is a square, then \(X\) is also a rectangle'' (\(\text{Square}(X) \rightarrow \text{Rectangle}(X)\)), where \(\text{Square}(X)\) and \(\text{Rectangle}(X)\) are predicates.
+
+{[}Table 1: Properties of Quadrilaterals
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Property & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\(A_1\) & At least one pair of parallel sides \\
+\(A_2\) & Two pairs of parallel sides \\
+\(A_3\) & Adjacent sides perpendicular \\
+\(A_4\) & Four right angles \\
+\(A_5\) & All sides equal \\
+\(A_6\) & Opposite sides equal \\
+\end{longtable}
+
+{]}
+
+When examining Table 1, properties are not mutually exclusive. A square possesses all listed properties, while a trapezoid has only one pair of parallel sides. Fallacious reasoning creeps in if inclusive definitions are grounded on shared properties. Declaring ``\(X\) is a square so \(X\) is a trapezoid because both have at least one pair of parallel sides'' is akin to declaring ``\(X\) is a bird, so \(X\) is an airplane because both have wings.'' These features can help classify quadrilaterals, but without modal concepts, they cannot be organized into a hierarchy.
+
+If inclusive definitions are desired:
+
+\begin{itemize}
+
+\item
+  \textbf{Necessity}: If \(X\) is a Trapezoid, it \emph{must necessarily have} at least one pair of parallel sides: \(\square(\text{Trapezoid}(X) \rightarrow A_1(X))\)
+\item
+  \textbf{Possibility}: A Quadrilateral \emph{can possibly have} one pair of parallel sides: \(\text{Quadrilateral}(X) \rightarrow \diamond A_1(X)\)
+\end{itemize}
+
+If exclusive definitions (canonical shapes) are desired, the last expression is negated: \(\text{Quadrilateral}(X) \rightarrow \neg\diamond A_1(X)\). Once that decision is made, further modal operators and axioms \parencite[141-175]{Brandom2008} can prove that a square is necessarily a rectangle, and a rectangle is necessarily a parallelogram (under inclusive definitions).
+
+\subsection*{Shadows of Shape: The Negative Articulation}\label{shadows-of-shape-the-negative-articulation}
+
+The analysis so far articulates that classifying a given shape as a particular quadrilateral involves understanding what it means to be a particular ``thing'' as a \emph{medium} in which compatible properties inhere. Doing so amounts to treating the thing as an \emph{also}, rather than as an exclusive \emph{one}.
+
+To get at the other side of the object---treating the thing as an exclusive \emph{one}---involves discerning its boundaries. What information would preclude stating ``\(X\) is a square''? A shape becomes determinate (e.g., as a square) by the set of restrictions it would refuse, like a vegan who will not eat butter.
+
+I argue that the negative articulation of the square---its shadow---is a necessary contrast to the positive articulation. That contrast is probably already at work with learners prior to engaging formal definitions, but I haven't found anything resembling my approach in the literature.
+
+A square object can be conceptualized toward a square \emph{subject} by considering what claims it repels. Following Hegel, Brandom argues that the concept of a particular \emph{object} emerges as a necessary structural feature for tracking such relations. The object is the \emph{unit of account} for incompatibilities and as such are ``of a different ontological category from the features for which they are units of account'' \parencite[150]{Brandom:2019aa}.
+
+The incompatibility between \emph{square} and \emph{triangle} is not a global law of logic; it is the fact that one and the same particular thing cannot be both. The placeholder ``\(X\)'' in our predicates, therefore, is not merely a variable; it represents the emergence of the particular object as the locus of property instantiation and exclusion. I repel the claim ``Tio is a dog'' just as a square, \(X\), repels the claim ``\(R_1\): No sides of \(X\) are equal.''
+
+{[}Table 2: Restrictive Claims Repelled by Quadrilaterals
+
+\begin{longtable}[]{@{}ll@{}}
+\toprule\noalign{}
+Restriction & Description \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\(R_1\) & No sides of \(X\) are equal \\
+\(R_2\) & No pair of adjacent sides of \(X\) are equal \\
+\(R_3\) & No pair of opposite sides of \(X\) are equal \\
+\(R_4\) & Non-parallel sides of \(X\) are not congruent \\
+\(R_5\) & No pair of opposite sides of \(X\) are parallel \\
+\(R_6\) & No angles of \(X\) are right angles \\
+\end{longtable}
+
+{]}
+
+The predicate \(\text{Square}(X)\) would entail the refusal of \(R_1\) (as a square has four equal sides). A square is \emph{incompatible} with each of the restrictions \(R_1,\ldots,R_6\). The collection of \(R_i\)'s I've listed are sufficient for distinguishing the quadrilaterals listed in Figure 5. Other claims are possible, like ``no diagonals of \(X\) are perpendicular.'' Exhaustive lists of negatively articulated claims for quadrilaterals are impossible---we can always say ``\(X\) is not a dog'' or ``\(X\) is not a triangle.''
+
+{[}Table 3: Incompatibility Relations Between Quadrilaterals and Restrictions
+
+\begin{longtable}[]{@{}llllllll@{}}
+\toprule\noalign{}
+Shape & \(R_1\) & \(R_2\) & \(R_3\) & \(R_4\) & \(R_5\) & \(R_6\) & Strength \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+Square & 1 & 1 & 1 & 1 & 1 & 1 & 6 \\
+Rectangle & 0 & 0 & 1 & 1 & 1 & 1 & 4 \\
+Rhombus & 1 & 1 & 1 & 1 & 1 & 0 & 5 \\
+Parallelogram & 0 & 0 & 1 & 1 & 1 & 0 & 3 \\
+Trapezoid & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+Quadrilateral & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+\end{longtable}
+
+\emph{Note.} A 1 indicates the shape rejects the restrictive claim. A 0 means it does not necessarily reject it. Inferential strength is the sum of restrictions rejected.{]}
+
+Table 3 summarizes incompatibility relations between quadrilateral categories and restrictions \(R_1,\ldots,R_6\). A 1 indicates the shape rejects the restrictive claim. A 0 means it does not necessarily reject it. The inferential strength of each shape is the sum of restrictions it rejects. The inferential strength of each restriction is the sum of shapes that reject it.
+
+At the heart of this analysis lies a crucial distinction between two kinds of opposition. The first is Brandom's material incompatibility and Hegel's determinate negation---oppositions arising from non-logical concept content. For instance, an object cannot be both circular and triangular simultaneously; ``circular'' materially excludes ``triangular.'' Brandom defines these as Aristotelian \emph{contraries}.
+
+The second is formal contradictoriness, or abstract negation---familiar logical opposition expressed by ``not,'' such as the relationship between ``red'' and ``not-red.''
+
+One delightful (and important for math education) feature of Brandom's reconstruction of Hegel's perception chapter is that Brandom defines formal contradictoriness in terms of material contrariety. He notes that ``green'' is a contrary of ``red'' and ``not-red'' is its contradictory. ``Not-red'' is the minimal contrary of red---it is entailed by every contrary of red (green, blue, yellow, etc.).
+
+Hegel's key move, which Brandom develops, is to treat material incompatibility (contrariety) as more fundamental, from which formal contradiction can be explained.
+
+\begin{figure}[h!]
+\includegraphics[width=0.8\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_difference_Particulars.pdf}
+\caption{\textit{Note.} A particular square is the medium (the Also) in which the properties $A_1, \ldots, A_6$ inhere. The square is also a unit of account for incompatibilities (the One) that repel the restrictions $R_1, \ldots, R_6$.}
+\label{fig:square_as_medium_and_unit_of_account_ch2}
+\end{figure}
+
+The conception of a square as both an exclusive one and an inclusive also can be understood as a square with its shadow (see Figure 6). The shadow is the set of restrictions the square repels, while the square is equally the set of properties it possesses. The shadow is not separate; it is a necessary aspect of the square's identity.
+
+This duality---the object as both an inclusive medium (the Also) and an exclusive boundary (the One)---is fundamental. It reveals that the object is not a passive container for properties but an active achievement. It is the locus where compatibilities are unified and incompatibilities are held apart. The stability of the object---what makes it a determinate ``thing'' at all---resides precisely in its capacity to repel what it is not.
+
+This structure is not unique to geometric objects. It is the same structure we find in the constitution of the self. The self, too, is both an ``Also''---a medium hosting diverse experiences, roles, and commitments---and a ``One''---a unit that maintains coherence by excluding what is incompatible with its identity. When we grasp a square, we are not merely attending to a shape; we are enacting the very structure of determination that makes both objects and selves possible. The mathematical object becomes a site for recognizing the logical structure of our own being. The boundaries we draw around the square are the same kind of boundaries we draw around ourselves, defining who we are by articulating what we are not. The coherence of the concept depends entirely on this negative articulation.
+
+When considering a square pulled from the bag, other properties besides \(A_1\ldots A_6\) and \(R_1\ldots R_6\) might sit alongside those properties. For example, shapes for my stepdaughters were plastic, so the square accepts the property of being plastic, while the shadow repels the restriction of being paper. The reverse would be so if this book is being read on paper.
+
+\begin{figure}[h!]
+\includegraphics[width=0.8\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_difference_Universals.pdf}
+\caption{\textit{Note.} Universals (predicates/sentence frames) exhibit the same duality as particulars (objects).}
+\label{fig:differences_Universals_ch2}
+\end{figure}
+
+Interestingly, the property of being square exhibits the same duality---it can be seen as forming a family of co-compatible universals like being rectangular, and it can be seen as repelling universals with which it cannot co-instantiate. Figure 7 illustrates this duality for universals/predicates/sentence frames.
+
+The universal ``square'' forms a family with other universals like ``rectangular,'' associated with particular rectangles having properties like four right angles. Likewise, the universal ``square'' excludes other incompatible universals like ``triangular.''
+
+Category errors arise as we consider other uses of ``square'' not involving particular geometric shapes. For example, the particular \(-1\), which is not a ``square number'' like 25 (\(5^2\)), or the slang ``square'' for a person who is not cool (``let's not be L7, come on learn to dance'') divorce ``square'' from the family of co-compatible universals related to geometric shapes by drawing from particulars outside that family.
+
+\section{Moments of Recognition: Where Meaning Fuses with Consciousness}\label{moments-of-recognition-where-meaning-fuses-with-consciousness}
+
+Brandom \parencite[161-162]{Brandom:2019aa} enumerates ten types of difference emerging from this analysis. Rather than catalog them abstractly, I want to frame them as \emph{moments where meaning can become conscious}---sites where the I-feeling can fuse with conceptual content.
+
+Each moment of differentiation is potentially a difference \emph{to-consciousness}. Each moment where a difference is discerned may be accompanied by apperceptive self-awareness. The I-feeling mode can fuse with these moments of conceptual movement, giving them a palpable quality we can recollect fondly and desire to revisit.
+
+As odd as I may be, that's the driving desire keeping me teaching and writing about mathematics. It feels good. The inferential chains flowing from stronger to weaker predicates---the algorithms---can be experienced with the smoothness of yogic flow, where each step in a proof is a pose punctuating the movement.
+
+There is a deep pleasure, a fusion of the I-feeling with the concept, that can occur when a difference is discerned to be null---when, for instance, the experience of misrecognition resolves into recognition, and the object for-consciousness aligns with the object in-itself.
+
+Let me articulate the key moments:
+
+\textbf{The First Moment: Mere Difference.} When you see a red square and a blue square, you recognize they differ in color. This is ``mere'' or ``indifferent'' difference---they are compatible. A square can be red or blue. The two properties can coexist in the same family. When you first grasp this---that being red and being square are \emph{compatibly} different---there's a small moment of clarity. The I-feeling might fuse with this recognition.
+
+\textbf{The Second Moment: Exclusive Difference.} When you see a square and a triangle, you recognize they differ in a stronger way. This is exclusive difference---they are \emph{incompatible}. A shape cannot be both square and triangular simultaneously. When you first truly grasp this---that being square and being triangular are \emph{incompatibly} different---there's another moment of clarity. The confusion of possibility collapses into the certainty of necessity.
+
+\textbf{The Third Moment: The Difference Between Differences.} Here's where it gets interesting. The difference between mere difference (red/blue) and exclusive difference (square/triangle) is itself a kind of exclusive difference. Why? Because any two properties must be either compatible or incompatible---there's no middle ground. When you recognize this meta-level structure---that the very distinction between kinds of difference is itself a difference---consciousness becomes aware of its own structuring activity.
+
+\textbf{The Fourth Moment: Material Contrariety.} This is determinate negation---what Hegel and Brandom mean when they say one thing \emph{determinately} negates another. Red determinately negates green, blue, yellow. Square determinately negates triangle, circle, pentagon. When you first grasp that ``not-square'' isn't just an abstract void but means specifically \emph{these other shapes}---this is a profound moment. The negative becomes populated, determinate, meaningful.
+
+\textbf{The Fifth Moment: Formal Contradiction.} This is the familiar logical ``not.'' Red versus not-red. Square versus not-square. When you recognize how this abstracts from material contrariety---how ``not-red'' is the \emph{minimal} contrary, entailed by all the specific contraries (green, blue, yellow)---another fusion occurs. You see how formal logic emerges from material content.
+
+\textbf{The Sixth Moment: The Difference Between Negations.} The difference between determinate negation (material contrariety) and abstract negation (formal contradiction) is itself crucial. When you grasp that these are two different kinds of negation, and why the difference matters, consciousness becomes aware of how meaning works at different levels.
+
+\textbf{The Seventh Moment: Universals and Particulars.} Properties are universals; objects are particulars. When you grasp that ``square'' (the property) is a different kind of thing from \emph{this} square (the object), and that particulars serve as units of account for incompatibilities while universals are what get counted---this is a major conceptual shift. Brandom says particulars have no opposites. What would be the opposite of \emph{this} red plastic square? It would have to be simultaneously not-red, not-plastic, and not-square---but ``not-red'' includes infinitely many incompatible colors. Impossible. When you grasp this asymmetry between how universals and particulars relate to their opposites, it's dizzying and delightful.
+
+\textbf{The Eighth Moment: Also and One.} Each particular is both an ``also'' (a medium hosting compatible properties---this square is \emph{also} red, \emph{also} plastic) and a ``one'' (a unit repelling incompatible properties---this square excludes being triangular). When you see how the same object plays both roles simultaneously, hosting and excluding, the I-feeling fuses with this doubled recognition. The square with its shadow.
+
+\textbf{The Ninth Moment: Universals' Double Role.} Just as particulars are both also and one, universals play dual roles with respect to particulars. ``Square'' forms a family with compatible universals (``rectangular,'' ``having-four-sides'') and excludes incompatible universals (``triangular,'' ``circular''). When you grasp how properties themselves have this double relation to other properties, mediated through particulars---another fusion.
+
+\textbf{The Tenth Moment: The Whole Structure.} Finally, when all these moments come together---when you grasp how mere and exclusive difference, material and formal negation, universals and particulars, also and one, all work together in a self-determining conceptual structure---consciousness grasps itself grasping concepts. This is the moment of greatest fusion, where the I-feeling unites with the entire inferential field. This is what Hegel means by ``the concept.''
+
+These moments are not abstract stages in a cognitive process. They are the living dynamics of understanding unfolding in real time, resonating with the embodied rhythm traced throughout this inquiry. When a student struggles with whether a square ``counts'' as a rectangle, they are grappling with the difference between mere difference (they appear distinct) and exclusive difference (can one be the other?). This struggle involves a temporal compression---a fixation on the distinction.
+
+When they finally grasp that ``rectangle'' is a broader category that includes ``square'' (The Eighth Moment: the Also and the One), this is not just a definitional adjustment. It is a moment where the conceptual structure aligns with their own awareness. This alignment is experienced as a release of tension---a temporal expansion. The ``aha'' that signals a fusion of the I-feeling with the content of the concept is the affective dimension of recognition. In this moment, the structure of the mathematical domain and the structure of consciousness become indistinguishable. We recognize ourselves in the structure of reason. Recognizing these moments as potential sites for this fusion transforms how we approach the teaching and learning of classification. It shifts the focus from memorizing hierarchies to facilitating the conscious discernment of differences.
+
+I am not claiming you must experience all these moments to understand quadrilaterals. I am claiming that each moment is a potential site where understanding can become \emph{felt}, where meaning fuses with consciousness, where mathematics becomes not just correct but \emph{meaningful}.
+
+The fractal-like structure in Figure 8 illustrates this self-determining quality. Each shape is both inside and outside the others under polarity-inverting contexts. The observation that each shape is, in a sense, both ``inside'' and ``outside'' the others dissolves the idea of a simple, linear hierarchy.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_venn_diagram_quads.pdf}
+	\caption{The ``Venn Diagram'' for quadrilaterals, extrapolated from Figure~\ref{fig:relaxing_the_square}, is fractal-like. The universal \textit{quadrilaterals} contains many differences. Each shape is both inside and outside the others under polarity-inverting contexts.}
+	\label{fig:venn_diagram_quads}
+\end{figure}
+
+A square ``contains'' the general quadrilateral in that it possesses all its properties, yet the general quadrilateral ``contains'' the square as a specific possibility within its broader conceptual space. Navigating this complex, self-similar landscape is precisely the work of logical operators like negation.
+
+By ``relaxing the square''---softening the hard negations that define it---the concept is not destroyed; rather, its inferential pathways to neighboring shapes, like the rhombus, are traced.
+
+\begin{figure}[h!]
+	\centering
+	\includegraphics[width=\textwidth]{/Users/tio/Documents/GitHub/September_UMEDCA/images/ch02_Relaxing_the_Square.pdf}
+	\caption{Relaxing the square's restrictive claims deforms it into neighboring quadrilateral predicates, illustrating polarity-inverting contexts that lead toward an inclusive understanding of the general quadrilateral.}
+	\label{fig:relaxing_the_square}
+\end{figure}
+
+\section{The Anaphoric Claim: Units as Pronouns}\label{the-anaphoric-claim-units-as-pronouns}
+
+Now we return to the puzzle that opened this chapter: why do hybridized models fail? The answer reveals something fundamental about the nature of mathematical units.
+
+\subsection*{The Requirement of Singular Terms}\label{the-requirement-of-singular-terms}
+
+The standard interpretation treats mathematical units as \textbf{singular terms}---expressions referring to specific objects. Singular terms are logically defined by participation in \textbf{symmetric substitution inferences}.
+
+If two expressions function as singular terms referring to the same object (e.g., ``Benjamin Franklin'' and ``The inventor of bifocals''), they form an equivalence class. They must be substitutable for one another in any sentence frame without altering assertion validity. The predicate remains stable under substitution.
+
+If the unit ``One'' is a singular term, then any representation of that unit---such as a Circle (\(U_C\)) or a Rectangle (\(U_R\))---must also be symmetrically intersubstitutable.
+
+\subsection*{The Test Case: Spatial Modeling}\label{the-test-case-spatial-modeling}
+
+I test this requirement in the context of modeling fractions. This involves applying a predicate (a partitioning strategy) to a term (the shape realizing the unit). The normative constraint is equipartitioning (creating equal, interchangeable parts).
+
+\begin{itemize}
+
+\item
+  A Rectangle Unit is appropriately partitioned using a Vertical strategy (\(P_V\)). Speech Act: \(P_V(U_R)\). (Good)
+\item
+  A Circle Unit is appropriately partitioned using a Radial strategy (\(P_R\)). Speech Act: \(P_R(U_C)\). (Good)
+\end{itemize}
+
+\subsection*{The Failure of Substitution}\label{the-failure-of-substitution}
+
+If \(U_R\) and \(U_C\) were symmetrically intersubstitutable, we should be able to substitute one for the other while keeping the predicate stable.
+
+Let's attempt to substitute \(U_C\) for \(U_R\) in the valid model \(P_V(U_R)\):
+
+\begin{itemize}
+
+\item
+  \textbf{Original:} \(P_V(U_R)\) (A Rectangle partitioned Vertically) $\rightarrow$ Valid Model
+\item
+  \textbf{Substitution:} \(P_V(U_C)\) (A Circle partitioned Vertically) $\rightarrow$ Invalid Model
+\end{itemize}
+
+The result, \(P_V(U_C)\), is a hybridized model. It's invalid because vertical partitioning a circle generally fails the normative requirement of equipartitioning.
+
+The inference generated by this substitution---(\(P_V(U_R)\) is Good) SO (\(P_V(U_C)\) is Good)---is a \textbf{Bad Inference}.
+
+\subsection*{The Diagnosis: Material Dependency}\label{the-diagnosis-material-dependency}
+
+The failure of substitution demonstrates that \(U_R\) and \(U_C\) are \textbf{not} symmetrically intersubstitutable. The predicate is not stable because the appropriate actualization of ``partitioning'' is materially \textbf{dependent} on the specific geometry of the term it modifies.
+
+``The contents of this predicate depend on the contents of the term substituted in. If this were not so, then the partitioning predicate for circular models\ldots{} would apply to the underlying substitution of `singular terms'\ldots{} Instead, such a substitution yields the hybridized model'' \parencite[235]{savich2022}.
+
+Because the terms fail the fundamental requirement of symmetric substitutability, the singular term interpretation is untenable.
+
+\subsection*{The Anaphoric Resolution}\label{the-anaphoric-resolution}
+
+The \textbf{anaphoric interpretation} resolves this conflict and explains the dependency structure. Anaphora (like pronouns) function by referring back to an antecedent. Their key feature is that they possess \textbf{syntactic sameness without semantic sameness} \parencite[235]{savich2022}.
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\item
+  \textbf{Syntactic Sameness:} Both \(U_R\) and \(U_C\) can fulfill the syntactic role of ``the unit'' in a fraction model.
+\item
+  \textbf{Semantic Difference:} Their underlying geometric properties (their semantic content) are different. These differences impose distinct material constraints on the practices (predicates) that can validly apply to them.
+\end{enumerate}
+
+Like the pronoun ``He''---where the appropriateness of the predicate ``is tall'' depends entirely on the specific referent---the appropriateness of the predicate ``is partitioned Vertically'' depends entirely on the specific actualization of the unit.
+
+The hybridized model error occurs precisely when a student recognizes the syntactic sameness but ignores the semantic difference. They attempt to project a predicate (\(P_V\)) across a substitution (\(U_R \rightarrow U_C\)) that cannot support it, breaking the anaphoric link that gave the original predicate its validity.
+
+The instability of predicates under substitution of different unit representations fundamentally contradicts the singular term interpretation. The anaphoric interpretation is necessary to account for material dependency between mathematical representations and the practices appropriate to them.
+
+In terms of the compression/expansion dynamic developed in Chapter 1, this error exhibits a fixation pattern: the student compresses onto the vertical partitioning scheme and cannot release it when material constraints demand different treatment. The scheme becomes trapped rather than serving as a moment in dialectical movement.
+
+\subsection*{Responding to Frege}\label{responding-to-frege}
+
+Frege would likely resist this argument by invoking his sense-reference distinction. He might say I'm confusing the \emph{representation} of the unit with the unit itself---making a category error. The circle and rectangle, he'd point out, are different \emph{senses} (different ways of presenting the unit), but both refer to the same \emph{referent} (the Unit as abstract object). What I've proven, he might claim, is merely that circles aren't rectangles. The fact that these representations aren't symmetrically intersubstitutable doesn't threaten the underlying unity of the referent. The Unit, like Venus, remains stable across its different modes of presentation.
+
+To this anticipated objection, I respond: Yes---but. Yes, there IS an important distinction between the material actualization (the specific circle or rectangle) and the stable term ``the unit.'' Frege and I agree on that much. Where we diverge is in how we explain that stability.
+
+Frege explains stability through reference: the various material instances (circle, rectangle) point to a transcendent object (the Unit as abstract entity). The stability comes from outside language, from the realm of abstract objects.
+
+I suggest stability emerges differently: through anaphoric recollection within language itself. The ``act of thought'' is indeed dynamic and context-specific---the specific material actualization matters (whether we're working with circles or rectangles). But the recollection of that act via the anaphoric term provides stability. Anaphora---the second negation, the \st{no}---is \emph{how} terms come to be fixed. The ``Unit'' functions as a pronoun, gaining its stability not by pointing beyond language to abstract objects, but by pointing back within language to its material antecedents.
+
+We need not posit a platonic heaven or a realm of truth separable from language. We need merely attend to language's recollective structure to find mathematical stability.
+
+This ``pointing back'' is the mechanism of recollection that structures consciousness itself. When we use an anaphoric term like ``the unit,'' we are not just referring to a specific material instantiation (this circle or that rectangle); we are recollecting the act of thought that constituted that instantiation as a unit in the first place. This connects the linguistic structure of anaphora directly to the transcendental structure of apperception discussed in Chapter 3---the ``I think'' that must be able to accompany all representations. The stability of the unit is the stability of the recollected self.
+
+The pronoun, therefore, serves as the linguistic marker of this recollective act. It acknowledges the material dependency of the predicate on the specific context while simultaneously providing the syntactic stability required for inferential projection. This stability does not require an appeal to abstract objects existing outside of practice; it requires only the capacity for recollection inherent in the structure of language and thought. The mathematical unit, understood anaphorically, becomes a testament to the unity of the self that performs the act of counting or partitioning. It is the trace of the subject within the objective structure of mathematics.
+
+But Frege might press further: Doesn't this commit me to psychologism? Doesn't it make mathematical validity depend on particular acts of thought, particular psychologies? The charge would be serious---perhaps bitter. I too find psychological explanations of mathematics trapped in vicious circularity.
+
+Here Brandom's interpretation of Hegel opens a path forward. Hegel, as Brandom reads him, introduces a non-psychological conceptualization of the conceptual. The Square is not a mental entity but a \emph{conceptual} entity defined by its inferential role: the collection of positive and negative inferential proprieties articulated earlier. There need be no reliance on the particular psychology of any claim-maker. While specific learning experiences may be temporally compressed into specific uses of geometric terms, the concepts themselves are constituted by the unbounded set of material inferences one might make about them.
+
+The Square is a conceptual entity, not a psychological one. Similarly, the ``I think'' is not a psychological entity but---as Kant argued---a transcendental condition of possibility for any representation whatsoever. (I will explore transcendental conditions more fully in the next chapter.)
+
+Consider how pronouns work: they follow predictable rules \emph{once entered into context}. ``Tio is a math educator, he is kind of a geek, but his kids are pretty cool.'' The transition he → his follows a rule. That rule might be appropriately challenged---folks asserting gender fluidity rightly question gendered pronoun conventions---but to challenge a norm is to assert a new norm, not to abandon normativity itself.
+
+Mathematical ``rulishness'' emerges similarly. Anaphora fixes the semantic contents of varying expressions not through individual psychology but through public, normative patterns of inference. Mathematical stability arises from the recollective structure of language---from how terms point back to their antecedents and carry forward inferential commitments. We need no separate realm of mathematical objects. We need only the structure of anaphoric recollection already operative in linguistic practice.
+
+\section{Bridging Chapters 1 and 2: The Phenomenology of Classification}\label{bridging-chapters-1-and-2-the-phenomenology-of-classification}
+
+In Chapter 1, you experienced the rhythm of compression and expansion through The Exercise. Now we can trace how that same rhythm appears to structure conceptual understanding. While we're making this pattern explicit through description, remember that the living practice of classification precedes and exceeds any particular characterization of it.
+
+\textbf{Moving Down (Specification):} Quadrilateral $\rightarrow$ Parallelogram $\rightarrow$ Rectangle $\rightarrow$ Square. This is a movement of increasing Compression (\(\downarrow\)). The conceptual hierarchy strengthens by adding constraints (commitments). ``Square'' is the most compressed concept.
+
+\textbf{Moving Up (Generalization):} Square $\rightarrow$ Rectangle $\rightarrow$ Parallelogram. This is a movement of increasing Expansion (\(\uparrow\)). The conceptual hierarchy weakens by ``Letting Go'' of constraints.
+
+\subsection*{The Dynamics of Inference}\label{the-dynamics-of-inference}
+
+Consider the standard inference: ``If it is a Square (\(S\)), then it is a Rectangle (\(R\))'' (\(S \Rightarrow R\)).
+
+\textbf{Embodied Dynamic:} The analysis starts with the highly compressed concept \(S\) (\(\downarrow\downarrow\)). To move to \(R\), the constraint of ``equal sides'' is released. This inference is experienced as an expansive movement (\(\uparrow\)).
+
+Now consider the contrapositive (Modus Tollens), which relies on polarity inversion: ``If it is NOT a Rectangle (\(\neg R\)), then it is NOT a Square (\(\neg S\))'' (\(\neg R \Rightarrow \neg S\)).
+
+\textbf{Embodied Dynamic:}
+
+The analysis starts with \(\neg R\). Since \(R\) is relatively expansive, \(\neg R\) introduces a compression (\(\downarrow\))---this closes off the space of rectangles.
+
+The conclusion involves \(\neg S\). Since \(S\) is compressive, \(\neg S\) is expansive (\(\uparrow\)).
+
+The inference moves from the compression of \(\neg R\) to the expansion of \(\neg S\). The compression required to exclude the broader category (Rectangle) necessarily forces the exclusion of the narrower category (Square) contained within it.
+
+This is the sound of time in conceptual space. The rhythm of compression and expansion, the pulse of determination and release, structures not just bodily awareness but conceptual understanding itself.
+
+\section{Conclusion: Movement and Meaning}\label{conclusion-movement-and-meaning}
+
+Let's pause to trace where this investigation has taken us. We began with hybridized models---student work that felt wrong but couldn't be dismissed as simple error. Working through these examples led us to understand how concepts gain content not from static representation but from inferential movement. The quadrilateral hierarchy served as our guide, allowing us to articulate how the structure of objects and properties emerges from practice---from the inferences we endorse and the claims we rule out.
+
+Within the inferentialist Scene we've established, the object (\(X\)) appears in a dual role: as the ``Also'' that unifies compatible properties (a square is also a rhombus), and as the ``One'' that serves as the unit of account for excluding incompatible ones (a square cannot be a triangle).
+
+The analysis suggests how formal logical vocabulary---negation, the conditional---makes explicit the material-inferential proprieties already operative in practice. The circular hierarchy of quadrilaterals, appearing under polarity inversion, is not a quirk of formalism. It reveals the holistic, reciprocally-defined nature of the concepts themselves, where each concept's identity is constituted by its relations of difference to all others.
+
+By quantifying ``inferential strength'' and tracking its inversion, the logical serves the material. The moments where differences emerge---where mere becomes exclusive, where material becomes formal, where universal becomes particular---are sites where content can fuse with consciousness. These are the moments where mathematics becomes not just correct but \emph{meaningful}.
+
+The anaphoric interpretation resolves the puzzle of hybridized models while pointing toward an understanding of mathematical practice where stability emerges not from reference to transcendent objects but from the recollective structure of language itself. Units function as pronouns, terms that possess syntactic sameness (all can play the role of ``the unit'') without semantic sameness (each imposes different material constraints on valid predicates). This interpretation will be developed more fully in Chapter 6.
+
+This understanding transforms how we approach mathematics education. Students are not learning to reference abstract objects but learning to navigate inferential space, to distinguish compatible from incompatible, to trace the pathways from stronger to weaker claims. They are learning the dance of compression and expansion, the rhythm of determination and release.
+
+In the next chapter, we turn more explicitly to this interplay, deepening our understanding of how the inferential movement of concepts is always also a movement of self and other, of recognition and transformation. The existential dimension of these logical structures will emerge more fully, revealing why getting quadrilaterals ``right'' matters not just mathematically but humanly.
+
+\printbibliography[heading=subbibliography]
+
+\end{document}

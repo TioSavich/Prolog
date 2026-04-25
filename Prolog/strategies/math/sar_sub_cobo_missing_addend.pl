@@ -153,38 +153,3 @@ extract_result_from_history(History, Result) :-
     ).
 
 % transition/4 defines the logic for moving from one state to the next.
-
-% From q_init, proceed to add bases (tens).
-transition(state(q_init, CV, Dist, T), _, state(q_add_bases, CV, Dist, T),
-           'Proceed to add bases.').
-
-% Loop in q_add_bases, counting on by one base (10) at a time, as long as it doesn't overshoot the target.
-transition(state(q_add_bases, CV, Dist, T), Base, state(q_add_bases, NewCV, NewDist, T), Interp) :-
-    CV + Base =< T,
-    integer_to_recollection(CV, RecCV2),
-    integer_to_recollection(Base, RecBase2),
-    grounded_arithmetic:add_grounded(RecCV2, RecBase2, RecNewCV2),
-    recollection_to_integer(RecNewCV2, NewCV),
-    integer_to_recollection(Dist, RecDist2),
-    grounded_arithmetic:add_grounded(RecDist2, RecBase2, RecNewDist2),
-    recollection_to_integer(RecNewDist2, NewDist),
-    format(string(Interp), 'Count on by base (+~w). New Value=~w.', [Base, NewCV]).
-% When adding the next base would overshoot, transition to adding ones.
-transition(state(q_add_bases, CV, Dist, T), Base, state(q_add_ones, CV, Dist, T),
-           'Next base overshoots target. Switching to ones.') :-
-    CV + Base > T.
-
-% Loop in q_add_ones, counting on by one at a time until the target is reached.
-transition(state(q_add_ones, CV, Dist, T), _, state(q_add_ones, NewCV, NewDist, T), Interp) :-
-    CV < T,
-    integer_to_recollection(CV, RecCV2),
-    grounded_arithmetic:successor(RecCV2, RecNewCV2),
-    recollection_to_integer(RecNewCV2, NewCV),
-    integer_to_recollection(Dist, RecDist2),
-    grounded_arithmetic:successor(RecDist2, RecNewDist2),
-    recollection_to_integer(RecNewDist2, NewDist),
-    format(string(Interp), 'Count on by one (+1). New Value=~w.', [NewCV]).
-% When the target is reached, transition to the final accept state.
-transition(state(q_add_ones, T, Dist, T), _, state(q_accept, T, Dist, T),
-           'Target reached.') :-
-    true.

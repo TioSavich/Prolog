@@ -241,7 +241,7 @@ incur_cost(Action) :-
 cost_for_action(Action, Cost) :-
     (   catch(config:cognitive_cost(Action, C), _, fail)
     ->  Cost = C
-    ;   local_cost(Action, Cost)
+    ;   once(local_cost(Action, Cost))
     ).
 
 local_cost(inference,         1).

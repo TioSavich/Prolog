@@ -1,0 +1,141 @@
+# Neurosymbolic Framing: Where the Project Already Sits
+
+This note records a frame for the project that clarifies what the
+architecture already is, without shifting philosophical terminology or
+direction. It exists because two external conversations — Hayes-Roth-style
+LLMs-as-queryable-databases (LARQL) and Gary Marcus on neurosymbolic AI —
+describe the landscape the project inhabits.
+
+The point is directionality without enclosure. The frame tells us what
+*kind* of thing the codebase is; it does not foreclose what the modules
+should do.
+
+## What the External Conversations Claim
+
+**LARQL / LLMs-as-databases.** Chris Hay's LARQL project treats transformer
+weights as a physically-structured graph database. The feed-forward network
+is the graph (entities as nodes, features as edges, relations as labels);
+attention is the navigator. Inference becomes a KNN walk rather than a
+dense matrix multiply. Facts can be inserted, updated, deleted, and
+recompiled without retraining. The model is not a black box — it is a
+queryable structure with discoverable schema.
+
+**Neurosymbolic AI / Gary Marcus on Claude Code.** Marcus argues the
+biggest advance in AI since the LLM is the marriage of symbolic logic with
+neural networks. Claude Code's 3,167-line `print.ts` kernel is a
+deterministic, IF-THEN-branching symbolic core — classical AI — wrapped
+around the neural LLM. Pure LLMs are too probabilistic for precise pattern
+matching. The field's real leap is the integration, not the scaling.
+
+## What This Project Already Is
+
+The umedcta-formalization codebase is neurosymbolic by architecture:
+
+- **Symbolic core.** Robinson Q axioms, sequent calculus (`proves/1`,
+  `proves/4`), 27 FSM strategy automata, domain prohibitions in
+  `axioms_domains.pl`, grounded arithmetic with no `is/2` in strategy
+  code. Everything deterministic. Everything inspectable.
+- **LLM boundary.** The oracle server (`oracle_server.pl`) and the
+  arche-trace erasure mechanism mark exactly where the neural component
+  enters. The erasure returns `erasure(RuleName)` at precisely the four
+  points where formal proof goes hollow: identity with Trace, S-O
+  inversion, double negation elimination, Oobleck transfer.
+- **Integration protocol.** When the sequent calculus hits an erasure or
+  the execution handler classifies a crisis the symbolic core cannot
+  resolve, the system signals that interpretive judgment is required.
+  In the current implementation, that judgment comes from the oracle's
+  pre-computed strategy table. In future work, it comes from an LLM
+  reading the event log and commitments.
+
+Marcus's claim ("smartly adding bits of symbolic AI can do more than
+scaling alone") is a retrospective description of what the project has
+been building all along. The project did not start from LLM scaling; it
+started from symbolic formalization and worked outward to the interpretive
+boundary.
+
+## What the LARQL Frame Adds
+
+LARQL's core technical insight — that an LLM's FFN is already a
+relational graph — resonates with three structural features of this
+codebase:
+
+1. **The 27 strategy automata form an inferential graph.** Each automaton
+   has predecessors and successors in the elaboration chain (counting_on
+   -> COBO -> chunking -> rounding). The LK_RB_Synthesis AutomatonAnalyzer
+   discovered 87 algorithmic elaboration relationships among 27+
+   automata. These are edges in the same sense LARQL's FFN features
+   are edges.
+2. **The material inference network in `pml/` is a graph.** Each
+   `material_inference/3` clause is an edge: premises -> consequent under
+   a side condition. The dialectical rhythm axioms, the Oobleck dynamic,
+   and the intersubjective recognition axioms form a small graph today.
+   If the AutomatonAnalyzer port happens, the strategies' elaboration
+   edges become queryable alongside.
+3. **The learner's commitment-stress map is a graph attribute.** The
+   `stress/2` facts in `critique.pl` weight commitments by how often they
+   fail. A commitment with high stress is a node the system is
+   considering dropping.
+
+None of this requires adopting LARQL's code. It is a shared vocabulary
+for what the project already models.
+
+## What This Frame Does Not Do
+
+The frame does not collapse distinct commitments:
+
+- **It does not reduce PML to a knowledge-graph schema.** PML is a
+  discourse-analytic framework with philosophical commitments (Carspecken,
+  Brandom, embodied temporality). Calling it a "relational schema" would
+  flatten the compressive/expansive polarity and the S/O/N mode structure.
+- **It does not reduce erasure to a model-editing operation.** The
+  arche-trace erasure is where formalization honestly stops; LARQL's
+  INSERT/DELETE is where a model is edited. Erasure is a marker that
+  interpretive judgment is required. Model editing is judgment applied.
+  The two are not identical.
+- **It does not make the 2525-inference corpus relevant again.** The
+  corpus was generated by an earlier PML prototype reading the manuscript
+  via Gemini API calls. Its quality is suspect. Even under the LARQL frame,
+  importing it naively would not produce a queryable knowledge graph;
+  it would produce a 1.5MB dump of suspect lookups. The corpus stays
+  deferred.
+
+## Directional Implications (Suggestive, Not Binding)
+
+If the project continues in this direction without being forced into a
+single academic product, three things the neurosymbolic frame suggests
+are worth attention:
+
+1. **The oracle is a LARQL-style boundary.** When the sequent calculus
+   erases or the crisis classifier runs out of responses, the system
+   currently consults a table. It could consult an LLM that reads the
+   system's own state (commitments, stress map, modal context) and
+   provides a reasoned response. The oracle is the place where the
+   neural can be integrated if that's wanted. This isn't a new direction
+   — it's what the oracle has always been, now with a clearer model of
+   what the neural half does.
+2. **The strategy automata could expose a query interface.** LARQL's LQL
+   has `SELECT` and `WALK` over the graph. The strategy module could
+   expose an analog: "which strategies elaborate counting_on?" "what
+   material inferences support chunking?" This is the AutomatonAnalyzer
+   port, reframed as a query surface rather than a static analysis dump.
+3. **The commitment/entitlement ledger could be queryable.** Brandom's
+   deontic scorekeeping (imported concept, not yet ported from
+   LK_RB_Synthesis) maps onto LARQL's edit-and-recompile pattern:
+   updating a commitment changes downstream entitlements; retracting a
+   commitment changes the inferential landscape. This is future work —
+   it's flagged as a Category B item in `docs/OUTSTANDING_TASKS_AUDIT.md`.
+
+None of these require rewriting what exists. They describe how the
+existing structure could evolve if its neurosymbolic shape were made
+explicit in the interface, rather than just embedded in the architecture.
+
+## Why This Note Exists Separately From the Spec
+
+The spec defines phases, modules, outstanding tasks. This note is a
+*frame* — a way of seeing the whole that does not add a task or change a
+commitment. Frames can be wrong without anything breaking. If the
+neurosymbolic frame turns out not to fit, this note gets retracted; the
+code continues as it is.
+
+Keeping the frame separate from the spec preserves the spec's commitments
+and keeps this note at the level of perspective, not obligation.

@@ -1,0 +1,6 @@
+.venv/
+immanent_output/
+training_corpus/
+__pycache__/
+*.pyc
+.pytest_cache/

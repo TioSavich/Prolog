@@ -37,6 +37,7 @@ is_prime(N) :- number(N), N > 1, find_factor_from(N, 2, F), F =:= N.
 
 % --- Euclid Case 1 Incoherence ---
 is_incoherent(X) :-
+    axiom_pack_enabled(number_theory),
     member(n(prime(EF)), X),
     member(n(is_complete(L)), X),
     product_of_list(L, DE),
@@ -46,28 +47,31 @@ is_incoherent(X) :-
 
 % M5: Euclid's Core Argument (Forward Chaining)
 proves_impl(( [n(prime(G)), n(divides(G, N)), n(is_complete(L))] => [n(neg(member(G, L)))] ), _) :-
-    product_of_list(L, P),
-    N is P + 1.
-
-% M5-Direct
-proves_impl(( [n(prime(G)), n(divides(G, N))] => [n(neg(member(G, L)))] ), _) :-
+    axiom_pack_enabled(number_theory),
     product_of_list(L, P),
     N is P + 1.
 
 % M4: Completeness Violation (Forward Chaining)
-proves_impl(([n(prime(G)), n(neg(member(G, L))), n(is_complete(L))] => [n(neg(is_complete(L)))]), _).
+proves_impl(([n(prime(G)), n(neg(member(G, L))), n(is_complete(L))] => [n(neg(is_complete(L)))]), _) :-
+    axiom_pack_enabled(number_theory).
 
 % M4-Direct
-proves_impl(([n(prime(G)), n(neg(member(G, L)))] => [n(neg(is_complete(L)))]), _).
+proves_impl(([n(prime(G)), n(neg(member(G, L)))] => [n(neg(is_complete(L)))]), _) :-
+    axiom_pack_enabled(number_theory).
 
 % Primality grounding
-proves_impl(([] => [n(prime(N))]), _) :- is_prime(N).
-proves_impl(([] => [n(composite(N))]), _) :- number(N), N > 1, \+ is_prime(N).
+proves_impl(([] => [n(prime(N))]), _) :-
+    axiom_pack_enabled(number_theory),
+    is_prime(N).
+proves_impl(([] => [n(composite(N))]), _) :-
+    axiom_pack_enabled(number_theory),
+    number(N), N > 1, \+ is_prime(N).
 
 % --- Structural Rules for Euclid's Proof ---
 
 % Euclid's Construction
 proves_impl((Premises => Conclusions), History) :-
+    axiom_pack_enabled(number_theory),
     member(n(is_complete(L)), Premises),
     \+ member(euclid_construction(L), History),
     product_of_list(L, DE),
@@ -77,6 +81,7 @@ proves_impl((Premises => Conclusions), History) :-
 
 % Case Analysis (analyze_euclid_number)
 proves_impl((Premises => Conclusions), History) :-
+    axiom_pack_enabled(number_theory),
     select(n(analyze_euclid_number(EF, L)), Premises, RestPremises),
     EF > 1,
     (member(n(is_complete(L)), Premises) ->
@@ -87,6 +92,7 @@ proves_impl((Premises => Conclusions), History) :-
 
 % Prime Factorization (Existential Instantiation)
 proves_impl((Premises => Conclusions), History) :-
+    axiom_pack_enabled(number_theory),
     select(n(composite(N)), Premises, RestPremises),
     \+ member(factorization(N), History),
     find_prime_factor(N, G),

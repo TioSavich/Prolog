@@ -110,7 +110,7 @@ run_fsm_loop(Module, CurrentState, Parameters, AccHistory, FinalHistory) :-
         FinalHistory = [HistoryEntry | AccHistory]
     ;
         % Try to make a transition
-        ( call(Module:transition(CurrentState, NextState, Interpretation)) ->
+        ( once(call(Module:transition(CurrentState, NextState, Interpretation))) ->
             create_history_entry(CurrentState, Interpretation, HistoryEntry),
             run_fsm_loop(Module, NextState, Parameters, [HistoryEntry | AccHistory], FinalHistory)
         ;

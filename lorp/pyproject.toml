@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lorp"
+version = "0.1.0"
+description = "Open-source LLM port of the immanent-reader skill (Phase 1 PoC)."
+requires-python = ">=3.10"
+dependencies = [
+  "pyyaml>=6.0",
+  "requests>=2.31",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.4"]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["lorp*"]
+exclude = ["tests*", "immanent_output*", "training_corpus*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

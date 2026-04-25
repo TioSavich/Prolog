@@ -23,25 +23,34 @@
 % --- EML Material Inferences ---
 
 % Commitment 2: Emergence of Awareness (Temporal Compression)
-proves_impl([s(u)] => [s(comp_nec a)], _).
-proves_impl([s(u_prime)] => [s(comp_nec a)], _).
+proves_impl([s(u)] => [s(comp_nec a)], _) :-
+    axiom_pack_enabled(eml).
+proves_impl([s(u_prime)] => [s(comp_nec a)], _) :-
+    axiom_pack_enabled(eml).
 
 % Commitment 3: The Tension of Awareness (Choice Point)
-proves_impl([s(a)] => [s(exp_poss lg)], _).  % Possibility of Release
-proves_impl([s(a)] => [s(comp_poss t)], _).   % Possibility of Fixation
+proves_impl([s(a)] => [s(exp_poss lg)], _) :-  % Possibility of Release
+    axiom_pack_enabled(eml).
+proves_impl([s(a)] => [s(comp_poss t)], _) :-   % Possibility of Fixation
+    axiom_pack_enabled(eml).
 
 % Commitment 4: Dynamics of the Choice
 % 4a: Fixation (Deepened Contraction)
-proves_impl([s(t)] => [s(comp_nec neg(u))], _).
+proves_impl([s(t)] => [s(comp_nec neg(u))], _) :-
+    axiom_pack_enabled(eml).
 % 4b: Release (Sublation)
-proves_impl([s(lg)] => [s(exp_nec u_prime)], _).
+proves_impl([s(lg)] => [s(exp_nec u_prime)], _) :-
+    axiom_pack_enabled(eml).
 
 % Hegel's Triad Oscillation:
-proves_impl([s(t_b)] => [s(comp_nec t_n)], _).
-proves_impl([s(t_n)] => [s(comp_nec t_b)], _).
+proves_impl([s(t_b)] => [s(comp_nec t_n)], _) :-
+    axiom_pack_enabled(eml).
+proves_impl([s(t_n)] => [s(comp_nec t_b)], _) :-
+    axiom_pack_enabled(eml).
 
 % --- EML Dynamics Structural Rule ---
 proves_impl((Premises => Conclusions), History) :-
+    axiom_pack_enabled(eml),
     select(s(P), Premises, RestPremises), \+ member(s(P), History),
     eml_axiom(s(P), s(M_Q)),
     ( (M_Q = comp_nec Q ; M_Q = exp_nec Q) -> proves_impl(([s(Q)|RestPremises] => Conclusions), [s(P)|History])

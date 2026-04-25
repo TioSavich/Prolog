@@ -1,0 +1,1718 @@
+{
+  "elaborations": [
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.4,
+      "direction_asymmetry":3,
+      "elaborated":"Chunking",
+      "shared": ["pat_predecessor_loop", "pat_sub_strategy_invocation" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.2,
+      "direction_asymmetry":3,
+      "elaborated":"RMB",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.4,
+      "direction_asymmetry":3,
+      "elaborated":"Rounding",
+      "shared": ["pat_predecessor_loop", "pat_sub_strategy_invocation" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.25,
+      "direction_asymmetry":2,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_sub_strategy_invocation" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"COBO",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.25,
+      "direction_asymmetry":2,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":4,
+      "elaborated":"Sliding",
+      "shared": ["pat_predecessor_loop", "pat_sub_strategy_invocation" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking A",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking C",
+      "shared": ["pat_predecessor_loop", "pat_sub_strategy_invocation" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"COBO",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"DR",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"IDP",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking",
+      "confidence_jaccard":0.6666666666666666,
+      "confidence_max":0.8,
+      "direction_asymmetry":0,
+      "elaborated":"RMB",
+      "shared": [
+	"pat_base_decomposition",
+	"pat_predecessor_loop",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking",
+      "confidence_jaccard":1,
+      "confidence_max":1,
+      "direction_asymmetry":0,
+      "elaborated":"Rounding",
+      "shared": [
+	"pat_base_decomposition",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ],
+      "type":"peer"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"Chunking",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Sub Rounding",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking",
+      "confidence_jaccard":0.8333333333333334,
+      "confidence_max":0.8333333333333334,
+      "direction_asymmetry":1,
+      "elaborated":"Sliding",
+      "shared": [
+	"pat_base_decomposition",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.14285714285714285,
+      "confidence_max":0.2,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.2,
+      "direction_asymmetry":3,
+      "elaborated":"Chunking",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking C",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking",
+      "shared": ["pat_predecessor_loop", "pat_sub_strategy_invocation" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"Chunking",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Dealing by Ones",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"IDP",
+      "confidence_jaccard":0.14285714285714285,
+      "confidence_max":0.2,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"RMB",
+      "confidence_jaccard":0.6666666666666666,
+      "confidence_max":0.8,
+      "direction_asymmetry":0,
+      "elaborated":"Rounding",
+      "shared": [
+	"pat_base_decomposition",
+	"pat_predecessor_loop",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ],
+      "type":"peer"
+    },
+    {
+      "base":"Sub Rounding",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6,
+      "direction_asymmetry":1,
+      "elaborated":"RMB",
+      "shared": ["pat_base_decomposition", "pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"RMB",
+      "confidence_jaccard":0.8333333333333334,
+      "confidence_max":0.8333333333333334,
+      "direction_asymmetry":1,
+      "elaborated":"Sliding",
+      "shared": [
+	"pat_base_decomposition",
+	"pat_error_branch",
+	"pat_predecessor_loop",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ],
+      "type":"elaboration"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.2,
+      "direction_asymmetry":3,
+      "elaborated":"RMB",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Sub Rounding",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"Rounding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Rounding",
+      "confidence_jaccard":0.8333333333333334,
+      "confidence_max":0.8333333333333334,
+      "direction_asymmetry":1,
+      "elaborated":"Sliding",
+      "shared": [
+	"pat_base_decomposition",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO (Missing Addend)",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking",
+      "shared": ["pat_sub_strategy_invocation", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO (Missing Addend)",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"RMB",
+      "shared": ["pat_error_branch", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO (Missing Addend)",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"Rounding",
+      "shared": ["pat_sub_strategy_invocation", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO (Missing Addend)",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.5,
+      "direction_asymmetry":0,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_accumulator_addition", "pat_error_branch" ],
+      "type":"peer"
+    },
+    {
+      "base":"COBO (Missing Addend)",
+      "confidence_jaccard":0.42857142857142855,
+      "confidence_max":0.5,
+      "direction_asymmetry":2,
+      "elaborated":"Sliding",
+      "shared": ["pat_error_branch", "pat_sub_strategy_invocation", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":2,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_error_branch", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO (Missing Addend)",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.5,
+      "direction_asymmetry":0,
+      "elaborated":"Chunking C",
+      "shared": ["pat_error_branch", "pat_sub_strategy_invocation" ],
+      "type":"peer"
+    },
+    {
+      "base":"IDP",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":2,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_accumulator_addition", "pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"CBBO (Take Away)",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.6,
+      "confidence_max":0.6,
+      "direction_asymmetry":2,
+      "elaborated":"RMB",
+      "shared": ["pat_base_decomposition", "pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Rounding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"CBBO (Take Away)",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.75,
+      "confidence_max":0.75,
+      "direction_asymmetry":1,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_base_decomposition", "pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":3,
+      "elaborated":"Sliding",
+      "shared": ["pat_base_decomposition", "pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"Chunking A",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"CBBO (Take Away)",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking C",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"CBO",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"CBBO (Take Away)",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"DR",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"CBO (Division)",
+      "shared": ["pat_base_decomposition", "pat_error_branch" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBBO (Take Away)",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"IDP",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"CBBO (Take Away)",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"RMB",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.25,
+      "direction_asymmetry":3,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.16666666666666666,
+      "direction_asymmetry":5,
+      "elaborated":"Sliding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"IDP",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":2,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_accumulator_addition", "pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Sub Rounding",
+      "confidence_jaccard":0.42857142857142855,
+      "confidence_max":0.5,
+      "direction_asymmetry":2,
+      "elaborated":"Sliding",
+      "shared": ["pat_base_decomposition", "pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.14285714285714285,
+      "confidence_max":0.16666666666666666,
+      "direction_asymmetry":4,
+      "elaborated":"Sliding",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"RMB",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.14285714285714285,
+      "confidence_max":0.2,
+      "direction_asymmetry":2,
+      "elaborated":"Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking A",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":3,
+      "elaborated":"Sliding",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking A",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.75,
+      "confidence_max":0.75,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking C",
+      "shared": [
+	"pat_error_branch",
+	"pat_leading_chunk_extraction",
+	"pat_predecessor_loop"
+      ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking A",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"DR",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking A",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"IDP",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking A",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.4,
+      "direction_asymmetry":3,
+      "elaborated":"RMB",
+      "shared": ["pat_error_branch", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.2,
+      "direction_asymmetry":3,
+      "elaborated":"Rounding",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.25,
+      "direction_asymmetry":2,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":4,
+      "elaborated":"Sliding",
+      "shared": ["pat_error_branch", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.25,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking C",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"IDP",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.5,
+      "direction_asymmetry":0,
+      "elaborated":"UCR",
+      "shared": ["pat_error_branch" ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking C",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"RMB",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking C",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.4,
+      "direction_asymmetry":1,
+      "elaborated":"Rounding",
+      "shared": ["pat_predecessor_loop", "pat_sub_strategy_invocation" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.25,
+      "direction_asymmetry":3,
+      "elaborated":"Chunking C",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Chunking C",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.5,
+      "direction_asymmetry":0,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking C",
+      "confidence_jaccard":0.42857142857142855,
+      "confidence_max":0.5,
+      "direction_asymmetry":2,
+      "elaborated":"Sliding",
+      "shared": [
+	"pat_error_branch",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation"
+      ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.25,
+      "direction_asymmetry":3,
+      "elaborated":"Chunking C",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking C",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Dealing by Ones",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking C",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"IDP",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking C",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.25,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking C",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"C2C",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"Chunking",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"C2C",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"RMB",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"C2C",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"Rounding",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"C2C",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.25,
+      "direction_asymmetry":3,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"C2C",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.16666666666666666,
+      "direction_asymmetry":5,
+      "elaborated":"Sliding",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"C2C",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking B",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"C2C",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"CBO",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"COBO",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"CBO",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking",
+      "shared": ["pat_predecessor_loop", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"RMB",
+      "shared": ["pat_predecessor_loop", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Rounding",
+      "shared": ["pat_predecessor_loop", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"CBO",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":3,
+      "elaborated":"Sliding",
+      "shared": ["pat_predecessor_loop", "pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"Chunking A",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"CBO",
+      "shared": ["pat_successor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking C",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"CBO",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"DR",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_list_redistribution", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBO",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"IDP",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"RMB",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.2,
+      "direction_asymmetry":4,
+      "elaborated":"Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":1,
+      "confidence_max":1,
+      "direction_asymmetry":0,
+      "elaborated":"Decomposition",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.25,
+      "direction_asymmetry":3,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.16666666666666666,
+      "direction_asymmetry":5,
+      "elaborated":"Sliding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"DR",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Commutative Reasoning",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"IDP",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"RMB",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Rounding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"DR",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":3,
+      "elaborated":"Sliding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.5,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":0,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"DR",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"IDP",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.14285714285714285,
+      "confidence_max":0.2,
+      "direction_asymmetry":2,
+      "elaborated":"Chunking",
+      "shared": ["pat_base_decomposition" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"RMB",
+      "shared": ["pat_base_decomposition", "pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.14285714285714285,
+      "confidence_max":0.2,
+      "direction_asymmetry":2,
+      "elaborated":"Rounding",
+      "shared": ["pat_base_decomposition" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"COBO (Missing Addend)",
+      "shared": ["pat_accumulator_addition", "pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.75,
+      "confidence_max":0.75,
+      "direction_asymmetry":1,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_accumulator_addition", "pat_base_decomposition", "pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":3,
+      "elaborated":"Sliding",
+      "shared": ["pat_base_decomposition", "pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"Chunking A",
+      "shared": ["pat_error_branch" ],
+      "type":"peer"
+    },
+    {
+      "base":"Chunking B",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"CBO (Division)",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.16666666666666666,
+      "confidence_max":0.25,
+      "direction_asymmetry":1,
+      "elaborated":"Chunking C",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"DR",
+      "shared": ["pat_base_decomposition" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_base_decomposition" ],
+      "type":"peer"
+    },
+    {
+      "base":"CBO (Division)",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"IDP",
+      "shared": ["pat_error_branch" ],
+      "type":"peer"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.6666666666666666,
+      "confidence_max":0.6666666666666666,
+      "direction_asymmetry":1,
+      "elaborated":"CBO (Division)",
+      "shared": ["pat_accumulator_addition", "pat_error_branch" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Dealing by Ones",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"RMB",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Dealing by Ones",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"Rounding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Decomposition",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":2,
+      "elaborated":"Dealing by Ones",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Dealing by Ones",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Dealing by Ones",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":3,
+      "elaborated":"Sliding",
+      "shared": ["pat_base_decomposition", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"Dealing by Ones",
+      "confidence_jaccard":0.2,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":0,
+      "elaborated":"IDP",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"peer"
+    },
+    {
+      "base":"IDP",
+      "confidence_jaccard":0.3333333333333333,
+      "confidence_max":0.4,
+      "direction_asymmetry":2,
+      "elaborated":"RMB",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"IDP",
+      "confidence_jaccard":0.14285714285714285,
+      "confidence_max":0.2,
+      "direction_asymmetry":2,
+      "elaborated":"Rounding",
+      "shared": ["pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"IDP",
+      "confidence_jaccard":0.4,
+      "confidence_max":0.5,
+      "direction_asymmetry":1,
+      "elaborated":"Sub Rounding",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"IDP",
+      "confidence_jaccard":0.2857142857142857,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":3,
+      "elaborated":"Sliding",
+      "shared": ["pat_error_branch", "pat_predecessor_loop" ],
+      "type":"elaboration"
+    },
+    {
+      "base":"UCR",
+      "confidence_jaccard":0.25,
+      "confidence_max":0.3333333333333333,
+      "direction_asymmetry":1,
+      "elaborated":"IDP",
+      "shared": ["pat_error_branch" ],
+      "type":"elaboration"
+    }
+  ],
+  "generated_at":"2026-04-18T13:25:01-0400",
+  "strategies": [
+    {
+      "module":"sar_add_cobo",
+      "name":"COBO",
+      "op":"+",
+      "patterns": ["pat_predecessor_loop", "pat_sub_strategy_invocation" ]
+    },
+    {
+      "module":"sar_add_chunking",
+      "name":"Chunking",
+      "op":"+",
+      "patterns": [
+	"pat_base_decomposition",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ]
+    },
+    {
+      "module":"sar_add_rmb",
+      "name":"RMB",
+      "op":"+",
+      "patterns": [
+	"pat_base_decomposition",
+	"pat_error_branch",
+	"pat_predecessor_loop",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ]
+    },
+    {
+      "module":"sar_add_rounding",
+      "name":"Rounding",
+      "op":"+",
+      "patterns": [
+	"pat_base_decomposition",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ]
+    },
+    {
+      "module":"sar_sub_cobo_missing_addend",
+      "name":"COBO (Missing Addend)",
+      "op":"-",
+      "patterns": [
+	"pat_accumulator_addition",
+	"pat_error_branch",
+	"pat_sub_strategy_invocation",
+	"pat_successor_loop"
+      ]
+    },
+    {
+      "module":"sar_sub_cbbo_take_away",
+      "name":"CBBO (Take Away)",
+      "op":"-",
+      "patterns": ["pat_base_decomposition", "pat_error_branch", "pat_predecessor_loop" ]
+    },
+    {
+      "module":"sar_sub_decomposition",
+      "name":"Decomposition",
+      "op":"-",
+      "patterns": ["pat_predecessor_loop" ]
+    },
+    {
+      "module":"sar_sub_rounding",
+      "name":"Sub Rounding",
+      "op":"-",
+      "patterns": [
+	"pat_accumulator_addition",
+	"pat_base_decomposition",
+	"pat_error_branch",
+	"pat_predecessor_loop"
+      ]
+    },
+    {
+      "module":"sar_sub_sliding",
+      "name":"Sliding",
+      "op":"-",
+      "patterns": [
+	"pat_base_decomposition",
+	"pat_error_branch",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation",
+	"pat_successor_loop",
+	"pat_target_base_adjustment"
+      ]
+    },
+    {
+      "module":"sar_sub_chunking_a",
+      "name":"Chunking A",
+      "op":"-",
+      "patterns": [
+	"pat_error_branch",
+	"pat_leading_chunk_extraction",
+	"pat_predecessor_loop"
+      ]
+    },
+    {
+      "module":"sar_sub_chunking_b",
+      "name":"Chunking B",
+      "op":"-",
+      "patterns": ["pat_error_branch", "pat_successor_loop" ]
+    },
+    {
+      "module":"sar_sub_chunking_c",
+      "name":"Chunking C",
+      "op":"-",
+      "patterns": [
+	"pat_error_branch",
+	"pat_leading_chunk_extraction",
+	"pat_predecessor_loop",
+	"pat_sub_strategy_invocation"
+      ]
+    },
+    {
+      "module":"smr_mult_c2c",
+      "name":"C2C",
+      "op":"*",
+      "patterns": ["pat_successor_loop" ]
+    },
+    {
+      "module":"smr_mult_cbo",
+      "name":"CBO",
+      "op":"*",
+      "patterns": ["pat_list_redistribution", "pat_predecessor_loop", "pat_successor_loop" ]
+    },
+    {
+      "module":"smr_mult_commutative_reasoning",
+      "name":"Commutative Reasoning",
+      "op":"*",
+      "patterns": ["pat_predecessor_loop" ]
+    },
+    {
+      "module":"smr_mult_dr",
+      "name":"DR",
+      "op":"*",
+      "patterns": [
+	"pat_base_decomposition",
+	"pat_partial_product_accumulation",
+	"pat_predecessor_loop"
+      ]
+    },
+    {
+      "module":"smr_div_cbo",
+      "name":"CBO (Division)",
+      "op":"/",
+      "patterns": ["pat_accumulator_addition", "pat_base_decomposition", "pat_error_branch" ]
+    },
+    {
+      "module":"smr_div_dealing_by_ones",
+      "name":"Dealing by Ones",
+      "op":"/",
+      "patterns": [
+	"pat_base_decomposition",
+	"pat_list_redistribution",
+	"pat_predecessor_loop"
+      ]
+    },
+    {
+      "module":"smr_div_idp",
+      "name":"IDP",
+      "op":"/",
+      "patterns": ["pat_error_branch", "pat_fact_lookup", "pat_predecessor_loop" ]
+    },
+    {
+      "module":"smr_div_ucr",
+      "name":"UCR",
+      "op":"/",
+      "patterns": ["pat_accumulator_addition", "pat_error_branch" ]
+    }
+  ],
+  "taxonomy": [
+    {
+      "category":"counting",
+      "justification":"successor/2 guarded by smaller_than/2: count up to a bound",
+      "name":"pat_successor_loop",
+      "order":1
+    },
+    {
+      "category":"counting",
+      "justification":"predecessor/2 or subtract-by-one in a self-looping transition: count down",
+      "name":"pat_predecessor_loop",
+      "order":2
+    },
+    {
+      "category":"counting",
+      "justification":"add_grounded into a register that appears in both source and target state",
+      "name":"pat_accumulator_addition",
+      "order":3
+    },
+    {
+      "category":"place_value",
+      "justification":"calls base_decompose_grounded/4 to split a quantity into quotient and remainder over the base",
+      "name":"pat_base_decomposition",
+      "order":4
+    },
+    {
+      "category":"place_value",
+      "justification":"calls base_recompose_grounded/4 to rebuild a quantity from parts",
+      "name":"pat_base_recomposition",
+      "order":5
+    },
+    {
+      "category":"place_value",
+      "justification":"computes next multiple of base via successor+multiply_grounded, or calls calculate_next_base_grounded",
+      "name":"pat_target_base_adjustment",
+      "order":6
+    },
+    {
+      "category":"place_value",
+      "justification":"calls leading_digit_chunk/3 or leading_place_value/3 to pull a place-value slice",
+      "name":"pat_leading_chunk_extraction",
+      "order":7
+    },
+    {
+      "category":"structural",
+      "justification":"two distinct accumulator-named states (e.g., q_loop_P1 and q_loop_P2) or a bases+remainder split path",
+      "name":"pat_partial_product_accumulation",
+      "order":8
+    },
+    {
+      "category":"structural",
+      "justification":"greedy walk across a KB list of Multiple-Factor pairs, typically via find_best_fact/4 or analogous helper",
+      "name":"pat_fact_lookup",
+      "order":9
+    },
+    {
+      "category":"structural",
+      "justification":"nth0/3-4 plus update_list/4 on a Groups list: move an element across a partitioned list",
+      "name":"pat_list_redistribution",
+      "order":10
+    },
+    {
+      "category":"control",
+      "justification":"module produces state(q_error, ...) as a next-state in some transition clause",
+      "name":"pat_error_branch",
+      "order":11
+    },
+    {
+      "category":"control",
+      "justification":"module state-name set properly contains a known sub-strategy shape (cobo_shape, k_count_shape, ppa_shape)",
+      "name":"pat_sub_strategy_invocation",
+      "order":12
+    }
+  ],
+  "unclassified": [],
+  "uncovered_modules": [
+    "strategies/math/counting2.pl",
+    "strategies/math/counting_on_back.pl",
+    "strategies/math/fraction_semantics.pl",
+    "strategies/math/jason.pl",
+    "strategies/math/jason_fsm.pl",
+    "strategies/math/sar_add_counting_on.pl",
+    "strategies/math/sar_sub_counting_back.pl"
+  ]
+}

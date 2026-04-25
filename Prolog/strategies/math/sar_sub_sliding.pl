@@ -173,39 +173,3 @@ extract_result_from_history(History, Result) :-
     ).
 
 % transition/4 defines the logic for moving from one state to the next.
-
-% From q_init_K, determine the amount K needed to slide S to a multiple of 10.
-transition(state(q_init_K, _, _, _, TB, _, M, S), _, state(q_loop_K, 0, 0, 0, TB, S, M, S), Interp) :-
-    format(string(Interp), 'Initializing K calculation: Counting from ~w to ~w.', [S, TB]).
-
-% Loop in q_loop_K to count up from S to the target base, calculating K.
-transition(state(q_loop_K, K, M_adj, S_adj, TB, TC, M, S), _, state(q_loop_K, NewK, M_adj, S_adj, TB, NewTC, M, S), Interp) :-
-    integer_to_recollection(TC, RecTC),
-    integer_to_recollection(TB, RecTB),
-    smaller_than(RecTC, RecTB),
-    integer_to_recollection(K, RecK),
-    successor(RecTC, RecNewTC),
-    recollection_to_integer(RecNewTC, NewTC),
-    successor(RecK, RecNewK),
-    recollection_to_integer(RecNewK, NewK),
-    format(string(Interp), 'Counting Up: ~w, K=~w', [NewTC, NewK]).
-% Once K is found, transition to q_adjust to apply the slide.
-transition(state(q_loop_K, K, _, _, TB, TC, M, S), _, state(q_adjust, K, 0, 0, TB, TC, M, S), Interp) :-
-    integer_to_recollection(TC, RecTC),
-    integer_to_recollection(TB, RecTB),
-    \+ smaller_than(RecTC, RecTB),
-    format(string(Interp), 'K needed to reach base is ~w.', [K]).
-
-% In q_adjust, "slide" both M and S by adding K.
-transition(state(q_adjust, K, _, _, _, _, M, S), _, state(q_subtract, K, M_adj, S_adj, 0, 0, M, S), Interp) :-
-    integer_to_recollection(S, RecS),
-    integer_to_recollection(M, RecM),
-    integer_to_recollection(K, RecK),
-    add_grounded(RecS, RecK, RecS_adj),
-    recollection_to_integer(RecS_adj, S_adj),
-    add_grounded(RecM, RecK, RecM_adj),
-    recollection_to_integer(RecM_adj, M_adj),
-    format(string(Interp), 'Sliding both by +~w. New problem: ~w - ~w.', [K, M_adj, S_adj]).
-
-% In q_subtract, the new problem is set up. Proceed to accept to perform the final calculation.
-transition(state(q_subtract, K, M_adj, S_adj, _, _, _, _), _, state(q_accept, K, M_adj, S_adj, 0, 0, 0, 0), 'Proceed to accept.').

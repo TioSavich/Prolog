@@ -1,0 +1,44 @@
+# OS
+.DS_Store
+
+# LaTeX build artifacts
+prolog/_minted/
+*.aux
+*.log
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# Test output dumps (ephemeral, not source)
+prolog/test_out*.txt
+prolog/test_final*.txt
+misconceptions/results.csv
+misconceptions/corpus_inscope.csv
+misconceptions/out_of_frame.csv
+misconceptions/fraction_batch_*.csv
+misconceptions/whole_number_batch_*.csv
+misconceptions/decimal_batch_*.csv
+misconceptions/measurement_batch_*.csv
+misconceptions/geometric_batch_*.csv
+
+# IDE
+*.code-workspace
+.gstack/
+
+# LearningCommons Knowledge Graph data (large JSONL files, download from CDN)
+data/learningcommons/*.jsonl
+
+# NotebookLM registry (local reference, not source)
+notebooklm-registry.md
+
+# Comment-stripped Prolog for code audit (see docs/phase5/code-audit-plan.md)
+Stripped_Code/
+
+# SQLite database
+research_corpus/pdfs/
+research_corpus/research.db
+research_corpus/research.db.schema.sql
+
+research_corpus/exports
+research_corpus/extraction_results
+research_corpus/references.bib

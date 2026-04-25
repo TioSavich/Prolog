@@ -86,7 +86,7 @@ run(state(q_accept, Sum, BC, OC), AccHistory, FinalHistory) :-
 
 % Recursive step: Perform one transition and continue.
 run(CurrentState, AccHistory, FinalHistory) :-
-    transition(CurrentState, NextState, Interpretation),
+    once(transition(CurrentState, NextState, Interpretation)),
     CurrentState = state(Name, Sum, BC, OC),
     HistoryEntry = step(Name, Sum, BC, OC, Interpretation),
     run(NextState, [HistoryEntry | AccHistory], FinalHistory).

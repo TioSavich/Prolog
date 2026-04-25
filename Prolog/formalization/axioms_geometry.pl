@@ -15,6 +15,19 @@
 % formal reconstruction of how determinate shape-concepts arise.
 % ===================================================================
 
+% --- Geometric Restrictions (what a shape EXCLUDES) ---
+% R1: No sides of X are equal
+% R2: No pair of adjacent sides of X are equal
+% R3: No pair of opposite sides of X are equal
+% R4: Non-parallel sides of X are not congruent (isosceles trapezoid property)
+% R5: No pair of opposite sides of X are parallel
+% R6: No angles of X are right angles
+%
+% A 1 in Table 4 (manuscript §4) means the shape rejects that restriction.
+% Inferential strength = number of restrictions rejected.
+% square: rejects all six (strongest)
+% trapezoid: rejects only R5 (weakest non-trivial)
+
 % --- Incompatibility Pairs ---
 % Each pair asserts that a shape is materially incompatible with
 % a restriction. r1-r6 represent geometric properties whose
@@ -37,6 +50,7 @@ geometric_predicates([square, rectangle, rhombus, parallelogram, trapezoid, kite
 
 % --- Geometric Incoherence ---
 is_incoherent(X) :-
+    axiom_pack_enabled(geometry),
     member(n(ShapePred), X), ShapePred =.. [Shape, V],
     member(n(RestrictionPred), X), RestrictionPred =.. [Restriction, V],
     ground(Shape), ground(Restriction),
@@ -44,6 +58,7 @@ is_incoherent(X) :-
 
 % --- Geometric Entailment (Structural Rule) ---
 proves_impl((Premises => Conclusions), _) :-
+    axiom_pack_enabled(geometry),
     member(n(P_pred), Premises), P_pred =.. [P_shape, X], is_shape(P_shape),
     member(n(Q_pred), Conclusions), Q_pred =.. [Q_shape, X], is_shape(Q_shape),
     entails_via_incompatibility(P_shape, Q_shape), !.

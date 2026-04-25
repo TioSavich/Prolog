@@ -1,0 +1,258 @@
+\documentclass{article}
+\usepackage[backend=biber, style=authoryear]{biblatex}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{minted}
+\usepackage{booktabs}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\addbibresource{references.bib}
+
+\title{A Pragmatic Re-Keying of Radical Constructivism: Modeling Mathematical Knowing as a Formal, Executable Choreography}
+\author{Gemini}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+This article translates a rich, psychological model of a student's mathematical development, grounded in Leslie P. Steffe's radical constructivism, into a formal, executable automaton. The goal is to re-key the descriptive insights of constructivism into a pragmatic framework that aligns with the spirit of Robert Brandom's analytic pragmatism, where knowing-how is made explicit in the form of a communicable knowing-that. I model the cognitive schemes of a student, "Jason," as a set of nested finite automata, moving from the psychological description of his mental operations to a computational specification. The resulting executable model demonstrates how cognitive development, particularly the "metamorphic accommodations" identified by constructivists, can be understood as the reorganization and nesting of formal procedures. The output of the model, a structured history of its operations, serves as a formal representation of the constructed meaning of a mathematical concept.
+\end{abstract}
+
+\section{Introduction}
+
+Leslie P. Steffe's work on the mathematical development of children offers a detailed account of cognitive construction, framed within the epistemology of radical constructivism \autocite{steffe2002new}. This perspective posits that learners actively build their own mathematical realities, not by discovering a pre-existing world, but by adapting their cognitive schemes to fit the constraints of their experience \autocite{von2005contradictions}. The teaching experiment methodology provides a longitudinal lens through which researchers can build second-order models of this construction, creating what is termed the "mathematics of students" \autocite{steffe2014teaching}.
+
+My objective here is not to question the descriptive validity of this constructivist model but to transpose it into a different philosophical key. I aim to translate the psychological description of one student's learning trajectory—that of "Jason"—into a formal, executable model. This act of translation serves a purpose aligned with analytic pragmatism: to make the implicit practices and cognitive choreography of mathematical knowing explicit in a formal structure. The resulting automaton is a pragmatic interpretation of Jason's mathematical schemes, where the focus shifts from the student's private experiential world to the public, formal specification of a viable cognitive system.
+
+\section{The Operational Foundation: The Explicitly Nested Number Sequence (ENS)}
+
+The foundation for Jason's later fractional knowledge was his whole-number operating system, what Steffe terms the Explicitly Nested Number Sequence (ENS) \autocite{steffe2002new}. The ENS is an interiorized counting scheme that allows a child to treat numbers and number sequences as objects of thought. The power of the ENS lies in a set of core mental operations that I will treat as the primitive functions of my computational model:
+
+\begin{itemize}
+    \item \textbf{Iteration:} The ability to take a composite unit (e.g., a "six") as a single item and repeat it to produce larger quantities \autocite{steffe2014childrens}.
+    \item \textbf{Disembedding:} The ability to mentally isolate a numerical part from a whole without destroying the conceptual integrity of the whole \autocite{steffe2002new}.
+    \item \textbf{Coordination of Units:} The capacity to flexibly view a number, such as twelve, as a single unit of twelve, a composite unit of twelve ones, and as a part of a larger sequence \autocite{steffe2004fractional}.
+\end{itemize}
+
+These operations form the iterative core of the automaton, the fundamental actions from which more complex, goal-directed schemes are built.
+
+\section{The Emergence of Fractional Schemes}
+
+According to the "reorganization hypothesis," fractional knowledge emerges as an accommodation of these whole-number schemes when applied to continuous quantities \autocite{steffe2002new}. My formal model captures this process by defining strategic shells—automata—that organize the core operations to solve new kinds of problems.
+
+\subsection{The Partitive Fractional Scheme (PFS)}
+
+Jason's first major accommodation was the construction of a Partitive Fractional Scheme (PFS), his primary tool for producing a proper fraction, such as making $\frac{3}{7}$ of a continuous unit (a "stick") \autocite{steffe2003construction}. This scheme repurposes the ENS operations: the number sequence (1 to 7) is used as a template to \textit{partition} the stick, one part (the $\frac{1}{7}$ unit fraction) is \textit{disembedded}, and that part is then \textit{iterated} three times.
+
+I model this goal-directed activity as a finite automaton, $M_{PFS} = (Q, V, \delta, q_0, F)$, which orchestrates the core operations.
+
+\begin{itemize}
+    \item \textbf{States (Q):} $\{q_{start}, q_{partition}, q_{disembed}, q_{iterate}, q_{accept}\}$
+    \item \textbf{Variables (V):} \{Whole, N (Denominator), M (Numerator), PartitionedWhole, UnitFraction, Result\}
+    \item \textbf{Transition Function ($\delta$):} The function choreographs the sequence of core operations, moving from partitioning the whole, to disembedding the unit part, to iterating that part to form the final fraction.
+\end{itemize}
+
+The sequence is not merely a list of steps but a structured, goal-directed procedure.
+
+\subsection{Metamorphic Accommodation: Recursive Partitioning}
+A pivotal event in Jason's development was his spontaneous invention of a method for finding a fraction of a fraction (e.g., $\frac{3}{4}$ of $\frac{1}{4}$ of a stick), an act Steffe identifies as a "metamorphic accommodation" \autocite{steffe2003construction}. This signaled the construction of a new operation: \textit{recursive partitioning}. Jason could take the \textit{result} of one partitioning operation and use it as the \textit{input} for a subsequent one.
+
+This cognitive leap is modeled by a second automaton, the Fractional Composition Scheme (FCS). The architecture of the FCS demonstrates a fractal-like elaboration: it is a strategic shell that calls the entire PFS automaton as a subroutine. This nesting of a previously constructed scheme to solve a more complex problem is the formal analogue of the psychological process of accommodation. The critical step in the FCS automaton is the state $q_{accommodate}$, where the output of the first PFS execution (the intermediate fraction) is formally re-assigned as the input "Whole" for the second PFS execution.
+
+\section{The Formal Automaton Model}
+
+The psychological descriptions are translated into a formal Python implementation. The `ContinuousUnit` class represents the cognitive material, tracking not only its numerical quantity but also its operational history, thereby capturing the constructed meaning of the number. The core ENS operations are static methods, and the schemes (PFS and FCS) are implemented as state machine classes.
+
+\subsection{Python Implementation}
+\begin{minted}[frame=lines, fontsize=\small, linenos]{python}
+import fractions
+from typing import List, Tuple
+
+class ContinuousUnit:
+    """Represents a continuous quantity, tracking both value and history."""
+    def __init__(self, value: fractions.Fraction, history: str = "Reference Unit"):
+        self.value = value
+        self.history = history
+    def __repr__(self):
+        return f"Unit({self.value} derived from: '{self.history}')"
+
+class ENSOperations:
+    """The iterative core operations derived from Jason's ENS."""
+    @staticmethod
+    def partition(unit: ContinuousUnit, n: int) -> List[ContinuousUnit]:
+        new_value = unit.value / n
+        new_history = f"1/{n} part of ({unit.history})"
+        return [ContinuousUnit(new_value, new_history) for _ in range(n)]
+    @staticmethod
+    def disembed(partitioned_whole: List[ContinuousUnit]) -> ContinuousUnit:
+        return partitioned_whole[0]
+    @staticmethod
+    def iterate(unit: ContinuousUnit, m: int) -> ContinuousUnit:
+        new_value = unit.value * m
+        new_history = f"{m} iterations of [{unit.history}]"
+        return ContinuousUnit(new_value, new_history)
+
+class PartitiveFractionalScheme:
+    """[SHELL::PFS] Automaton model for constructing proper fractions."""
+    def __init__(self):
+        self.F = {'q_accept'}
+        self.V = {}
+        self.trace = []
+    def run(self, whole: ContinuousUnit, num: int, den: int) -> ContinuousUnit:
+        # Simplified for brevity: direct implementation of the state logic
+        self.trace.append("State: q_partition -> Partitioning Whole")
+        partitioned = ENSOperations.partition(whole, den)
+        self.trace.append("State: q_disembed -> Disembedding Unit Fraction")
+        unit_fraction = ENSOperations.disembed(partitioned)
+        self.trace.append(f"State: q_iterate -> Iterating Unit Fraction {num} times")
+        result = ENSOperations.iterate(unit_fraction, num)
+        self.trace.append("State: q_accept -> PFS Complete")
+        return result
+
+class FractionalCompositionScheme:
+    """[SHELL::FCS] Models recursive partitioning by nesting the PFS."""
+    def __init__(self):
+        self.F = {'q_accept'}
+        self.PFS = PartitiveFractionalScheme() 
+        self.trace = []
+    def run(self, whole: ContinuousUnit, outer: Tuple[int, int], inner: Tuple[int, int]) -> ContinuousUnit:
+        A, B = outer
+        C, D = inner
+        self.trace.append("State: q_inner_PFS -> Calculating inner fraction")
+        intermediate_result = self.PFS.run(whole, C, D)
+        self.trace.append("State: q_accommodate -> METAMORPHIC ACCOMMODATION")
+        new_whole = intermediate_result
+        self.trace.append("State: q_outer_PFS -> Calculating outer fraction")
+        final_result = self.PFS.run(new_whole, A, B)
+        self.trace.append("State: q_accept -> FCS Complete")
+        return final_result
+\end{minted}
+
+\subsection{Execution and Analysis}
+Running the model replicates Jason's cognitive choreography. 
+
+\textbf{Test 1: Partitive Fractional Scheme ($\frac{3}{7}$ of a Whole)}
+\begin{verbatim}
+Execution Trace:
+State: q_partition -> Partitioning Whole
+State: q_disembed -> Disembedding Unit Fraction
+State: q_iterate -> Iterating Unit Fraction 3 times
+State: q_accept -> PFS Complete
+
+RESULT: Unit(3/7 derived from: '3 iterations of [1/7 part of (Reference Unit)]')
+\end{verbatim}
+
+\textbf{Test 2: Fractional Composition Scheme ($\frac{3}{4}$ of $\frac{1}{4}$ of a Whole)}
+\begin{verbatim}
+Execution Trace:
+State: q_inner_PFS -> Calculating inner fraction
+State: q_accommodate -> METAMORPHIC ACCOMMODATION
+State: q_outer_PFS -> Calculating outer fraction
+State: q_accept -> FCS Complete
+
+RESULT: Unit(3/16 derived from: '3 iterations of 
+    [1/4 part of (1 iterations of [1/4 part of (Reference Unit)])]')
+\end{verbatim}
+The execution trace makes the temporal unfolding of Jason's scheme explicit. The result of Test 2 is not the bare quantity $\frac{3}{16}$, but a quantity whose meaning is constituted by its operational history. The output string is a formal record of the nested operations that produced the result, making the constructed nature of the concept transparent. This aligns with a pragmatist view where meaning is rooted in practice.
+
+\section{Conclusion: From Psychological Description to Pragmatic Specification}
+This project successfully translates the psychological description of Jason's mathematical schemes into a formal, executable automaton. This translation re-keys radical constructivism into a pragmatic framework. While constructivism focuses on modeling the student's viable, private reality, this formal model provides a public, verifiable specification of a cognitive practice.
+
+The automaton does not claim to be a "true" picture of Jason's mind. Rather, it is a formal model of the \textit{choreography of his reasoning}. The execution trace makes the inferential steps of his practice explicit. The "metamorphic accommodation" of recursive partitioning is modeled not as an inexplicable insight, but as a structural change in the automaton: the nesting of one goal-directed procedure within another.
+
+In this pragmatic key, understanding a concept like "$\frac{3}{16}$" is not about having a mental representation that corresponds to reality, but about possessing the structured, operational capacity to produce it. The automaton's final output, with its embedded history, is a formal representation of this capacity. It is a piece of "knowing-that" which explicitly codifies the "knowing-how" of Jason's mathematical practice.
+
+\printbibliography
+
+\section*{Appendix: Summary of Jason's Mathematical Schemes}
+
+\begin{table}[h!]
+\centering
+\caption{Synthesis of Jason's Mathematical Schemes and Constituent Operations}
+\label{tab:schemes}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Scheme / Operational State} & \textbf{Triggering Situation (Input)} & \textbf{Core Mental Operations (Transition Function)} & \textbf{Result (Output)} \\ \midrule
+\textbf{Explicitly Nested} & Whole-number tasks requiring & - Iterating composite units. & A numerical quantity \\
+\textbf{Number Sequence (ENS)} & part-whole reasoning. & - Disembedding a numerical part. & or relation. \\
+ & & - Coordinating three levels of units. & \\ \addlinespace
+\textbf{Partitive Fractional} & Task to construct a proper & - Partitioning the whole into n parts. & A new continuous quantity \\
+\textbf{Scheme} & fraction ($\frac{m}{n}$) of a whole. & - Disembedding one unit part ($\frac{1}{n}$). & representing the fraction $\frac{m}{n}$. \\
+ & & - Iterating the unit part m times. & \\ \addlinespace
+\textbf{Recursive Partitioning} & Novel task to find a fraction & - Taking the result of a partitioning operation & A new unit fraction related \\
+\textbf{Operation} & of a fractional part. & as the input for a subsequent partition. & to the whole via composition. \\ \addlinespace
+\textbf{Fractional Composition} & Generalized task to find a & - Stabilized application of the recursive & A new fractional quantity \\
+\textbf{Scheme} & fraction of a fraction. & partitioning operation. & representing the product. \\ \bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\newpage
+\subsection*{BibTeX Entries}
+\begin{verbatim}
+@article{steffe2002new,
+  title={A new hypothesis concerning children's fractional knowledge},
+  author={Steffe, Leslie P},
+  journal={Journal of Mathematical Behavior},
+  volume={20},
+  number={3},
+  pages={267--307},
+  year={2002},
+  publisher={Elsevier},
+  note = {Accessed through CEPA.INFO}
+}
+
+@article{steffe2003construction,
+  title={On the construction of learning trajectories of children: The case of commensurate fractions},
+  author={Steffe, Leslie P},
+  journal={Monographs of the Journal for Research in Mathematics Education},
+  pages={1--26},
+  year={2003},
+  publisher={National Council of Teachers of Mathematics},
+  note = {Accessed via ResearchGate/ERIC}
+}
+
+@incollection{steffe2004fractional,
+  title={Fractional commensurate, composition, and adding schemes: Learning trajectories of Jason and Laura: Grade 5},
+  author={Steffe, Leslie P},
+  booktitle={Children's fractional knowledge},
+  editor={Olive, John and Tzur, Ron},
+  pages={1--60},
+  year={2004},
+  publisher={American Educational Research Association},
+  note = {Accessed via ResearchGate}
+}
+
+@book{steffe2014childrens,
+  title={Children's number sequences: An explanation of Steffe's constructs and an extrapolation to rational numbers of arithmetic},
+  author={Steffe, Leslie P},
+  year={2014},
+  publisher={Unpublished manuscript, available via CiteSeerX and ResearchGate},
+  note = {Originally from 1994}
+}
+
+@article{von2005contradictions,
+  title={The contradictions in the constructivist discourse},
+  author={Rowlands, Stuart},
+  journal={Philosophy of Mathematics Education Journal},
+  volume={14},
+  year={2005},
+  note = {Citing von Glasersfeld}
+}
+
+@inproceedings{steffe2014teaching,
+  title={Teaching experiment methodology: Underlying principles and essential elements},
+  author={Steffe, Leslie P and Thompson, Patrick W},
+  booktitle={Proceedings of the 24th annual meeting of the North American Chapter of the International Group for the Psychology of Mathematics Education},
+  year={2014},
+  note = {Accessed via ResearchGate, originally published 2000},
+  publisher={ERIC Clearinghouse for Science, Mathematics, and Environmental Education}
+}
+
+\end{verbatim}
+
+\end{document}

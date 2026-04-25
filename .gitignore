@@ -1,0 +1,16 @@
+# Course materials — not for public distribution
+N101coursenotes_f24.md
+N101coursenotes_f24.docx
+N101_Student_Packet.pdf
+
+# Experimental prototype — preserved locally, not in git
+# See n101_bot/FOREST.md for the architecture this prototype sketched
+n101_bot/
+
+# Snapshots of the pre-submodule Prolog code — superseded by Prolog/ submodule
+Prolog.zip
+OldProlog.zip
+
+# Editor / OS / agent metadata
+.DS_Store
+.claude/

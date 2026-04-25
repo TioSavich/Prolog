@@ -1,0 +1,30 @@
+# LoRP pipeline configuration.
+#
+# Swap `backend` and `model` here to retarget a different LLM runtime or
+# different open-source model, without editing code. Every voice reads from
+# this file via lorp.config at startup.
+
+backend: ollama            # one of: ollama, openai_compat
+endpoint: http://localhost:11434      # Ollama default; ignored when backend != openai_compat
+timeout_seconds: 600
+
+voices:
+  immanent:
+    # Phase 1 default. DeepSeek-R1 because immanent decomposition is
+    # careful analytical work and the <think> trace is useful scaffolding.
+    # Swap to qwen3:32b or gemma4:4b once pulled.
+    model: deepseek-r1:14b
+    temperature: 0.0
+    max_tokens: 8192
+    think_mode: true
+    # If the model emits Prolog after a <think>...</think> block,
+    # the Ollama adapter will split them. Setting this to false keeps the
+    # full response as one blob.
+
+output:
+  base_dir: ./immanent_output
+
+corpus_hook:
+  # Where to accumulate (passage, axioms, verdicts) quadruples for a future
+  # training corpus. See docs/superpowers/specs/2026-04-24-* for the plan.
+  index_path: ./training_corpus/index.jsonl

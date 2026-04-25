@@ -21,16 +21,20 @@
 :- use_module(event_log).
 :- use_module(more_machine_learner, []).
 :- use_module(tension_dynamics).
+:- use_module(strategies(hermeneutic_calculator)).
+:- use_module(strategies(visualization)).
 
 % Route definitions
 :- http_handler(root(api/compute), handle_compute, []).
 :- http_handler(root(api/strategies), handle_strategies, []).
+:- http_handler(root(api/strategy/run), handle_strategy_run, []).
 :- http_handler(root(api/knowledge), handle_knowledge, []).
 :- http_handler(root(api/tension), handle_tension, []).
 :- http_handler(root(api/reset), handle_reset, []).
 :- http_handler(root(bridge), serve_bridge, []).
 :- http_handler(root(fractal), serve_fractal, []).
 :- http_handler(root(landing), serve_landing, []).
+:- http_handler(root(strategies), serve_strategy_page, [prefix]).
 :- http_handler(root(assets), serve_zeeman_asset, [prefix]).
 :- http_handler(root(.), serve_frontend, [prefix]).
 
@@ -105,6 +109,127 @@ handle_strategies(Request) :-
     (   oracle_server:list_available_strategies(Op, Strategies)
     ->  reply_json_dict(_{operation: Op, strategies: Strategies})
     ;   reply_json_dict(_{operation: Op, strategies: []})
+    ).
+
+%!  handle_strategy_run(+Request) is det.
+%
+%   POST /api/strategy/run
+%   Body: {"strategy": "Chunking", "op": "+", "a": 46, "b": 37}
+%   Returns: {"success": bool, "result": Int, "jumps": [...], "history": [...]}
+%
+%   Directly executes a named strategy via hermeneutic_calculator:calculate/6
+%   without going through the ORR cycle. This is the authoritative path for
+%   strategy-specific visualization.
+handle_strategy_run(Request) :-
+    cors_enable(Request, [methods([post])]),
+    http_read_json_dict(Request, Input),
+    atom_string(Strategy, Input.strategy),
+    atom_string(OpAtom, Input.op),
+    Op = OpAtom,
+    A = Input.a,
+    B = Input.b,
+    (   catch(
+            hermeneutic_calculator:calculate(A, Op, B, Strategy, Result, History),
+            Error,
+            (   format(user_error,
+                       'strategy_run error: ~w~n', [Error]),
+                fail
+            )
+        )
+    ->  ( is_list(History)
+        -> visualization:strategy_jumps(Strategy, History, Jumps),
+           visualization:history_to_dicts(Strategy, History, HistoryDicts),
+           reply_json_dict(_{
+               success: true,
+               strategy: Strategy,
+               op: Op,
+               a: A, b: B,
+               result: Result,
+               jumps: Jumps,
+               history: HistoryDicts
+           })
+        ;  % Pre-existing dispatcher bug: hermeneutic_calculator binds
+           % History to a non-list (e.g., Remainder for CBO Division and IDP).
+           % Surface honestly rather than crash.
+           term_to_atom(History, HAtom),
+           reply_json_dict(_{
+               success: false,
+               strategy: Strategy,
+               op: Op,
+               a: A, b: B,
+               result: Result,
+               jumps: [],
+               history: [],
+               error: 'dispatcher does not return a step history for this strategy',
+               raw_history_value: HAtom
+           })
+        )
+    ;   reply_json_dict(_{
+            success: false,
+            strategy: Strategy,
+            op: Op,
+            a: A, b: B,
+            error: 'strategy execution failed'
+        }, [status(400)])
+    ).
+
+%!  serve_strategy_page(+Request) is det.
+%
+%   GET /strategies/<name>.html — serves files from more-zeeman/strategies/
+%   with a <base> tag pointing at /assets/strategies/ so relative CSS loads.
+serve_strategy_page(Request) :-
+    cors_enable(Request, [methods([get])]),
+    memberchk(path(Path), Request),
+    ( Path == '/strategies' ; Path == '/strategies/' ),
+    !,
+    source_file(serve_bridge(_), ThisFile),
+    file_directory_name(ThisFile, PrologDir),
+    file_directory_name(PrologDir, RepoRoot),
+    atom_concat(RepoRoot, '/more-zeeman/strategies/index.html', IndexPath),
+    ( exists_file(IndexPath) ->
+        read_file_to_string(IndexPath, HTML, []),
+        inject_strategies_base_tag(HTML, Patched),
+        serve_html_string(Patched)
+    ;
+        reply_json_dict(_{error: 'no index.html'}, [status(404)])
+    ).
+serve_strategy_page(Request) :-
+    cors_enable(Request, [methods([get])]),
+    memberchk(path(Path), Request),
+    atom_concat('/strategies/', RelPath, Path),
+    \+ sub_atom(RelPath, _, _, _, '..'),
+    source_file(serve_bridge(_), ThisFile),
+    file_directory_name(ThisFile, PrologDir),
+    file_directory_name(PrologDir, RepoRoot),
+    atomic_list_concat([RepoRoot, '/more-zeeman/strategies/', RelPath], FullPath),
+    ( exists_file(FullPath) ->
+        ( atom_concat(_, '.html', RelPath) ->
+            read_file_to_string(FullPath, HTML, []),
+            inject_strategies_base_tag(HTML, Patched),
+            serve_html_string(Patched)
+        ;
+            % Non-HTML assets served directly from same folder
+            asset_content_type(RelPath, CT),
+            format('Content-type: ~w~n~n', [CT]),
+            setup_call_cleanup(
+                open(FullPath, read, In, [type(binary)]),
+                copy_stream_data(In, current_output),
+                close(In))
+        )
+    ;
+        reply_json_dict(_{error: 'strategy page not found', path: RelPath},
+                        [status(404)])
+    ).
+
+inject_strategies_base_tag(HTML, Patched) :-
+    ( sub_string(HTML, Before, _, _, "<head>") ->
+        HeadEnd is Before + 6,
+        sub_string(HTML, 0, HeadEnd, _, Prefix),
+        sub_string(HTML, HeadEnd, _, 0, Suffix),
+        atomic_list_concat([Prefix,
+            '\n<base href="/strategies/">\n', Suffix], Patched)
+    ;
+        Patched = HTML
     ).
 
 %!  handle_knowledge(+Request) is det.

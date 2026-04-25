@@ -22,28 +22,24 @@
  * clauses at the appropriate priority level.
  */
 :- module(incompatibility_semantics,
-          [ proves/1, is_recollection/2, incoherent/1, set_domain/1, current_domain/1
+          [ proves/1, safe_proves/2, is_recollection/2, incoherent/1, normalize/2
+          , set_domain/1, current_domain/1
+          , enable_axiom_pack/1, disable_axiom_pack/1, enabled_axiom_pack/1, with_axiom_packs/2
           , product_of_list/2
           , s/1, o/1, n/1, 'comp_nec'/1, 'exp_nec'/1, 'exp_poss'/1, 'comp_poss'/1, 'neg'/1
-          , highlander/2, bounded_region/4, equality_iterator/3
-          % Geometry
-          , square/1, rectangle/1, rhombus/1, parallelogram/1, trapezoid/1, kite/1, quadrilateral/1
-          , r1/1, r2/1, r3/1, r4/1, r5/1, r6/1
-          % Number Theory (Euclid)
-          , prime/1, composite/1, divides/2, is_complete/1
-          % Fractions (Jason.pl)
-          , 'rdiv'/2, iterate/3, partition/3, normalize/2
+          , bounded_region/4, equality_iterator/3
           % Normative Crisis Detection
           , prohibition/2, normative_crisis/2, check_norms/1, current_domain_context/1
           ]).
 
-:- use_module(strategies(hermeneutic_calculator)).
 :- use_module(formalization(grounded_arithmetic), [incur_cost/1]).
+:- use_module(library(time), [call_with_time_limit/2]).
 :- reexport(pml(pml_operators)).
 
 :- discontiguous proves_impl/2.
 :- discontiguous is_incoherent/1.
 :- discontiguous check_norms/1.
+:- dynamic axiom_pack_enabled/1.
 
 % =================================================================
 % Operators
@@ -60,6 +56,81 @@
 % =================================================================
 % Engine Helpers
 % =================================================================
+
+default_axiom_pack(robinson).
+default_axiom_pack(geometry).
+default_axiom_pack(number_theory).
+default_axiom_pack(eml).
+default_axiom_pack(domains).
+
+initialize_axiom_packs :-
+    retractall(axiom_pack_enabled(_)),
+    forall(default_axiom_pack(Pack),
+           assertz(axiom_pack_enabled(Pack))).
+
+known_axiom_pack(Pack) :-
+    default_axiom_pack(Pack),
+    !.
+known_axiom_pack(Pack) :-
+    throw(error(domain_error(axiom_pack, Pack), _)).
+
+enable_axiom_pack(Pack) :-
+    known_axiom_pack(Pack),
+    (   axiom_pack_enabled(Pack)
+    ->  true
+    ;   assertz(axiom_pack_enabled(Pack))
+    ).
+
+disable_axiom_pack(Pack) :-
+    known_axiom_pack(Pack),
+    retractall(axiom_pack_enabled(Pack)).
+
+enabled_axiom_pack(Pack) :-
+    axiom_pack_enabled(Pack).
+
+set_enabled_axiom_packs(Packs) :-
+    retractall(axiom_pack_enabled(_)),
+    forall(member(Pack, Packs),
+           assertz(axiom_pack_enabled(Pack))).
+
+normalize_axiom_packs(all, Packs) :-
+    !,
+    findall(Pack, default_axiom_pack(Pack), Packs).
+normalize_axiom_packs(Packs, Normalized) :-
+    is_list(Packs),
+    !,
+    maplist(known_axiom_pack, Packs),
+    sort(Packs, Normalized).
+normalize_axiom_packs(Packs, _) :-
+    throw(error(type_error(list, Packs), _)).
+
+with_axiom_packs(Packs, Goal) :-
+    normalize_axiom_packs(Packs, Normalized),
+    findall(Pack, axiom_pack_enabled(Pack), Saved),
+    setup_call_cleanup(
+        set_enabled_axiom_packs(Normalized),
+        call(Goal),
+        set_enabled_axiom_packs(Saved)
+    ).
+
+option_value(Key, [Option|_], Value) :-
+    Option =.. [Key, Value],
+    !.
+option_value(Key, [_|Rest], Value) :-
+    option_value(Key, Rest, Value).
+
+safe_proves(Sequent, Options) :-
+    (   option_value(time_limit, Options, TimeLimit)
+    ->  true
+    ;   TimeLimit = 2
+    ),
+    (   option_value(packs, Options, Packs)
+    ->  SafeGoal = with_axiom_packs(Packs, proves(Sequent))
+    ;   SafeGoal = proves(Sequent)
+    ),
+    catch(call_with_time_limit(TimeLimit, SafeGoal),
+          time_limit_exceeded,
+          fail).
 
 select(X, [X|T], T).
 select(X, [H|T], [H|R]) :- select(X, T, R).
@@ -160,17 +231,34 @@ proves_impl((P => C), H) :- select(nec(X), C, C1), !, ( proves_impl((P => C1), H
 % PML operators (s/1, o/1, n/1, neg/1, comp_nec/1, etc.) now live
 % in pml/pml_operators.pl and are re-exported via :- reexport(pml(pml_operators)).
 
-square(_). rectangle(_). rhombus(_). parallelogram(_). trapezoid(_). kite(_). quadrilateral(_).
-r1(_). r2(_). r3(_). r4(_). r5(_). r6(_).
-prime(_). composite(_). divides(_, _). is_complete(_).
+% These predicates are syntactic placeholders only. They must not succeed as
+% raw goals, otherwise the engine can "prove" domain facts without going
+% through the sequent rules.
+square(_) :- fail.
+rectangle(_) :- fail.
+rhombus(_) :- fail.
+parallelogram(_) :- fail.
+trapezoid(_) :- fail.
+kite(_) :- fail.
+quadrilateral(_) :- fail.
+r1(_) :- fail.
+r2(_) :- fail.
+r3(_) :- fail.
+r4(_) :- fail.
+r5(_) :- fail.
+r6(_) :- fail.
+prime(_) :- fail.
+composite(_) :- fail.
+divides(_, _) :- fail.
+is_complete(_) :- fail.
 analyze_euclid_number(_, _).
-rdiv(_, _). iterate(_, _, _). partition(_, _, _).
-
-highlander([Result], Result) :- !.
-highlander([], _) :- !, fail.
-highlander([_|Rest], Result) :- highlander(Rest, Result).
+rdiv(_, _) :- fail.
+iterate(_, _, _) :- fail.
+partition(_, _, _) :- fail.
 
 bounded_region(I, L, U, R) :- ( number(I), I >= L, I =< U -> R = in_bounds(I) ; R = out_of_bounds(I) ).
 
 equality_iterator(T, T, T) :- !.
 equality_iterator(C, T, R) :- C < T, C1 is C + 1, equality_iterator(C1, T, R).
+
+:- initialization(initialize_axiom_packs).

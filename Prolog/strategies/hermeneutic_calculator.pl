@@ -118,6 +118,8 @@ calculate(M, -, S, 'Decomposition', Result, History) :-
     run_decomposition(M, S, Result, History).
 calculate(M, -, S, 'Rounding', Result, History) :-
     run_sub_rounding(M, S, Result, History).
+calculate(M, -, S, 'Sub Rounding', Result, History) :-
+    run_sub_rounding(M, S, Result, History).
 calculate(M, -, S, 'Sliding', Result, History) :-
     run_sliding(M, S, Result, History).
 calculate(M, -, S, 'Chunking A', Result, History) :-
