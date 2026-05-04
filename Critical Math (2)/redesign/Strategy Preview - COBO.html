@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>COBO — preview of redesigned strategy page</title>
+<link rel="stylesheet" href="strategy_shell.css">
+<style>
+  /* preview-only banner (not part of the drop-in stylesheet) */
+  .preview-banner {
+    max-width: 820px;
+    margin: 0 auto 1.2rem;
+    padding: 0.7rem 1.2rem;
+    background: rgba(232,168,76,0.08);
+    border: 1px solid #3a3428;
+    border-left: 3px solid #e8a84c;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.76rem;
+    color: #c4bea8;
+    line-height: 1.55;
+  }
+  .preview-banner b { color: #e8a84c; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; }
+  .preview-banner .x { color: #8a8470; }
+</style>
+</head>
+<body>
+
+<div class="preview-banner">
+  <b>preview</b> · this is what <span class="x">SAR_ADD_COBO.html</span> will look like after you drop <span class="x">strategy_shell.css</span> into the strategies/ folder. The HTML below is byte-identical to your existing page (plus a seeded mock result since there's no Prolog server here). Your .pl files, strategy_viz.js, and every strategy .html stay unchanged.
+</div>
+
+<div class="container">
+  <p class="back"><a href="Strategies Index.html">← All strategies</a></p>
+  <h1>COBO: Counting On by Bases and Ones</h1>
+  <p class="meta">Computed by <code>strategies/math/sar_add_cobo.pl</code> via <code>POST /api/strategy/run</code>. Each tens-jump is +10 (one base); each ones-jump is +1.</p>
+
+  <div class="inputs">
+    <label>Addend 1: <input type="number" id="a1" value="46"></label>
+    <label>Addend 2: <input type="number" id="a2" value="37"></label>
+    <button id="go">Calculate and Visualize</button>
+  </div>
+
+  <h2>Result</h2>
+  <div id="out"></div>
+
+  <h2>Number-line Diagram</h2>
+  <svg id="diagram" width="700" height="280"></svg>
+
+  <h2>Step Trace (from Prolog)</h2>
+  <ol id="steps" class="step-list"></ol>
+</div>
+
+<!-- In production: <script src="strategy_viz.js"></script> then wireStrategyPage(...). -->
+<!-- Here we inline a seeded render so you can see the styled output without the Prolog server. -->
+<script>
+(function(){
+  // ─── Minimal copy of drawNumberLine from strategy_viz.js ──────────
+  function drawNumberLine(svgId, startVal, jumps, finalVal) {
+    const svg = document.getElementById(svgId);
+    if (!svg) return;
+    svg.innerHTML = '';
+    const w = parseFloat(svg.getAttribute('width'));
+    const h = parseFloat(svg.getAttribute('height'));
+    const startX = 50, endX = w - 50;
+    const y = h / 2 + 30;
+    const tickH = 10, labelOff = 20;
+    const jumpHLarge = 60, jumpHSmall = 40, jumpLabelOff = 15, arrow = 5;
+    const breakThreshold = 40;
+
+    appendLine(svg, startX, y, endX, y, 'number-line-tick');
+    appendLine(svg, startX, y - tickH/2, startX, y + tickH/2, 'number-line-tick');
+    appendText(svg, startX, y + labelOff, '0', 'number-line-label');
+
+    let minV = startVal, maxV = finalVal;
+    jumps.forEach(j => { minV=Math.min(minV,j.from,j.to); maxV=Math.max(maxV,j.from,j.to); });
+    let dispStart=0, scaleStartX=startX, drawBreak=false;
+    if (Math.min(startVal,minV) > breakThreshold) {
+      dispStart = minV - 10; scaleStartX = startX + 30; drawBreak = true;
+      appendBreakSymbol(svg, scaleStartX-15, y);
+    }
+    const dispEnd = maxV + 10;
+    const range = Math.max(dispEnd - dispStart, 1);
+    const scale = (endX - scaleStartX) / range;
+    function valToX(v){ if(v<dispStart&&drawBreak) return scaleStartX-10; const sx=scaleStartX+(v-dispStart)*scale; return Math.min(sx,endX); }
+    function tickAndLabel(v, idx){
+      const x = valToX(v);
+      if (x < scaleStartX-5 && v!==0) return;
+      appendLine(svg, x, y-tickH/2, x, y+tickH/2, 'number-line-tick');
+      const off = labelOff * (idx%2===0 ? 1 : -1.5);
+      appendText(svg, x, y+off, v.toString(), 'number-line-label');
+    }
+    tickAndLabel(startVal, 0);
+    let lastTo = startVal;
+    jumps.forEach((j, idx) => {
+      const x1=valToX(j.from), x2=valToX(j.to);
+      if (x1>=endX-1 && x2>=endX-1) return;
+      const isLarge = Math.abs(j.to-j.from) >= 10;
+      const jh = isLarge ? jumpHLarge : jumpHSmall;
+      const stagger = idx%2===0 ? 0 : jh*0.5;
+      drawArc(svg, x1, y, x2, jh+stagger);
+      appendText(svg, (x1+x2)/2, y-(jh+stagger)-jumpLabelOff, j.label, 'jump-label');
+      tickAndLabel(j.to, idx+1);
+      lastTo = j.to;
+    });
+    if (finalVal !== lastTo && valToX(finalVal) <= endX) tickAndLabel(finalVal, jumps.length+1);
+    const endLineX = valToX(dispEnd);
+    appendPath(svg, `M ${endLineX-arrow} ${y-arrow/2} L ${endLineX} ${y} L ${endLineX-arrow} ${y+arrow/2} Z`, 'number-line-arrow');
+    appendCircle(svg, valToX(startVal), y, 4, 'stopping-point');
+    appendText(svg, valToX(startVal), y+labelOff*1.5, 'Start', 'number-line-label');
+  }
+  function appendLine(svg,x1,y1,x2,y2,cls){const e=document.createElementNS('http://www.w3.org/2000/svg','line');e.setAttribute('x1',x1);e.setAttribute('y1',y1);e.setAttribute('x2',x2);e.setAttribute('y2',y2);e.setAttribute('class',cls);svg.appendChild(e);}
+  function appendText(svg,x,y,t,cls){const e=document.createElementNS('http://www.w3.org/2000/svg','text');e.setAttribute('x',x);e.setAttribute('y',y);e.setAttribute('class',cls);e.setAttribute('text-anchor','middle');e.setAttribute('font-size','12px');e.textContent=t;svg.appendChild(e);}
+  function appendBreakSymbol(svg,x,y){const off=4,h=8;appendLine(svg,x-off,y-h,x+off,y+h,'number-line-break');appendLine(svg,x+off,y-h,x-off,y+h,'number-line-break');}
+  function appendPath(svg,d,cls){const e=document.createElementNS('http://www.w3.org/2000/svg','path');e.setAttribute('d',d);e.setAttribute('class',cls);svg.appendChild(e);}
+  function appendCircle(svg,cx,cy,r,cls){const e=document.createElementNS('http://www.w3.org/2000/svg','circle');e.setAttribute('cx',cx);e.setAttribute('cy',cy);e.setAttribute('r',r);e.setAttribute('class',cls);svg.appendChild(e);}
+  function drawArc(svg,x1,y1,x2,arcH){const cx=(x1+x2)/2,cy=y1-arcH;appendPath(svg,`M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y1}`,'jump-arrow');const dx=x2-cx,dy=y1-cy;const ang=Math.atan2(dy,dx)*180/Math.PI;const head=document.createElementNS('http://www.w3.org/2000/svg','path');head.setAttribute('class','jump-arrow-head');head.setAttribute('d','M 0 0 L 5 2.5 L 5 -2.5 Z');head.setAttribute('transform',`translate(${x2}, ${y1}) rotate(${ang+180})`);svg.appendChild(head);}
+
+  // ─── Mock Prolog result — what the API would return for 46 + 37 via COBO ───
+  function mockRun(a, b) {
+    const tens = Math.floor(b / 10);
+    const ones = b - tens * 10;
+    const jumps = [];
+    const history = [];
+    let cur = a;
+    history.push({ state: `q_init(a=${a}, b=${b})`, interpretation: `Start: counting on from ${a} by bases (${tens} tens), then ones (${ones} ones).` });
+    for (let i = 0; i < tens; i++) {
+      const next = cur + 10;
+      jumps.push({ from: cur, to: next, label: '+10' });
+      history.push({ state: `q_count_tens(${cur}→${next})`, interpretation: `Jump one base: ${cur} + 10 → ${next}.` });
+      cur = next;
+    }
+    for (let i = 0; i < ones; i++) {
+      const next = cur + 1;
+      jumps.push({ from: cur, to: next, label: '+1' });
+      history.push({ state: `q_count_ones(${cur}→${next})`, interpretation: `Jump one one: ${cur} + 1 → ${next}.` });
+      cur = next;
+    }
+    history.push({ state: `q_accept(result=${cur})`, interpretation: `Halt. ${a} + ${b} = ${cur}.` });
+    return { success: true, strategy: 'COBO', a, b, result: cur, jumps, history };
+  }
+
+  function run() {
+    const a = parseInt(document.getElementById('a1').value, 10);
+    const b = parseInt(document.getElementById('a2').value, 10);
+    const out = document.getElementById('out');
+    const steps = document.getElementById('steps');
+    const svg = document.getElementById('diagram');
+    if (isNaN(a) || isNaN(b)) {
+      out.innerHTML = '<div class="error-banner">Please enter valid integers for both operands.</div>';
+      return;
+    }
+    const data = mockRun(a, b);
+    out.innerHTML = `<p><strong>${data.a} + ${data.b} = ${data.result}</strong> (via ${data.strategy})</p>` +
+                    `<p class="meta">${data.jumps.length} jump(s), ${data.history.length} step(s) total. <em style="color:#8a8470">(preview — real page calls Prolog)</em></p>`;
+    steps.innerHTML = '';
+    for (const s of data.history) {
+      const li = document.createElement('li');
+      li.textContent = `${s.state}  —  ${s.interpretation}`;
+      steps.appendChild(li);
+    }
+    const trajStart = data.jumps.length > 0 ? data.jumps[0].from : a;
+    drawNumberLine('diagram', trajStart, data.jumps, data.result);
+  }
+  document.getElementById('go').addEventListener('click', run);
+  // Auto-run on load so the preview shows something
+  run();
+})();
+</script>
+</body>
+</html>

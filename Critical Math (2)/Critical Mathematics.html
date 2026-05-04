@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="critical-math">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Critical Mathematics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #110f08;
+      --surface: #1a1710;
+      --surface-raised: #242014;
+      --border: #3a3428;
+      --text: #d4cfc0;
+      --muted: #8a8470;
+      --tension: #d4634a;
+      --release: #5b9eae;
+      --snap: #e8a84c;
+      --star: #e8a84c;
+      --accent: #e8a84c;
+      --title-font: 'IBM Plex Serif', Georgia, serif;
+      --body-font: 'IBM Plex Serif', Georgia, serif;
+      --mono: 'IBM Plex Mono', monospace;
+      --density: 1;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { background: var(--bg); color: var(--text); font-family: var(--body-font); font-size: 17px; line-height: 1.72; -webkit-font-smoothing: antialiased; }
+    body { max-width: 760px; margin: 0 auto; padding: calc(3rem * var(--density)) 1.5rem calc(5rem * var(--density)); }
+
+    /* top bar */
+    .top-bar { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:0.5rem; }
+    .brand { font-family: var(--mono); font-size:0.72rem; letter-spacing:0.18em; color:var(--muted); text-transform:uppercase; }
+    .brand b { color: var(--accent); font-weight:500; }
+
+    /* NO! opening */
+    .opening { margin: 2rem 0 3rem; text-align:center; position:relative; }
+    .no-word {
+      font-family: var(--title-font);
+      font-weight: 700;
+      font-style: italic;
+      font-size: clamp(5rem, 18vw, 10rem);
+      line-height: 0.9;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      display: inline-block;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.4s cubic-bezier(.2,.9,.2,1.2);
+    }
+    .no-word:hover { transform: scale(1.03) rotate(-1deg); }
+    .no-word.struck { color: var(--muted); transform: scale(0.82); opacity:0.65; }
+    .no-word.struck::after {
+      content: '';
+      position: absolute; left: -4%; right: -4%; top: 52%;
+      height: 4px; background: var(--tension);
+      transform-origin: left center;
+      animation: strike .32s cubic-bezier(.2,.9,.2,1) forwards;
+      border-radius: 2px;
+    }
+    @keyframes strike { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .no-hint {
+      font-family: var(--mono); font-size: 0.78rem; color: var(--muted);
+      margin-top: 1.25rem; opacity: 0.8;
+    }
+    .no-hint .k { color: var(--accent); }
+
+    /* Echoed NOs — fractal repetition appearing after first click */
+    .echo-row { margin-top: 2rem; display:flex; justify-content:center; align-items:baseline; gap: 0.4rem; flex-wrap:wrap; opacity:0; transition:opacity 0.6s ease; min-height:1.6em; }
+    .echo-row.on { opacity: 1; }
+    .echo {
+      font-family: var(--title-font);
+      font-style: italic; font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--accent);
+      position: relative; display:inline-block;
+    }
+    .echo.struck { color: var(--muted); }
+    .echo.struck::after {
+      content:''; position:absolute; left:-6%; right:-6%; top:52%;
+      height:2px; background: var(--tension); border-radius:2px;
+    }
+    .echo.e1 { font-size: 3.2rem; }
+    .echo.e2 { font-size: 2.0rem; }
+    .echo.e3 { font-size: 1.25rem; }
+    .echo.e4 { font-size: 0.85rem; }
+    .echo.e5 { font-size: 0.6rem; opacity: 0.7; }
+
+    /* essayistic body */
+    .essay { max-width: 640px; margin: 0 auto; }
+    .essay p { margin-bottom: 1.1em; text-wrap: pretty; }
+    .essay p.lead {
+      font-size: 1.2rem; line-height: 1.55;
+      font-family: 'Source Serif 4', var(--title-font);
+      color: var(--text);
+      font-style: italic;
+    }
+    .essay .drop::first-letter {
+      font-family: var(--title-font);
+      font-size: 3.4rem; font-weight: 700;
+      float:left; line-height: 0.85; padding-right: 0.5rem; padding-top: 0.4rem;
+      color: var(--accent);
+    }
+    .essay em.strike { text-decoration: line-through; text-decoration-color: var(--tension); text-decoration-thickness: 2px; color: var(--muted); font-style: normal; }
+    .essay strong { color: var(--text); font-weight: 600; }
+    .essay .pull {
+      border-left: 2px solid var(--accent);
+      padding: 0.4rem 0 0.4rem 1.2rem; margin: 1.8rem 0;
+      font-family: 'Source Serif 4', var(--title-font);
+      font-size: 1.05rem; font-style: italic; color: var(--text);
+    }
+    .section-mark {
+      display:flex; align-items:center; gap: 0.9rem; margin: 3.4rem 0 1.2rem;
+      font-family: var(--mono); text-transform:uppercase;
+      font-size: 0.72rem; letter-spacing: 0.2em; color: var(--muted);
+    }
+    .section-mark::before, .section-mark::after { content:''; flex:1; height:1px; background: var(--border); }
+    .section-mark .mk { color: var(--accent); opacity:0.8; }
+
+    h2.head {
+      font-family: var(--title-font);
+      font-size: 1.7rem; font-weight: 600;
+      color: var(--text);
+      margin: 0 0 1rem; letter-spacing: -0.01em;
+      text-align: center;
+    }
+    h2.head .q { color: var(--accent); font-style: italic; font-weight: 400; }
+
+    /* Module ladder — nested rings */
+    .modules { margin: 2.2rem 0 3rem; }
+    .module {
+      display: grid; grid-template-columns: 96px 1fr;
+      gap: 1.4rem; align-items: start;
+      padding: 1.2rem 0;
+      border-top: 1px solid var(--border);
+      text-decoration: none; color: inherit;
+      transition: background 0.25s, padding-left 0.25s;
+    }
+    .module:last-child { border-bottom: 1px solid var(--border); }
+    .module:hover { background: rgba(232,168,76,0.04); padding-left: 0.4rem; }
+    .module .glyph {
+      width: 96px; aspect-ratio: 1; position:relative;
+      display:flex; align-items:center; justify-content:center;
+    }
+    .module .glyph svg { width:100%; height:100%; overflow: visible; }
+    .module .label-row {
+      display:flex; align-items:baseline; gap: 0.9rem; flex-wrap:wrap;
+      margin-bottom: 0.35rem;
+    }
+    .module .idx {
+      font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+    .module .title {
+      font-family: var(--title-font); font-size: 1.2rem; font-weight: 600;
+      color: var(--text);
+    }
+    .module:hover .title { color: var(--accent); }
+    .module .sub { font-family: var(--mono); font-size:0.74rem; color: var(--muted); }
+    .module .desc { font-size: 0.95rem; color: #b8b0a0; line-height: 1.6; margin-top: 0.4rem; }
+    .module .state {
+      font-family: var(--mono); font-size: 0.68rem; margin-top: 0.6rem;
+      color: var(--muted); letter-spacing: 0.08em;
+    }
+    .module .state .live { color: var(--release); }
+    .module .state .wip { color: var(--tension); }
+    .module .state .open { color: var(--accent); }
+
+    /* Discourse buttons (re-used from shared.js aesthetic) */
+    .discourse-buttons { display:flex; gap:0.35rem; align-items:center; }
+    .discourse-btn {
+      font-family: var(--mono); font-size: 0.7rem;
+      background:none; border:1px solid var(--border); color: var(--muted);
+      padding: 0.22rem 0.55rem; border-radius: 3px; cursor:pointer;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .discourse-btn:hover { border-color: var(--muted); color: var(--text); }
+    .discourse-btn.active { border-color: var(--accent); color: var(--accent); }
+
+    /* Layered essay blocks */
+    .layer { display:none; }
+    .layer.on { display: block; }
+
+    /* Bibliography */
+    .biblio { margin: 3rem 0 1rem; }
+    .biblio ol { list-style: none; counter-reset: ref; padding: 0; }
+    .biblio li {
+      counter-increment: ref;
+      font-size: 0.88rem; line-height: 1.55; color: #b8b0a0;
+      padding: 0.75rem 0 0.75rem 2.4rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .biblio li::before {
+      content: counter(ref, decimal-leading-zero);
+      position: absolute; left: 0; top: 0.75rem;
+      font-family: var(--mono); font-size: 0.72rem; color: var(--accent);
+      letter-spacing: 0.1em;
+    }
+    .biblio li em { color: var(--text); }
+    .biblio li .tag {
+      display:inline-block; font-family: var(--mono); font-size: 0.62rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--muted); border:1px solid var(--border);
+      padding: 0.05rem 0.4rem; border-radius: 3px;
+      margin-left: 0.4rem; vertical-align: 0.1em;
+    }
+
+    /* CTA buttons */
+    .cta-row { display:flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; margin: 2.5rem 0 1rem; }
+    .cta {
+      font-family: var(--mono); font-size: 0.88rem;
+      padding: 0.7rem 1.4rem; border-radius: 4px;
+      text-decoration: none; transition: all 0.2s;
+      border: 1px solid var(--border);
+    }
+    .cta.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 500; }
+    .cta.primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .cta.ghost { color: var(--text); }
+    .cta.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* footer */
+    footer { margin-top: 3.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    footer p { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); line-height: 1.6; }
+    footer a { color: var(--release); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    /* tweaks panel */
+    .tweaks-panel {
+      position: fixed; bottom: 1.25rem; right: 1.25rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 0.9rem 1rem; width: 240px;
+      font-family: var(--mono); font-size: 0.72rem;
+      display: none; z-index: 100;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+    }
+    .tweaks-panel.open { display: block; }
+    .tweaks-panel h4 { font-size: 0.72rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.8rem; }
+    .tweaks-panel .row { display:flex; justify-content: space-between; align-items:center; gap: 0.5rem; margin-bottom: 0.55rem; }
+    .tweaks-panel label { color: var(--muted); }
+    .tweaks-panel select, .tweaks-panel input[type=range] {
+      background: var(--bg); color: var(--text); border: 1px solid var(--border);
+      border-radius: 3px; padding: 0.15rem 0.3rem; font-family: var(--mono);
+      font-size: 0.7rem;
+    }
+    .tweaks-panel input[type=color] { width: 32px; height: 22px; background: transparent; border: 1px solid var(--border); border-radius: 3px; padding: 0; cursor: pointer; }
+    .tweaks-panel input[type=checkbox] { accent-color: var(--accent); }
+
+    /* Fractal background ornament */
+    .fractal-bg {
+      position: fixed; top: 50%; right: -160px; transform: translateY(-50%);
+      width: 520px; height: 520px; pointer-events: none; z-index: -1;
+      opacity: 0.08; transition: opacity 0.4s;
+    }
+    body.no-fractal .fractal-bg { opacity: 0; }
+
+    @media (max-width: 640px) {
+      body { padding: 1.5rem 1.2rem 3rem; }
+      .essay p.lead { font-size: 1.05rem; }
+      .module { grid-template-columns: 64px 1fr; gap: 1rem; }
+      .module .glyph { width: 64px; }
+      .fractal-bg { right: -260px; width: 380px; height: 380px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Fractal ornament -->
+  <svg class="fractal-bg" viewBox="-250 -250 500 500" aria-hidden="true">
+    <g fill="none" stroke="currentColor" stroke-width="0.6" style="color: var(--accent)">
+      <circle r="230"/><circle r="180"/><circle r="140"/><circle r="108"/><circle r="82"/><circle r="62"/><circle r="46"/><circle r="34"/><circle r="24"/><circle r="16"/><circle r="10"/><circle r="6"/>
+      <circle r="3" fill="currentColor" stroke="none"/>
+    </g>
+  </svg>
+
+  <div class="top-bar">
+    <div class="brand"><b>Critical</b> Mathematics</div>
+    <div class="discourse-buttons">
+      <button class="discourse-btn active" data-level="freshman">freshman</button>
+      <button class="discourse-btn" data-level="mathEd">math ed</button>
+      <button class="discourse-btn" data-level="philosophy">philosophy</button>
+    </div>
+  </div>
+
+  <!-- ═══════════ OPENING: NO! ═══════════ -->
+  <section class="opening" aria-label="Opening: No">
+    <div class="no-word" id="no-word" role="button" tabindex="0" aria-label="No! — click to say no again">NO!</div>
+    <div class="no-hint">click the <span class="k">NO!</span> — or just keep reading</div>
+    <div class="echo-row" id="echo-row" aria-hidden="true">
+      <span class="echo e1">no</span>
+      <span class="echo e2">no</span>
+      <span class="echo e3">no</span>
+      <span class="echo e4">no</span>
+      <span class="echo e5">no</span>
+    </div>
+  </section>
+
+  <!-- ═══════════ ESSAY ═══════════ -->
+  <div class="essay">
+
+    <!-- ─── FRESHMAN LAYER ─── -->
+    <div class="layer on" data-layer="freshman">
+      <p class="lead">We begin with <em>NO!</em> When a child, an adult, an animal, or a rock resists, it becomes knowable. The <em>no</em> is what separates — what makes something <em>determinate</em>. But the no does not last. The child is folded back into her parents' arms. We make mistakes. We repair them.</p>
+
+      <p class="drop">Critical Mathematics seeks to grow mathematical understanding through recognizing differences, acknowledging errors, and repairing them — over and over. From that beginning — which is not really a beginning, since every <em>NO!</em> arises from some unacceptable context — the project gets complicated. Follow your own <em>no</em> through this site and perhaps each complication will reveal itself as a fractal-like repetition of the first one. We say <em>no</em>, and then we say <em>no</em> to that no-saying. <em class="strike">no</em>. And then <em class="strike">no</em> to that. And so on.</p>
+
+      <div class="pull">A <em>no</em> arises, folds, and negates itself. What remains is a structure — small, inverted, insisting. The whole project is this structure at different scales.</div>
+
+      <p>This site is a set of tools. Each one lets you feel a moment of mathematical learning as it happens in a child — not as a formula to memorize, but as a <strong>crisis</strong> that a strategy meets, breaks against, and reassembles itself around. The tools are ramshackle. They are honestly so. They are also the clearest way I know to show what <em>philosophy of mathematics, grounded in children's arithmetic, written from an anti-ideological position</em> can look like when you make it do something.</p>
+    </div>
+
+    <!-- ─── MATH ED LAYER ─── -->
+    <div class="layer" data-layer="mathEd">
+      <p class="lead">Critical Mathematics formalizes the developmental sequence of children's arithmetic as a computational system where strategies emerge through <em>perturbation</em> and <em>reorganization</em>. The <em>NO!</em> is Norton &amp; Steffe's <em>perturbation</em> — the moment a scheme fails at its limit and the learner must reorganize.</p>
+
+      <p class="drop">Each strategy documented by <strong>Carpenter, Fennema &amp; Franke</strong> in <em>Cognitively Guided Instruction</em> is re-presented here as a finite-state automaton. The automata invoke one another as subroutines — counting-all inside counting-on, counting-on inside COBO, COBO inside RMB — producing the fractal nesting the manuscript calls <strong>metamorphic accommodation</strong>.</p>
+
+      <div class="pull">The interesting thing is not that the system computes 7 + 3. The interesting thing is where the representation fails — at fractions — and <em>how</em> it fails.</div>
+
+      <p>The <em>NO!</em> and its double negation are the observable trace of the dialectic the formalism tracks. When a strategy hits its inference ceiling, the meta-interpreter raises a crisis. The oracle provides a new strategy. The learner retries. The Polarized Modal Logic appendix tags the whole trajectory as <strong>compressive</strong> (the <em>no</em> gathering) and <strong>expansive</strong> (the <em>no</em> releasing into a new form). Every <em>no</em> is followed by a <em class="strike">no</em>, and the negation produces something genuinely new — a fresh row and column in Cantor's matrix, a fresh ring in the fractal nesting, a fresh state in the automaton.</p>
+    </div>
+
+    <!-- ─── PHILOSOPHY LAYER ─── -->
+    <div class="layer" data-layer="philosophy">
+      <p class="lead">The <em>NO!</em> is determinate negation. It is the Hegelian moment at which an implicit contradiction in experience becomes <em>for consciousness</em>. What is said <em>no</em> to is not annihilated — it is sublated, carried forward inverted, and re-contained at a higher level.</p>
+
+      <p class="drop">This project is a representation that can be made to behave like the reasoning strategies of children under controlled conditions — using Prolog, a sequent calculus with an <em>erasure</em> boundary, and a Polarized Modal Logic of subjective / objective / normative modes. It is not a proof that Hegel was right about mathematics. It is a tool for noticing exactly where formalization stops being able to say what a learner is doing — the <em>arche-trace</em> erasure points — and where a human judgment must enter. Those points are the content of the inquiry.</p>
+
+      <div class="pull">The <em class="strike">no</em> is written with strike-through because the negation is itself negated. Its form is carried forward; its content is cancelled. That is the sign of Derrida's <em>arche-trace</em> — a trace that is visible only as its own erasure.</div>
+
+      <p>The backbone of the site is a Prolog formalization. Its sequent calculus — <code>proves/4</code> — models justifying; its meta-interpreter — <code>solve/6</code> — models computing. They are deliberately kept apart because what the system can <em>do</em> is not the same as what it can <em>give reasons for</em>. The HTML pages are experiential companions — the geometry of the snap, the fractal of nested automata, the ORR narrative — each enacting what the Prolog formalizes. Where the companions work, they make the philosophical point viscerally. Where they break, they mark exactly the places the formalism was honestly never going to reach.</p>
+    </div>
+
+  </div>
+
+  <!-- ═══════════ MODULE LADDER ═══════════ -->
+  <div class="section-mark"><span class="mk">I.</span><span>Follow your no through these</span><span class="mk">⋆</span></div>
+
+  <h2 class="head">The modules, each a <span class="q">no</span> to the one before it</h2>
+
+  <p style="text-align:center; font-size:0.92rem; color: var(--muted); max-width: 600px; margin: 0 auto 2rem;">Each module reveals itself when the previous stops working. The modules nest — the next one does not replace the last, it <em>wraps</em> it.</p>
+
+  <div class="modules">
+
+    <!-- The More Machine -->
+    <a class="module" href="umedcta-formalization/more-zeeman/index.html" data-idx="0">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <circle cx="0" cy="0" r="44" fill="none" stroke="var(--tension)" stroke-width="1" opacity="0.5"/>
+          <circle cx="0" cy="0" r="14" fill="none" stroke="var(--tension)" stroke-width="1.5"/>
+          <line x1="0" y1="-14" x2="-22" y2="-36" stroke="var(--tension)" stroke-width="1"/>
+          <line x1="0" y1="-14" x2="22" y2="-36" stroke="var(--tension)" stroke-width="1"/>
+          <circle cx="-22" cy="-36" r="2" fill="var(--tension)"/>
+          <circle cx="22" cy="-36" r="2" fill="var(--tension)"/>
+          <circle cx="0" cy="-14" r="2.5" fill="var(--accent)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">00 ·</span>
+          <span class="title">The More Machine</span>
+          <span class="sub">embodied · proprioceptive</span>
+        </div>
+        <div class="desc">A Zeeman catastrophe machine. Continuous pressure produces a discontinuous <em>snap</em>. Model for the first <em>NO!</em> — the moment tension in the bands becomes untenable and the disc must jump.</div>
+        <div class="state"><span class="live">● live</span> · drag, or press "just watch" for autopilot</div>
+      </div>
+    </a>
+
+    <!-- Counting -->
+    <a class="module" href="umedcta-formalization/more-zeeman/counting.html" data-idx="1">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <g stroke="var(--release)" stroke-width="1.5" stroke-linecap="round">
+            <line x1="-32" y1="-18" x2="-32" y2="18"/>
+            <line x1="-20" y1="-18" x2="-20" y2="18"/>
+            <line x1="-8"  y1="-18" x2="-8"  y2="18"/>
+            <line x1="4"   y1="-18" x2="4"   y2="18"/>
+            <line x1="16"  y1="-18" x2="16"  y2="18"/>
+            <line x1="28"  y1="-18" x2="28"  y2="18"/>
+          </g>
+          <line x1="-36" y1="12" x2="32" y2="-12" stroke="var(--tension)" stroke-width="1" opacity="0.7"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">01 ·</span>
+          <span class="title">Counting</span>
+          <span class="sub">one, two, three… until it breaks</span>
+        </div>
+        <div class="desc">The developmental ground floor. Cost is linear: 99 + 99 is 198 steps. The strategy is <em>correct</em> — but correctness is not affordability. When cost exceeds what the meta-interpreter will tolerate, crisis is raised.</div>
+        <div class="state"><span class="live">● live</span> · try 7+5, 38+55, 99+99</div>
+      </div>
+    </a>
+
+    <!-- Addition -->
+    <a class="module" href="umedcta-formalization/more-zeeman/strategies/SAR_ADD_COBO.html" data-idx="2">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <line x1="-40" y1="20" x2="40" y2="20" stroke="var(--muted)" stroke-width="0.8"/>
+          <g stroke="var(--muted)" stroke-width="0.8">
+            <line x1="-30" y1="17" x2="-30" y2="23"/>
+            <line x1="-10" y1="17" x2="-10" y2="23"/>
+            <line x1="10" y1="17" x2="10" y2="23"/>
+            <line x1="30" y1="17" x2="30" y2="23"/>
+          </g>
+          <path d="M -30 20 Q -20 -10 -10 20" fill="none" stroke="var(--accent)" stroke-width="1.3"/>
+          <path d="M -10 20 Q 0 -10 10 20" fill="none" stroke="var(--accent)" stroke-width="1.3"/>
+          <path d="M 10 20 Q 20 0 30 20" fill="none" stroke="var(--release)" stroke-width="1.3"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">02 ·</span>
+          <span class="title">Addition</span>
+          <span class="sub">COBO · RMB · Chunking · Rounding</span>
+        </div>
+        <div class="desc">The first shortcut: counting on by bases and then ones. Then rearranging to make bases (Hackenberg's slide). Each addition strategy is an automaton that <em>calls</em> counting as a subroutine.</div>
+        <div class="state"><span class="live">● live</span> · 4 strategies, each prolog-driven</div>
+      </div>
+    </a>
+
+    <!-- Subtraction -->
+    <a class="module" href="umedcta-formalization/more-zeeman/strategies/SAR_SUB_Sliding.html" data-idx="3">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <line x1="-40" y1="0" x2="40" y2="0" stroke="var(--muted)" stroke-width="0.8"/>
+          <path d="M 30 0 Q 15 -22 0 0" fill="none" stroke="var(--tension)" stroke-width="1.3" stroke-dasharray="3 2"/>
+          <path d="M 0 0 Q -10 -18 -22 0" fill="none" stroke="var(--tension)" stroke-width="1.3"/>
+          <circle cx="30" cy="0" r="2" fill="var(--tension)"/>
+          <circle cx="-22" cy="0" r="2" fill="var(--accent)"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">03 ·</span>
+          <span class="title">Subtraction</span>
+          <span class="sub">take-away · missing-addend · sliding</span>
+        </div>
+        <div class="desc">Subtraction is not the opposite of addition — it is a family of <em>different</em> operations depending on whether the child is taking-away, counting the distance, or sliding both ends. Seven strategies, none reducible to the others.</div>
+        <div class="state"><span class="live">● live</span> · 7 strategies</div>
+      </div>
+    </a>
+
+    <!-- Multiplication -->
+    <a class="module" href="umedcta-formalization/more-zeeman/strategies/SMR_MULT_C2C.html" data-idx="4">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <g fill="var(--release)" opacity="0.55">
+            <circle cx="-24" cy="-18" r="3"/><circle cx="-8" cy="-18" r="3"/><circle cx="8" cy="-18" r="3"/><circle cx="24" cy="-18" r="3"/>
+            <circle cx="-24" cy="0" r="3"/><circle cx="-8" cy="0" r="3"/><circle cx="8" cy="0" r="3"/><circle cx="24" cy="0" r="3"/>
+            <circle cx="-24" cy="18" r="3"/><circle cx="-8" cy="18" r="3"/><circle cx="8" cy="18" r="3"/><circle cx="24" cy="18" r="3"/>
+          </g>
+          <rect x="-32" y="-26" width="64" height="52" fill="none" stroke="var(--accent)" stroke-width="1" stroke-dasharray="2 3"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">04 ·</span>
+          <span class="title">Multiplication</span>
+          <span class="sub">coordinating two counts</span>
+        </div>
+        <div class="desc">Coordinating two counts. Distributive reasoning. The dialectic of part and whole where the part is itself a whole-of-ones. This is where <em>unit coordination</em> becomes explicit.</div>
+        <div class="state"><span class="live">● live</span> · 4 strategies</div>
+      </div>
+    </a>
+
+    <!-- Division -->
+    <a class="module" href="umedcta-formalization/more-zeeman/strategies/SMR_DIV_Dealing_By_Ones.html" data-idx="5">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <circle cx="-24" cy="10" r="12" fill="none" stroke="var(--release)" stroke-width="1"/>
+          <circle cx="0" cy="10" r="12" fill="none" stroke="var(--release)" stroke-width="1"/>
+          <circle cx="24" cy="10" r="12" fill="none" stroke="var(--release)" stroke-width="1"/>
+          <g fill="var(--accent)">
+            <circle cx="-28" cy="8" r="1.8"/><circle cx="-20" cy="8" r="1.8"/><circle cx="-24" cy="14" r="1.8"/>
+            <circle cx="-4" cy="8" r="1.8"/><circle cx="4" cy="8" r="1.8"/><circle cx="0" cy="14" r="1.8"/>
+            <circle cx="20" cy="8" r="1.8"/><circle cx="28" cy="8" r="1.8"/><circle cx="24" cy="14" r="1.8"/>
+          </g>
+          <path d="M -24 -25 Q 0 -35 24 -25" fill="none" stroke="var(--muted)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">05 ·</span>
+          <span class="title">Division</span>
+          <span class="sub">dealing · measuring · inverse distribution</span>
+        </div>
+        <div class="desc">Division splits into <em>partitive</em> (how many in each group?) and <em>quotative</em> (how many groups?). The child's first intuition is usually dealing — the round-robin gesture. The other strategies derive from that gesture by cutting corners.</div>
+        <div class="state"><span class="live">● live</span> · 4 strategies</div>
+      </div>
+    </a>
+
+    <!-- Fractal / Boundary -->
+    <a class="module" href="umedcta-formalization/more-zeeman/fractal.html" data-idx="6">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <g fill="none" stroke="var(--snap)" stroke-width="0.8">
+            <circle r="44"/><circle r="34"/><circle r="26"/><circle r="18"/><circle r="12"/><circle r="7"/><circle r="3" fill="var(--snap)"/>
+          </g>
+          <circle cx="-24" cy="-24" r="2.4" fill="var(--tension)"/>
+          <path d="M -30 -30 L 30 30" stroke="var(--tension)" stroke-width="0.6" stroke-dasharray="2 2"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">06 ·</span>
+          <span class="title">The Fractal</span>
+          <span class="sub">hermeneutic sphere through flatland</span>
+        </div>
+        <div class="desc">Each strategy is a ring; each ring invokes the one inside it. Imagine the hermeneutic circle as an action — an automaton whose <code>q_start</code> is also <code>q_accept</code>. Stack those circles into a sphere and drop the sphere through flatland. What you see at each moment is a circle. What's <em>really</em> there is the whole sphere — implicit, all at once, as the first <em>NO!</em>.</div>
+        <div class="state"><span class="wip">● rough</span> · in redesign — the idea is what matters</div>
+      </div>
+    </a>
+
+    <!-- Fraction Crisis -->
+    <a class="module" href="umedcta-formalization/more-zeeman/boundary.html" data-idx="7" style="border-bottom-color: rgba(212,99,74,0.35);">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <line x1="-34" y1="0" x2="34" y2="0" stroke="var(--tension)" stroke-width="1.2"/>
+          <text x="0" y="-10" text-anchor="middle" fill="var(--tension)" font-family="IBM Plex Mono" font-size="20" font-weight="500">1</text>
+          <text x="0" y="24" text-anchor="middle" fill="var(--tension)" font-family="IBM Plex Mono" font-size="20" font-weight="500">?</text>
+          <path d="M -40 -36 L 40 36" stroke="var(--tension)" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.6"/>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">07 ·</span>
+          <span class="title" style="color: var(--tension)">The Fraction Boundary</span>
+          <span class="sub">where the formalism stops</span>
+        </div>
+        <div class="desc">The system represents whole numbers through crisis. It cannot represent fractions. That failure is not a bug — it is the <em>point</em> at which the flat-FSM architecture encounters what Norton and Steffe call metamorphic accommodation: not another strategy, but a new kind of strategy.</div>
+        <div class="state"><span class="open">● open</span> · research frontier — read the assessment</div>
+      </div>
+    </a>
+
+    <!-- Hermes -->
+    <a class="module" href="redesign/hermes/Hermes.html" data-idx="8" style="border-top: 1px solid var(--border); border-bottom: 1px solid rgba(232,168,76,0.4); background: rgba(232,168,76,0.025);">
+      <div class="glyph">
+        <svg viewBox="-50 -50 100 100" aria-hidden="true">
+          <g fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+            <!-- left wing — sweeping up -->
+            <path d="M -14 -10 C -22 -22, -34 -32, -46 -34 C -42 -26, -34 -18, -26 -14 C -20 -11, -16 -10, -14 -10 Z" fill="var(--accent)" fill-opacity="0.18"/>
+            <path d="M -18 -14 C -28 -22, -38 -28, -44 -32" stroke-width="1"/>
+            <!-- right wing -->
+            <path d="M 14 -10 C 22 -22, 34 -32, 46 -34 C 42 -26, 34 -18, 26 -14 C 20 -11, 16 -10, 14 -10 Z" fill="var(--accent)" fill-opacity="0.18"/>
+            <path d="M 18 -14 C 28 -22, 38 -28, 44 -32" stroke-width="1"/>
+            <!-- H -->
+            <g stroke-width="5">
+              <path d="M -14 -10 C -16 4, -16 18, -13 28"/>
+              <path d="M 14 -10 C 16 4, 16 18, 13 28"/>
+              <path d="M -13 8 Q 0 5, 13 9"/>
+            </g>
+          </g>
+          <g fill="var(--accent)" opacity="0.7">
+            <path d="M -32 26 l 0.9 2.6 l 2.7 0 l -2.2 1.6 l 0.85 2.6 l -2.25 -1.6 l -2.25 1.6 l 0.85 -2.6 l -2.2 -1.6 l 2.7 0 z"/>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <div class="label-row">
+          <span class="idx">08 ·</span>
+          <span class="title" style="color: var(--accent)">Hermes</span>
+          <span class="sub">the Hermeneutic Calculator</span>
+        </div>
+        <div class="desc">A neurosymbolic listener for math classrooms. The third presence on a Zoom call. Hermes hears teacher–student talk, codes it (TalkMoves · PML), maps it to strategies, anticipates moves, and quietly suggests pairings. Not a tutor — a <em>listener</em>. A separate product, born from this project.</div>
+        <div class="state"><span class="open">● new</span> · marketing · console · architecture</div>
+      </div>
+    </a>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-row">
+    <a class="cta primary" href="umedcta-formalization/more-zeeman/index.html">Begin with the <em>NO!</em> →</a>
+    <a class="cta ghost" href="redesign/hermes/Hermes.html">Meet Hermes</a>
+    <a class="cta ghost" href="umedcta-formalization/overview.html">Read the overview</a>
+    <a class="cta ghost" href="#biblio">Bibliography</a>
+  </div>
+
+  <!-- ═══════════ WHY THIS MATTERS ═══════════ -->
+  <div class="section-mark"><span class="mk">II.</span><span>Why this project exists</span><span class="mk">⋆</span></div>
+
+  <div class="essay">
+    <div class="layer on" data-layer="freshman">
+      <p>Children invent strategies. They are not given addition; they figure out addition from counting, and counting from fingers, and fingers from the body. The mathematical content of schooling is, in one reading, an attempt to hand these inventions back to children as if they were ours.</p>
+      <p>This project puts the inventions back where they came from. Each module is grounded in something a child actually does, catalogued by researchers who sat with children and paid attention. Then the strategy is modelled — in Prolog, as an automaton — so that you can see what happens when it breaks.</p>
+    </div>
+    <div class="layer" data-layer="mathEd">
+      <p>Cognitively Guided Instruction (Carpenter, Fennema &amp; Franke, 1999) documents children's strategies as they appear in classrooms. Steffe's constructivism (1992; with Olive, 2010) theorizes the schemes that produce them. This project takes the catalog and the theory and asks: if we model the strategies as automata that invoke each other, does the developmental sequence fall out <em>as computational necessity</em>? Sometimes yes. At fractions, explicitly no — and the no is productive.</p>
+    </div>
+    <div class="layer" data-layer="philosophy">
+      <p>Formalisms break productively — what the manuscript calls <em>the Hegelian Infinite</em> — when they are consistent under Brandom's (1994) interpretation of Kant's synthetic unity of apperception. The Prolog work is not a proof of that claim. It is a representation that can be made to behave like the relevant reasoning strategies under controlled conditions. Where the representation breaks is a site of productive contact with the manuscript's central argument. Fractions are the first such site. The erasure boundary in the sequent calculus is another.</p>
+    </div>
+  </div>
+
+  <!-- ═══════════ BIBLIOGRAPHY ═══════════ -->
+  <div class="section-mark" id="biblio"><span class="mk">III.</span><span>What this stands on</span><span class="mk">⋆</span></div>
+  <h2 class="head">Sources &amp; <span class="q">citations</span></h2>
+
+  <div class="biblio">
+    <ol>
+      <li><strong>Carpenter, T. P., Fennema, E., Franke, M. L., Levi, L., &amp; Empson, S. B.</strong> (1999). <em>Children's Mathematics: Cognitively Guided Instruction.</em> Heinemann. <span class="tag">CGI</span><span class="tag">strategies</span> — the catalog this project's strategy modules are grounded in.</li>
+      <li><strong>Steffe, L. P., &amp; Olive, J.</strong> (2010). <em>Children's Fractional Knowledge.</em> Springer. <span class="tag">fractions</span> — Steffe's constructivism treats mathematical knowledge as constructed through the child's own operations, not transmitted.</li>
+      <li><strong>Steffe, L. P.</strong> (1992). Schemes of action and operation involving composite units. <em>Learning and Individual Differences, 4</em>(3), 259–309. <span class="tag">schemes</span> — the INS/TNS distinction the counting module leans on.</li>
+      <li><strong>Norton, A.</strong> (2008). Josh's operational conjectures. <em>JRME, 39</em>(4), 401–430. <span class="tag">metamorphic</span> — the operational conjecture / metamorphic accommodation frame the fraction crisis section invokes.</li>
+      <li><strong>Carpenter, T. P., &amp; Moser, J. M.</strong> (1984). The acquisition of addition and subtraction concepts in grades one through three. <em>JRME, 15</em>(3), 179–202. <span class="tag">addition</span> — evidence that efficiency pressure is real, not artificial.</li>
+      <li><strong>Brandom, R.</strong> (1994). <em>Making It Explicit.</em> Harvard University Press. <span class="tag">inferentialism</span> — the inferentialist frame for the sequent calculus's "justifying" layer.</li>
+      <li><strong>Brandom, R.</strong> (2019). <em>A Spirit of Trust.</em> Harvard University Press. <span class="tag">Hegel</span> — the Hegel reading the manuscript's "productive breakdown" depends on.</li>
+      <li><strong>Hegel, G. W. F.</strong> (1807/1977). <em>Phenomenology of Spirit.</em> Trans. A. V. Miller. Oxford University Press. <span class="tag">determinate negation</span> — the <em>NO!</em> and its sublation.</li>
+      <li><strong>Negarestani, R.</strong> (2018). <em>Intelligence and Spirit.</em> Urbanomic/Sequence Press. <span class="tag">Chomsky hierarchy</span> — the argument that finite-state recognition cannot be general intelligence; read against the fractal module's architecture.</li>
+      <li><strong>Zeeman, E. C.</strong> (1977). Catastrophe theory. <em>Scientific American, 234</em>(4), 65–83. <span class="tag">catastrophe</span> — the snap of the More Machine.</li>
+      <li><strong>Cantor, G.</strong> (1891). Über eine elementare Frage der Mannigfaltigkeitslehre. <em>Jahresbericht der DMV, 1</em>, 75–78. <span class="tag">diagonal</span> — the diagonal construction the matrix visualizer enacts.</li>
+      <li><strong>Carspecken, P.</strong> (1999). <em>Four Scenes for Posing the Question of Meaning.</em> Peter Lang. <span class="tag">scenes</span> — the phenomenological frame the ORR cycle is a formal flattening of.</li>
+      <li><strong>Abbott, E. A.</strong> (1884). <em>Flatland: A Romance of Many Dimensions.</em> <span class="tag">fractal</span> — the sphere-through-flatland metaphor under the fractal module.</li>
+      <li><strong>Derrida, J.</strong> (1967/1976). <em>Of Grammatology.</em> Trans. Spivak. Johns Hopkins. <span class="tag">arche-trace</span> — where the sequent calculus returns <code>erasure</code> instead of <code>proof</code>.</li>
+      <li><strong>Seuss, Dr.</strong> (1961). <em>The Sneetches.</em> Random House. <span class="tag">McBean</span> — the star-on / star-off machine as companion for Cantor's diagonal. Children's literature as philosophy of mathematics.</li>
+    </ol>
+  </div>
+
+  <footer>
+    <p><strong style="color: var(--text);">Critical Mathematics</strong> is the public face of <a href="https://github.com/TioSavich/umedcta-formalization">umedcta-formalization</a>, the Prolog &amp; manuscript archive for <em>Understanding Mathematics as an Emancipatory Discipline: A Critical Theory Approach</em> by Tio Savich.</p>
+    <p>The formalization is a tool for noticing where formalization stops. The interesting thing is where the representation fails.</p>
+    <p style="margin-top:0.8rem;">This site is <em>ramshackle on purpose</em>. The breakdowns are the point of contact with the argument. If you are a funder, a collaborator, a reader — the state of the visuals is not the state of the ideas.</p>
+  </footer>
+
+  <!-- TWEAKS -->
+  <div class="tweaks-panel" id="tweaks">
+    <h4>Tweaks</h4>
+    <div class="row"><label>accent</label><input type="color" id="tw-accent" value="#e8a84c"></div>
+    <div class="row"><label>title font</label>
+      <select id="tw-title">
+        <option value="IBM Plex Serif">IBM Plex Serif</option>
+        <option value="Source Serif 4">Source Serif 4</option>
+      </select>
+    </div>
+    <div class="row"><label>density</label><input type="range" id="tw-density" min="0.7" max="1.3" step="0.05" value="1"></div>
+    <div class="row"><label>fractal ornament</label><input type="checkbox" id="tw-fractal" checked></div>
+    <div class="row"><label>opening mode</label>
+      <select id="tw-opening">
+        <option value="essay">essayistic</option>
+        <option value="bold">bold NO!</option>
+        <option value="fractal">fractal echo</option>
+      </select>
+    </div>
+  </div>
+
+<script>
+// Tweaks defaults (persisted via host)
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#e8a84c",
+  "titleFont": "IBM Plex Serif",
+  "density": 1,
+  "fractal": true,
+  "opening": "essay"
+}/*EDITMODE-END*/;
+
+let state = Object.assign({}, TWEAK_DEFAULTS);
+let userClicked = false;
+
+function applyState(){
+  const r = document.documentElement.style;
+  r.setProperty('--accent', state.accent);
+  r.setProperty('--snap', state.accent);
+  r.setProperty('--star', state.accent);
+  r.setProperty('--title-font', `'${state.titleFont}', Georgia, serif`);
+  r.setProperty('--density', state.density);
+  document.body.classList.toggle('no-fractal', !state.fractal);
+  document.body.dataset.opening = state.opening;
+  // Opening modes:
+  const echoRow = document.getElementById('echo-row');
+  if (state.opening === 'fractal') echoRow.classList.add('on');
+  else if (state.opening === 'essay' && !userClicked) echoRow.classList.remove('on');
+}
+applyState();
+
+// Tweaks panel wiring
+const panel = document.getElementById('tweaks');
+['accent','title','density','fractal','opening'].forEach(k=>{
+  const id = 'tw-' + k;
+  const map = {accent:'accent', title:'titleFont', density:'density', fractal:'fractal', opening:'opening'};
+  const stateKey = map[k];
+  const el = document.getElementById(id);
+  el.value = state[stateKey];
+  if (k==='fractal') el.checked = state[stateKey];
+  el.addEventListener('input', ()=>{
+    state[stateKey] = (k==='fractal') ? el.checked : (k==='density' ? parseFloat(el.value) : el.value);
+    applyState();
+    try { window.parent.postMessage({type:'__edit_mode_set_keys', edits:{[stateKey]: state[stateKey]}}, '*'); } catch(e){}
+  });
+});
+
+// Edit-mode handshake
+window.addEventListener('message', (e)=>{
+  if (!e.data || typeof e.data!=='object') return;
+  if (e.data.type === '__activate_edit_mode') panel.classList.add('open');
+  else if (e.data.type === '__deactivate_edit_mode') panel.classList.remove('open');
+});
+try { window.parent.postMessage({type:'__edit_mode_available'}, '*'); } catch(e){}
+
+// Discourse toggling
+const layers = document.querySelectorAll('[data-layer]');
+const btns = document.querySelectorAll('.discourse-btn');
+function setLevel(lv){
+  try { localStorage.setItem('discourse-level', lv); } catch(e){}
+  layers.forEach(l => l.classList.toggle('on', l.dataset.layer===lv));
+  btns.forEach(b => b.classList.toggle('active', b.dataset.level===lv));
+}
+btns.forEach(b => b.addEventListener('click', ()=> setLevel(b.dataset.level)));
+try {
+  const saved = localStorage.getItem('discourse-level');
+  if (saved) setLevel(saved);
+} catch(e){}
+
+// ─── NO! interaction ──────────────────────────────────────────────
+const noWord = document.getElementById('no-word');
+const echoRow = document.getElementById('echo-row');
+const echoes = echoRow.querySelectorAll('.echo');
+let noIndex = 0;
+const noTexts = ['NO!', 'no', 'NO.', 'no', 'no'];
+function cycle(){
+  userClicked = true;
+  echoRow.classList.add('on');
+  noIndex++;
+  // Strike each echo progressively
+  if (noIndex <= echoes.length) {
+    const e = echoes[noIndex-1];
+    if (e) {
+      // Toggle strike pair
+      setTimeout(()=> e.classList.add('struck'), 60);
+    }
+    // Cycle word
+    const word = noTexts[noIndex % noTexts.length];
+    noWord.textContent = word;
+    if (noIndex > 1) noWord.classList.toggle('struck');
+  } else {
+    // Reset — the fractal completes and can begin again
+    noIndex = 0;
+    echoes.forEach(e => e.classList.remove('struck'));
+    noWord.textContent = 'NO!';
+    noWord.classList.remove('struck');
+  }
+}
+noWord.addEventListener('click', cycle);
+noWord.addEventListener('keydown', (e)=>{ if (e.key==='Enter'||e.key===' '){ e.preventDefault(); cycle(); }});
+
+// Reveal echo row after a short delay even without interaction (so readers see the fractal)
+setTimeout(()=>{ if (state.opening !== 'bold') echoRow.classList.add('on'); }, 1400);
+</script>
+</body>
+</html>

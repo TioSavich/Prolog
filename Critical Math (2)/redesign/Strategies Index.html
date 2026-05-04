@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Prolog-driven Strategy Visualizations</title>
+<link rel="stylesheet" href="strategy_shell.css">
+<style>
+  /* preview-only banner */
+  .preview-banner {
+    max-width: 820px; margin: 0 auto 1.2rem;
+    padding: 0.7rem 1.2rem;
+    background: rgba(232,168,76,0.08);
+    border: 1px solid #3a3428;
+    border-left: 3px solid #e8a84c;
+    border-radius: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.76rem; color: #c4bea8; line-height: 1.55;
+  }
+  .preview-banner b { color:#e8a84c; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; }
+  .preview-banner .x { color:#8a8470; }
+  /* small operation header enhancement — purely CSS, HTML unchanged */
+  .container h2 { margin-top: 2rem; }
+  .container h2 .count {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: #8a8470;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+
+<div class="preview-banner">
+  <b>preview</b> · this is the redesigned <span class="x">strategies/index.html</span>. Your existing HTML structure stays exactly as is (four operation sections, strategy-grid of links); only <span class="x">strategy_shell.css</span> changes.
+</div>
+
+<div class="container">
+  <p class="back"><a href="../Critical Mathematics.html">← Critical Mathematics</a></p>
+  <h1>Strategy Visualizations</h1>
+  <p class="meta">Each page below executes a strategy in Prolog (<code>strategies/math/*.pl</code>) and renders the resulting step trace and number-line trajectory. The JavaScript only renders; it does not compute. Every strategy is grounded in a child's invention catalogued by Carpenter &amp; Fennema's <em style="color:#c4bea8">Cognitively Guided Instruction</em>.</p>
+
+  <h2>Addition <span class="count">4 strategies</span></h2>
+  <div class="strategy-grid">
+    <a href="Strategy Preview - COBO.html"><strong>COBO</strong><span>Counting On by Bases and Ones</span></a>
+    <a href="#"><strong>Chunking</strong><span>Chunking by Bases and Then Ones</span></a>
+    <a href="#"><strong>RMB</strong><span>Rearranging to Make Bases</span></a>
+    <a href="#"><strong>Rounding</strong><span>Rounding and Adjusting</span></a>
+  </div>
+
+  <h2>Subtraction <span class="count">8 strategies</span></h2>
+  <div class="strategy-grid">
+    <a href="#"><strong>COBO (Missing Addend)</strong><span>Count on from S to M</span></a>
+    <a href="#"><strong>CBBO (Take Away)</strong><span>Count back from M</span></a>
+    <a href="#"><strong>Decomposition</strong><span>Column subtraction with borrowing</span></a>
+    <a href="#"><strong>Sub Rounding</strong><span>Round both, subtract, adjust</span></a>
+    <a href="#"><strong>Sliding</strong><span>Add K to both (preserves difference)</span></a>
+    <a href="#"><strong>Chunking A</strong><span>Backward chunks of S</span></a>
+    <a href="#"><strong>Chunking B</strong><span>Forward count from S to M</span></a>
+    <a href="#"><strong>Chunking C</strong><span>Strategic backward chunks</span></a>
+  </div>
+
+  <h2>Multiplication <span class="count">4 strategies</span></h2>
+  <div class="strategy-grid">
+    <a href="#"><strong>C2C</strong><span>Coordinating two counts</span></a>
+    <a href="#"><strong>CBO</strong><span>Group redistribution</span></a>
+    <a href="#"><strong>Commutative Reasoning</strong><span>Repeated addition</span></a>
+    <a href="#"><strong>DR</strong><span>Distributive split</span></a>
+  </div>
+
+  <h2>Division <span class="count">4 strategies</span></h2>
+  <div class="strategy-grid">
+    <a href="#"><strong>Dealing by Ones</strong><span>Round-robin distribute</span></a>
+    <a href="#"><strong>UCR</strong><span>Repeated addition until E</span></a>
+    <a href="#"><strong>CBO Division</strong><span>(dispatcher gap — see page)</span></a>
+    <a href="#"><strong>IDP</strong><span>(dispatcher gap — see page)</span></a>
+  </div>
+
+  <p class="meta" style="margin-top:2rem; padding-top:1.2rem; border-top:1px solid #2a2519">Sliding and RMB share the K-count phase (count up to next base). Compare them side-by-side to see Hackenberg's claim about Sliding deriving from RMB.</p>
+</div>
+
+</body>
+</html>

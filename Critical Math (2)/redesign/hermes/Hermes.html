@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="hermes-home">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes — the Hermeneutic Calculator</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@400;600&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Hermes palette — gold-dominant, friendlier than the rest of Critical Math */
+  --ink: #0d0c08;
+  --ink-soft: #1a1812;
+  --paper: #f4ead6;
+  --paper-warm: #ebdfc5;
+  --paper-cool: #ede4cf;
+  --gold: #d4a747;
+  --gold-deep: #b78930;
+  --gold-pale: #f0d68a;
+  --gold-glow: rgba(212,167,71,0.18);
+  --rust: #c45a3e;          /* misconceptions */
+  --teal: #4d8a96;          /* releases / affordances */
+  --line: #2a2418;
+  --line-pale: rgba(13,12,8,0.12);
+  --muted: #6a6353;
+
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --hand: 'Caveat', 'Patrick Hand', cursive;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+
+html, body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.65;
+  font-size: 17px;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background-image:
+    radial-gradient(ellipse 800px 600px at 85% 5%, var(--gold-glow), transparent 70%),
+    radial-gradient(ellipse 600px 500px at 5% 95%, rgba(77,138,150,0.06), transparent 70%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--gold); transition: all 0.15s; }
+a:hover { color: var(--gold-deep); border-bottom-color: var(--gold-deep); }
+
+/* ─── tiny hand-drawn texture overlay ─────────────────────── */
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.03 0 0 0 0.04 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  opacity: 0.5;
+  z-index: 1;
+}
+body > * { position: relative; z-index: 2; }
+
+/* ═══════════════════════════════════════════════════════════
+ *  TOP BAR
+ * ═══════════════════════════════════════════════════════════ */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.2rem 2rem; max-width: 1200px; margin: 0 auto;
+  border-bottom: 1px solid var(--line-pale);
+}
+.topbar .home {
+  font-family: var(--mono); font-size: 0.72rem;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--muted); border: none;
+}
+.topbar .home:hover { color: var(--ink); }
+.topbar .actions { display: flex; gap: 0.6rem; align-items: center; }
+.topbar .pill {
+  font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.05em;
+  border: 1px solid var(--ink); border-radius: 100px;
+  padding: 0.4rem 1rem; color: var(--ink); background: var(--paper);
+}
+.topbar .pill.primary { background: var(--ink); color: var(--gold); border-color: var(--ink); }
+.topbar .pill.primary:hover { background: var(--gold); color: var(--ink); border-color: var(--ink); }
+
+/* ═══════════════════════════════════════════════════════════
+ *  HERO
+ * ═══════════════════════════════════════════════════════════ */
+.hero {
+  max-width: 1100px; margin: 0 auto;
+  padding: 3rem 2rem 4rem;
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 3rem;
+  align-items: center;
+}
+
+.hero .kicker {
+  font-family: var(--mono); font-size: 0.74rem;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold-deep); margin-bottom: 1.2rem;
+  display: inline-flex; align-items: center; gap: 0.5rem;
+}
+.hero .kicker::before { content: '⋆'; color: var(--gold); }
+
+.hero h1 {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: clamp(2.6rem, 5.5vw, 4.4rem);
+  line-height: 1.02; letter-spacing: -0.02em;
+  margin-bottom: 1.2rem;
+}
+.hero h1 .hand {
+  font-family: var(--hand); font-weight: 400;
+  font-size: 1.15em; color: var(--gold-deep);
+  display: inline-block; transform: rotate(-2deg);
+  letter-spacing: 0;
+}
+.hero h1 em {
+  font-style: italic; color: var(--gold-deep); font-weight: 400;
+}
+
+.hero .lede {
+  font-family: var(--serif); font-size: 1.25rem; line-height: 1.55;
+  color: var(--ink-soft); max-width: 530px; font-style: italic;
+  margin-bottom: 1.8rem;
+}
+
+.hero .actions { display: flex; gap: 0.8rem; flex-wrap: wrap; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.85rem 1.4rem; border-radius: 100px;
+  font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.05em;
+  text-decoration: none; border: 1px solid var(--ink);
+  color: var(--ink); background: transparent;
+  cursor: pointer; transition: all 0.15s;
+}
+.btn.primary {
+  background: var(--ink); color: var(--gold); border-color: var(--ink);
+}
+.btn.primary:hover { background: var(--gold); color: var(--ink); transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); }
+.btn:hover { transform: translate(-1px,-1px); box-shadow: 3px 3px 0 var(--ink); background: var(--paper-warm); }
+
+/* ─── Hermes avatar tile ─── */
+.avatar-stage {
+  position: relative;
+  display: grid; place-items: center;
+}
+.avatar-tile {
+  width: 280px; height: 280px;
+  background: var(--ink); color: var(--gold);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  box-shadow:
+    inset 0 0 0 6px var(--paper),
+    inset 0 0 0 8px var(--ink),
+    8px 8px 0 var(--ink);
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.avatar-tile.thinking { animation: think 2.4s ease-in-out infinite; }
+.avatar-tile.speaking { animation: speak 0.8s ease-in-out infinite; }
+@keyframes think {
+  0%, 100% { transform: rotate(-1deg) scale(1); }
+  50% { transform: rotate(1deg) scale(1.02); }
+}
+@keyframes speak {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+.avatar-tile svg { width: 70%; height: 70%; }
+.avatar-tile svg, .face-card .mini svg, .msg .who.h svg { fill: currentColor; stroke: currentColor; }
+.avatar-status {
+  position: absolute; bottom: 8px; right: 8px;
+  background: var(--paper); border: 2px solid var(--ink);
+  border-radius: 100px; padding: 0.3rem 0.7rem;
+  font-family: var(--mono); font-size: 0.66rem;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink);
+  display: flex; align-items: center; gap: 0.35rem;
+}
+.avatar-status::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--teal);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* avatar floating chips */
+.avatar-stage .chip {
+  position: absolute;
+  background: var(--paper); border: 1px solid var(--ink);
+  border-radius: 100px; padding: 0.3rem 0.7rem;
+  font-family: var(--hand); font-size: 1.05rem;
+  color: var(--ink);
+  white-space: nowrap;
+  box-shadow: 2px 2px 0 var(--ink);
+}
+.avatar-stage .chip.c1 { top: 8%; left: -10%; transform: rotate(-4deg); }
+.avatar-stage .chip.c2 { top: 50%; right: -18%; transform: rotate(2deg); }
+.avatar-stage .chip.c3 { bottom: 5%; left: 8%; transform: rotate(-2deg); }
+
+/* ═══════════════════════════════════════════════════════════
+ *  SECTION SCAFFOLD
+ * ═══════════════════════════════════════════════════════════ */
+.section {
+  max-width: 1100px; margin: 0 auto; padding: 3rem 2rem;
+}
+.section.dark {
+  background: var(--ink); color: var(--paper);
+  max-width: none; padding: 4rem 2rem;
+}
+.section.dark .inner { max-width: 1100px; margin: 0 auto; }
+.section .eyebrow {
+  font-family: var(--mono); font-size: 0.74rem;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--gold-deep); margin-bottom: 0.8rem;
+}
+.section.dark .eyebrow { color: var(--gold); }
+.section h2 {
+  font-family: var(--serif); font-weight: 600;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+  line-height: 1.1; letter-spacing: -0.015em;
+  max-width: 720px; margin-bottom: 1.4rem;
+}
+.section h2 em { color: var(--gold-deep); font-style: italic; font-weight: 400; }
+.section.dark h2 em { color: var(--gold); }
+.section .subhead {
+  font-size: 1.12rem; max-width: 640px; color: var(--ink-soft);
+  margin-bottom: 2rem;
+}
+.section.dark .subhead { color: #d8cba8; }
+
+/* ═══════════════════════════════════════════════════════════
+ *  WHAT HERMES DOES — capability cards
+ * ═══════════════════════════════════════════════════════════ */
+.cap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem; margin-top: 1rem;
+}
+.cap-card {
+  background: var(--paper-warm);
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  padding: 1.4rem 1.4rem 1.5rem;
+  position: relative;
+  transition: transform 0.18s, box-shadow 0.18s;
+}
+.cap-card:hover { transform: translate(-2px,-2px); box-shadow: 4px 4px 0 var(--ink); }
+.cap-card .badge {
+  font-family: var(--mono); font-size: 0.65rem;
+  color: var(--muted); letter-spacing: 0.12em;
+  margin-bottom: 0.5rem;
+  display: flex; justify-content: space-between;
+}
+.cap-card .badge .num { color: var(--gold-deep); }
+.cap-card h3 {
+  font-family: var(--serif); font-weight: 600; font-size: 1.18rem;
+  margin-bottom: 0.5rem;
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.cap-card h3 .glyph {
+  font-family: var(--hand); color: var(--gold-deep); font-size: 1.4rem;
+  display: inline-block; transform: rotate(-3deg);
+}
+.cap-card p {
+  font-size: 0.92rem; color: var(--ink-soft); line-height: 1.55;
+}
+.cap-card.featured {
+  background: var(--ink); color: var(--paper);
+  border-color: var(--ink);
+}
+.cap-card.featured .badge { color: rgba(244,234,214,0.55); }
+.cap-card.featured .badge .num { color: var(--gold); }
+.cap-card.featured h3 .glyph { color: var(--gold); }
+.cap-card.featured p { color: rgba(244,234,214,0.75); }
+
+/* ═══════════════════════════════════════════════════════════
+ *  CONVERSATION PREVIEW
+ * ═══════════════════════════════════════════════════════════ */
+.conv-preview {
+  background: var(--paper-cool);
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  padding: 1.5rem 1.5rem 0.8rem;
+  display: grid; grid-template-columns: 1fr 320px; gap: 1.5rem;
+  margin-top: 1rem;
+}
+.conv-feed {
+  display: flex; flex-direction: column; gap: 0.7rem;
+  max-height: 380px; overflow: hidden;
+  position: relative;
+}
+.conv-feed::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 60px;
+  background: linear-gradient(to bottom, transparent, var(--paper-cool));
+  pointer-events: none;
+}
+.msg {
+  display: flex; gap: 0.7rem; align-items: flex-start;
+}
+.msg .who {
+  width: 32px; height: 32px; border-radius: 50%;
+  flex-shrink: 0;
+  display: grid; place-items: center;
+  font-family: var(--mono); font-size: 0.7rem; font-weight: 600;
+}
+.msg .who.t { background: var(--paper-warm); color: var(--ink); border: 1px solid var(--ink); }
+.msg .who.h { background: var(--ink); color: var(--gold); }
+.msg .who.h svg { width: 70%; height: 70%; }
+.msg .body {
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 12px; padding: 0.7rem 0.95rem;
+  max-width: 90%; font-size: 0.95rem; line-height: 1.5;
+}
+.msg.h .body { border-color: var(--ink); }
+.msg .body em { color: var(--gold-deep); font-style: normal; }
+.msg .body code {
+  font-family: var(--mono); font-size: 0.85em; color: var(--gold-deep);
+  background: var(--paper-warm); padding: 0 0.25rem; border-radius: 3px;
+}
+
+.conv-side {
+  background: var(--paper); border: 1px solid var(--ink);
+  border-radius: 10px; padding: 1rem;
+}
+.conv-side .label {
+  font-family: var(--mono); font-size: 0.66rem;
+  color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 0.6rem;
+  display: flex; justify-content: space-between;
+}
+.conv-side .label .panel-tag { color: var(--gold-deep); }
+.conv-side svg { display: block; width: 100%; height: auto; }
+.conv-side .anticipation {
+  display: grid; gap: 0.4rem;
+}
+.conv-side .anticipation .item {
+  font-size: 0.82rem;
+  display: flex; gap: 0.5rem; align-items: baseline;
+  padding-bottom: 0.4rem; border-bottom: 1px dashed var(--line-pale);
+}
+.conv-side .anticipation .item:last-child { border-bottom: none; }
+.conv-side .anticipation .pct {
+  font-family: var(--mono); color: var(--gold-deep);
+  font-size: 0.72rem;
+}
+.conv-side .anticipation .strat {
+  font-family: var(--mono); font-size: 0.74rem;
+  color: var(--ink); flex: 1;
+}
+.conv-side .anticipation .who-said {
+  font-size: 0.72rem; color: var(--muted); font-style: italic;
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  THE FACE OF HERMES — three states
+ * ═══════════════════════════════════════════════════════════ */
+.faces-row {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem; margin-top: 1rem;
+}
+.face-card {
+  text-align: center;
+  background: var(--paper-warm);
+  border: 1.5px solid var(--ink);
+  border-radius: 14px;
+  padding: 2rem 1rem 1.4rem;
+}
+.face-card .mini {
+  width: 120px; height: 120px;
+  background: var(--ink); color: var(--gold);
+  border-radius: 50%; margin: 0 auto 1rem;
+  display: grid; place-items: center;
+  box-shadow: inset 0 0 0 4px var(--paper-warm), inset 0 0 0 6px var(--ink);
+}
+.face-card .mini svg { width: 70%; height: 70%; }
+.face-card.thinking .mini { animation: think 2.4s ease-in-out infinite; }
+.face-card.listening .mini { animation: listen 1.6s ease-in-out infinite; }
+.face-card.speaking .mini { animation: speak-mini 0.6s ease-in-out infinite; }
+@keyframes listen {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); box-shadow: inset 0 0 0 4px var(--paper-warm), inset 0 0 0 6px var(--ink), 0 0 0 6px var(--gold-glow); }
+}
+@keyframes speak-mini {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.025); }
+}
+.face-card .state-name {
+  font-family: var(--mono); font-size: 0.72rem;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--gold-deep); margin-bottom: 0.3rem;
+}
+.face-card .state-desc {
+  font-family: var(--hand); font-size: 1.15rem;
+  color: var(--ink); line-height: 1.3;
+  transform: rotate(-1deg); display: inline-block;
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  PHILOSOPHY STRIP (dark) — what makes Hermes different
+ * ═══════════════════════════════════════════════════════════ */
+.diff-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 0; margin-top: 2rem;
+  border-top: 1px solid rgba(244,234,214,0.18);
+}
+.diff-grid > div {
+  padding: 1.6rem 1.2rem 1rem;
+  border-right: 1px solid rgba(244,234,214,0.18);
+  border-bottom: 1px solid rgba(244,234,214,0.18);
+}
+.diff-grid > div:nth-child(3n) { border-right: none; }
+.diff-grid h4 {
+  font-family: var(--serif); font-weight: 600; font-size: 1.1rem;
+  color: var(--gold); margin-bottom: 0.5rem;
+}
+.diff-grid p {
+  font-size: 0.92rem; color: rgba(244,234,214,0.78);
+  line-height: 1.55;
+}
+.diff-grid .vs {
+  font-family: var(--mono); font-size: 0.7rem;
+  color: rgba(244,234,214,0.5);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 0.4rem;
+}
+
+/* ═══════════════════════════════════════════════════════════
+ *  CTA STRIP
+ * ═══════════════════════════════════════════════════════════ */
+.cta {
+  max-width: 1100px; margin: 0 auto;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.cta h2 { margin: 0 auto 1rem; }
+.cta .lede { max-width: 560px; margin: 0 auto 1.8rem; }
+.cta .actions { justify-content: center; display: flex; gap: 0.8rem; flex-wrap: wrap; }
+
+/* ═══════════════════════════════════════════════════════════
+ *  FOOTER
+ * ═══════════════════════════════════════════════════════════ */
+footer {
+  border-top: 1px solid var(--line-pale);
+  padding: 2rem; max-width: 1100px; margin: 0 auto;
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 0.74rem;
+  color: var(--muted); letter-spacing: 0.05em;
+  flex-wrap: wrap; gap: 1rem;
+}
+footer .links { display: flex; gap: 1.4rem; }
+footer .links a { border-bottom: none; color: var(--muted); }
+footer .links a:hover { color: var(--ink); }
+
+/* ─── responsive ─── */
+@media (max-width: 880px) {
+  .hero { grid-template-columns: 1fr; padding: 2rem 1.2rem 3rem; gap: 2rem; }
+  .avatar-stage { order: -1; }
+  .avatar-tile { width: 220px; height: 220px; }
+  .conv-preview { grid-template-columns: 1fr; }
+  .faces-row { grid-template-columns: 1fr; }
+  .diff-grid { grid-template-columns: 1fr; }
+  .diff-grid > div { border-right: none !important; }
+  .topbar { padding: 1rem; }
+  .section { padding: 2.4rem 1.2rem; }
+  .section.dark { padding: 2.8rem 1.2rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HERMES LOGO — Seussian winged H
+     Reusable via <use href="#hermes-logo"/>
+     ═══════════════════════════════════════════════════════════ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="hermes-logo" viewBox="-110 -78 220 144">
+      <!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g>
+    </symbol>
+    <symbol id="hermes-logo-mini" viewBox="-110 -78 220 144">
+      <use href="#hermes-logo"/>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ═══════════════════════════════════════════════════════════
+     TOP BAR
+     ═══════════════════════════════════════════════════════════ -->
+<header class="topbar">
+  <a href="../../Critical Mathematics.html" class="home">← Critical Math</a>
+  <div class="actions">
+    <a href="Hermes Architecture.html" class="pill">how it thinks</a>
+    <a href="Hermes Console.html" class="pill primary">try the console</a>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HERO
+     ═══════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-text">
+    <div class="kicker">A neurosymbolic listener for math classrooms</div>
+    <h1>Meet <span class="hand">Hermes,</span><br>the <em>Hermeneutic</em><br>Calculator.</h1>
+    <p class="lede">A third presence on the call. Hermes listens to teacher–student talk, maps it to strategies, anticipates moves, and quietly suggests pairings — so the conversation goes somewhere productive.</p>
+    <div class="actions">
+      <a href="Hermes Console.html" class="btn primary">open the console <span aria-hidden="true">→</span></a>
+      <a href="Hermes Architecture.html" class="btn">how Hermes thinks</a>
+    </div>
+  </div>
+
+  <div class="avatar-stage">
+    <div class="avatar-tile thinking" id="avatar">
+      <svg viewBox="-110 -78 220 144" style="color:var(--gold)"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg>
+    </div>
+    <div class="avatar-status">listening</div>
+    <div class="chip c1">hmm.</div>
+    <div class="chip c2">try counting on?</div>
+    <div class="chip c3">marcus might pair with sasha</div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     WHAT HERMES DOES
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="eyebrow">what hermes does</div>
+  <h2>Not a tutor. Not a grader. <em>A listener.</em></h2>
+  <p class="subhead">Hermes joins your zoom call, your classroom, your one-on-one. It hears the math; it watches the talk; it has read every paper on cognitively-guided instruction. It has opinions, but it waits to be asked.</p>
+
+  <div class="cap-grid">
+    <div class="cap-card featured">
+      <div class="badge"><span>core</span><span class="num">01</span></div>
+      <h3><span class="glyph">⌒</span> Listens</h3>
+      <p>Live transcription mapped, in real time, to PML codes and TalkMoves. You see exactly which utterance landed where.</p>
+    </div>
+    <div class="cap-card">
+      <div class="badge"><span>5 practices</span><span class="num">02</span></div>
+      <h3><span class="glyph">~</span> Anticipates</h3>
+      <p>Before the lesson: ranks likely strategies for each task. During the lesson: marks which ones actually showed up.</p>
+    </div>
+    <div class="cap-card">
+      <div class="badge"><span>5 practices</span><span class="num">03</span></div>
+      <h3><span class="glyph">⌢</span> Pairs</h3>
+      <p>Suggests which two students to put in a breakout — based on which divergence will be most productive to surface.</p>
+    </div>
+    <div class="cap-card">
+      <div class="badge"><span>diagnostic</span><span class="num">04</span></div>
+      <h3><span class="glyph">∼</span> Maps misconceptions</h3>
+      <p>"Why did Marcus say 100?" Hermes pulls up the misconception graph and traces the inference chain that produced it.</p>
+    </div>
+    <div class="cap-card">
+      <div class="badge"><span>visualizes</span><span class="num">05</span></div>
+      <h3><span class="glyph">↗</span> Shows the math</h3>
+      <p>Number-line jumps, area models, prolog code, curricular maps, standards alignment — surfaced from the transcript, not pasted in by you.</p>
+    </div>
+    <div class="cap-card">
+      <div class="badge"><span>tooling</span><span class="num">06</span></div>
+      <h3><span class="glyph">?</span> Asks back</h3>
+      <p>Hermes won't tell you the answer. He'll ask: <em>what would you like the student to notice?</em> — and route the conversation from there.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CONVERSATION PREVIEW
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="eyebrow">a teacher · planning a lesson</div>
+  <h2>You: <em>"What might my kids try for 38 + 27?"</em></h2>
+  <p class="subhead">A glimpse of the console. Hermes responds to your question, opens an Anticipation panel, and quietly previews what each student is likely to bring.</p>
+
+  <div class="conv-preview">
+    <div class="conv-feed">
+      <div class="msg t">
+        <div class="who t">T</div>
+        <div class="body">Tomorrow I'm running a number-talk on <code>38 + 27</code>. Help me anticipate what the kids will try?</div>
+      </div>
+      <div class="msg h">
+        <div class="who h"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div>
+        <div class="body">Five strategies are likely, ranked. <em>RMB</em> dominates — kids who notice 38 wants 2 to make 40. <em>COBO</em> is second; bases first, then ones. A few will still <em>count on by ones</em> — that's the watch-list. Want me to open the Anticipation panel? →</div>
+      </div>
+      <div class="msg t">
+        <div class="who t">T</div>
+        <div class="body">Yes. And mark the kids I should pair if RMB shows up.</div>
+      </div>
+      <div class="msg h">
+        <div class="who h"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div>
+        <div class="body"><em>Pairing</em>: Sasha (likely RMB) with Marcus (likely count-on) — the contrast surfaces base-thinking. <em>Pairing</em>: Devi (likely COBO) with Jun (likely chunking) — both base-aware, divergent in granularity.</div>
+      </div>
+    </div>
+
+    <aside class="conv-side">
+      <div class="label"><span>Anticipation</span><span class="panel-tag">5p · 1/5</span></div>
+      <div class="anticipation">
+        <div class="item">
+          <span class="pct">62%</span>
+          <span class="strat">RMB</span>
+          <span class="who-said">Sasha · Devi</span>
+        </div>
+        <div class="item">
+          <span class="pct">48%</span>
+          <span class="strat">COBO</span>
+          <span class="who-said">Devi · Jun</span>
+        </div>
+        <div class="item">
+          <span class="pct">35%</span>
+          <span class="strat">Chunking</span>
+          <span class="who-said">Jun · Mei</span>
+        </div>
+        <div class="item">
+          <span class="pct">22%</span>
+          <span class="strat">Rounding</span>
+          <span class="who-said">Aiden</span>
+        </div>
+        <div class="item">
+          <span class="pct">18%</span>
+          <span class="strat" style="color:var(--rust)">count-on</span>
+          <span class="who-said">Marcus</span>
+        </div>
+      </div>
+    </aside>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     THE FACE
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="eyebrow">the third on the call</div>
+  <h2>A face you can read.</h2>
+  <p class="subhead">Hermes occupies a tile, like any other person on a video call. You can see when he's listening, when he's thinking, when he's about to speak.</p>
+
+  <div class="faces-row">
+    <div class="face-card listening">
+      <div class="mini"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div>
+      <div class="state-name">listening</div>
+      <div class="state-desc">"go on, I'm with you"</div>
+    </div>
+    <div class="face-card thinking">
+      <div class="mini"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div>
+      <div class="state-name">thinking</div>
+      <div class="state-desc">"hmm, let me check something"</div>
+    </div>
+    <div class="face-card speaking">
+      <div class="mini"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div>
+      <div class="state-name">speaking</div>
+      <div class="state-desc">"may I show you?"</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     PHILOSOPHY STRIP
+     ═══════════════════════════════════════════════════════════ -->
+<section class="section dark">
+  <div class="inner">
+    <div class="eyebrow">why "hermeneutic"</div>
+    <h2>A calculator that interprets, instead of replacing.</h2>
+    <p class="subhead">A normal calculator gives you the answer. Hermes gives you the question — and the strategies behind it — and the misconceptions that compete with it. Computation is downstream. Interpretation is the product.</p>
+
+    <div class="diff-grid">
+      <div>
+        <div class="vs">a normal calc</div>
+        <h4>Returns a value.</h4>
+        <p>You type 38+27. It says 65. The arithmetic is finished, the conversation never started.</p>
+      </div>
+      <div>
+        <div class="vs">a tutor bot</div>
+        <h4>Returns a hint.</h4>
+        <p>It tells the student what to do next. The teacher's expertise becomes ornamental.</p>
+      </div>
+      <div>
+        <div class="vs">hermes</div>
+        <h4>Returns a map.</h4>
+        <p>The strategies that might surface. The misconceptions that might compete. The pairing that might productively expose the divergence. The teacher decides; Hermes prepares the ground.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CTA
+     ═══════════════════════════════════════════════════════════ -->
+<section class="cta">
+  <div class="eyebrow">try it</div>
+  <h2>Open the console. Run a scripted demo. Or read the architecture.</h2>
+  <p class="subhead lede">Three demos in the console: anticipating strategies for a number-talk, mapping a transcript onto PML/TalkMoves, debugging "why did Marcus say 100?", and proposing pairings across student work.</p>
+  <div class="actions">
+    <a href="Hermes Console.html" class="btn primary">open the console →</a>
+    <a href="Hermes Architecture.html" class="btn">how Hermes thinks</a>
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════════════════════
+     FOOTER
+     ═══════════════════════════════════════════════════════════ -->
+<footer>
+  <span>Hermes · part of <a href="../../Critical Mathematics.html">Critical Math</a> · v0.1 demo</span>
+  <div class="links">
+    <a href="Hermes Console.html">console</a>
+    <a href="Hermes Architecture.html">architecture</a>
+    <a href="../../Critical Mathematics.html">project home</a>
+  </div>
+</footer>
+
+</body>
+</html>

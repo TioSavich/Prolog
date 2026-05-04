@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="hermes-arch">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How Hermes Thinks — the Neurosymbolic Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@400;600&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0c08; --ink-soft: #1a1812;
+  --paper: #f4ead6; --paper-warm: #ebdfc5; --paper-cool: #ede4cf;
+  --gold: #d4a747; --gold-deep: #b78930; --gold-pale: #f0d68a;
+  --gold-glow: rgba(212,167,71,0.18);
+  --rust: #c45a3e; --teal: #4d8a96; --moss: #6a8a4d;
+  --line-pale: rgba(13,12,8,0.12);
+  --line-mid: rgba(13,12,8,0.28);
+  --muted: #6a6353;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --hand: 'Caveat', 'Patrick Hand', cursive;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+body{
+  background-image:
+    radial-gradient(ellipse 800px 600px at 90% 5%, var(--gold-glow), transparent 70%),
+    radial-gradient(ellipse 600px 500px at 0% 95%, rgba(77,138,150,0.05), transparent 70%);
+  background-attachment:fixed;min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.03 0 0 0 0.04 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  opacity:0.5;
+}
+body>*{position:relative;z-index:2;}
+a{color:var(--ink);border-bottom:1px solid var(--gold);text-decoration:none;}
+a:hover{color:var(--gold-deep);}
+
+/* ─── topbar ─── */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:1.2rem 2rem;max-width:1280px;margin:0 auto;border-bottom:1px solid var(--line-pale);}
+.topbar .home{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);border:none;}
+.topbar .home:hover{color:var(--ink);}
+.topbar .actions{display:flex;gap:.6rem;align-items:center;}
+.topbar .pill{font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;border:1px solid var(--ink);border-radius:100px;padding:.4rem 1rem;color:var(--ink);}
+.topbar .pill.primary{background:var(--ink);color:var(--gold);}
+.topbar .pill.primary:hover{background:var(--gold);color:var(--ink);}
+
+/* ─── hero ─── */
+.hero{max-width:1100px;margin:0 auto;padding:3rem 2rem 2rem;}
+.kicker{font-family:var(--mono);font-size:.74rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:1rem;}
+.kicker::before{content:'⋆ ';color:var(--gold);}
+.hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(2.2rem,4.5vw,3.6rem);line-height:1.05;letter-spacing:-.02em;margin-bottom:1rem;max-width:880px;}
+.hero h1 em{color:var(--gold-deep);font-style:italic;font-weight:400;}
+.hero h1 .hand{font-family:var(--hand);font-weight:400;color:var(--gold-deep);display:inline-block;transform:rotate(-2deg);}
+.hero .lede{font-style:italic;font-size:1.18rem;max-width:700px;color:var(--ink-soft);}
+
+/* ─── DIAGRAM ─── */
+.diagram-wrap{max-width:1280px;margin:0 auto;padding:2rem 2rem 1rem;}
+.diagram-wrap .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:.8rem;}
+.diagram-wrap h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,2.6vw,2.2rem);margin-bottom:.5rem;letter-spacing:-.015em;}
+.diagram-wrap h2 em{color:var(--gold-deep);font-style:italic;font-weight:400;}
+.diagram-wrap .subhead{font-size:1.05rem;color:var(--ink-soft);max-width:680px;margin-bottom:1.5rem;}
+
+.diagram{
+  background:var(--paper-warm);
+  border:1.5px solid var(--ink);
+  border-radius:18px;
+  padding:1.8rem;
+  margin-top:1rem;
+  position:relative;
+}
+.diagram-grid{
+  display:grid;
+  grid-template-columns: 1fr 1.4fr 1fr;
+  gap:1.4rem;
+  align-items:stretch;
+}
+.col-label{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold-deep);margin-bottom:.6rem;text-align:center;
+}
+.col-label .num{
+  display:inline-block;background:var(--ink);color:var(--gold);padding:.1rem .5rem;border-radius:3px;
+  font-size:.6rem;margin-right:.4rem;letter-spacing:.1em;
+}
+
+/* tile = a panel inside a column */
+.tile{
+  background:var(--paper);
+  border:1.5px solid var(--ink);
+  border-radius:12px;
+  padding:1.1rem 1.1rem 1rem;
+  position:relative;
+}
+.tile + .tile{margin-top:.9rem;}
+.tile h3{
+  font-family:var(--serif);font-weight:600;font-size:1.05rem;
+  letter-spacing:-.005em;margin-bottom:.35rem;
+}
+.tile h3 .hand{font-family:var(--hand);color:var(--gold-deep);font-size:1.3rem;font-weight:400;display:inline-block;transform:rotate(-2deg);margin-right:.2rem;}
+.tile .desc{font-size:.88rem;color:var(--ink-soft);line-height:1.5;}
+.tile ul{list-style:none;margin-top:.55rem;padding:0;}
+.tile ul li{
+  font-family:var(--mono);font-size:.74rem;color:var(--ink);
+  padding:.18rem 0 .18rem 1rem;position:relative;line-height:1.55;
+}
+.tile ul li::before{content:'›';position:absolute;left:.1rem;color:var(--gold-deep);}
+
+.tile.input{border-color:var(--teal);background:rgba(77,138,150,0.08);}
+.tile.output{border-color:var(--rust);background:rgba(196,90,62,0.06);}
+
+/* the BIG core column */
+.core{
+  display:flex;flex-direction:column;gap:0;
+  border:2px solid var(--ink);
+  border-radius:16px;overflow:hidden;
+  background:var(--paper);
+}
+.core-header{
+  padding:.7rem 1rem;background:var(--ink);color:var(--gold);
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.core-header .h-mark{display:inline-flex;align-items:center;gap:.5rem;}
+.core-header .h-mark svg{width:18px;height:18px;}
+.core-header .tag{font-size:.6rem;color:var(--paper-warm);opacity:.65;letter-spacing:.18em;}
+
+.neuro{
+  padding:1.2rem 1.2rem 1rem;
+  background:linear-gradient(180deg, rgba(212,167,71,0.16) 0%, rgba(212,167,71,0.05) 100%);
+  position:relative;border-bottom:2px dashed var(--ink);
+}
+.neuro .layer-tag,.symbolic .layer-tag{
+  font-family:var(--mono);font-size:.66rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold-deep);margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem;
+}
+.neuro .layer-tag .dot,.symbolic .layer-tag .dot{
+  width:8px;height:8px;border-radius:50%;background:var(--gold-deep);display:inline-block;
+}
+.symbolic .layer-tag .dot{background:var(--rust);}
+.neuro h3,.symbolic h3{
+  font-family:var(--serif);font-weight:600;font-size:1.25rem;margin-bottom:.4rem;letter-spacing:-.01em;
+}
+.neuro h3 em,.symbolic h3 em{color:var(--gold-deep);font-style:italic;font-weight:400;}
+.symbolic h3 em{color:var(--rust);}
+.neuro p,.symbolic p{font-size:.95rem;color:var(--ink-soft);margin-bottom:.7rem;line-height:1.55;}
+
+.neuro .stack-list,.symbolic .stack-list{display:flex;flex-direction:column;gap:.4rem;}
+.stack-row{
+  display:grid;grid-template-columns: 110px 1fr;gap:.7rem;
+  padding:.45rem .6rem;background:var(--paper);
+  border:1px solid var(--line-pale);border-radius:7px;
+  font-size:.85rem;
+}
+.stack-row .what{
+  font-family:var(--mono);font-size:.7rem;letter-spacing:.05em;color:var(--gold-deep);
+  font-weight:500;align-self:center;
+}
+.symbolic .stack-row .what{color:var(--rust);}
+.stack-row .where{color:var(--ink);line-height:1.4;}
+.stack-row .where em{color:var(--ink-soft);font-style:italic;}
+
+.symbolic{
+  padding:1.2rem 1.2rem 1.1rem;
+  background:linear-gradient(180deg, rgba(196,90,62,0.06) 0%, rgba(196,90,62,0.12) 100%);
+  position:relative;
+}
+
+/* loop overlay arrow */
+.loop-overlay{
+  position:absolute;
+  right:-12px;top:50%;
+  width:42px;height:120px;transform:translateY(-50%);
+  pointer-events:none;
+}
+.loop-overlay svg{width:100%;height:100%;overflow:visible;}
+
+.loop-note{
+  margin-top:1.2rem;
+  display:flex;gap:.8rem;align-items:flex-start;
+  background:var(--paper-cool);border:1px solid var(--gold);border-radius:10px;
+  padding:.8rem 1rem;
+  font-size:.92rem;color:var(--ink-soft);
+}
+.loop-note .arrow{
+  font-family:var(--hand);color:var(--gold-deep);font-size:1.5rem;line-height:1;flex-shrink:0;
+  transform:translateY(-2px);
+}
+.loop-note strong{color:var(--ink);font-weight:600;}
+.loop-note em{color:var(--gold-deep);font-style:italic;}
+
+/* annotation under core header */
+.core-meta{
+  background:var(--paper-cool);
+  border-bottom:2px solid var(--ink);
+  padding:.8rem 1rem;
+  font-family:var(--mono);font-size:.74rem;color:var(--ink-soft);
+  text-align:center;letter-spacing:.02em;
+}
+.core-meta strong{color:var(--ink);font-weight:600;font-family:var(--serif);font-style:italic;font-size:.92rem;}
+
+/* ─── second section: privacy / deployment ─── */
+.deploy-section{max-width:1100px;margin:0 auto;padding:3rem 2rem 1.5rem;}
+.deploy-section .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:.8rem;}
+.deploy-section h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,2.6vw,2.2rem);margin-bottom:.5rem;letter-spacing:-.015em;}
+.deploy-section h2 em{color:var(--gold-deep);font-style:italic;font-weight:400;}
+.deploy-section .lede{font-size:1.05rem;color:var(--ink-soft);max-width:680px;margin-bottom:1.5rem;}
+
+.deploy-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;}
+.deploy-card{
+  background:var(--paper-warm);border:1.5px solid var(--ink);border-radius:12px;
+  padding:1.2rem;
+}
+.deploy-card .stage{font-family:var(--mono);font-size:.66rem;letter-spacing:.12em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:.4rem;}
+.deploy-card .stage::before{content:'● ';color:var(--gold);}
+.deploy-card.now .stage::before{color:var(--moss);}
+.deploy-card.next .stage::before{color:var(--gold);}
+.deploy-card.later .stage::before{color:var(--rust);opacity:.6;}
+.deploy-card h4{font-family:var(--serif);font-weight:600;font-size:1.1rem;margin-bottom:.4rem;}
+.deploy-card h4 em{color:var(--gold-deep);font-style:italic;font-weight:400;}
+.deploy-card p{font-size:.88rem;color:var(--ink-soft);line-height:1.55;margin-bottom:.5rem;}
+.deploy-card .specs{font-family:var(--mono);font-size:.7rem;color:var(--ink);background:var(--paper);border-radius:6px;padding:.5rem .6rem;line-height:1.55;border:1px solid var(--line-pale);}
+.deploy-card .specs span{display:block;}
+.deploy-card .specs span::before{content:'» ';color:var(--gold-deep);}
+
+/* ─── trace example ─── */
+.trace-section{max-width:1100px;margin:0 auto;padding:2.5rem 2rem;}
+.trace-section .eyebrow{font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:.8rem;}
+.trace-section h2{font-family:var(--serif);font-weight:600;font-size:clamp(1.6rem,2.6vw,2.2rem);margin-bottom:.5rem;letter-spacing:-.015em;}
+.trace-section h2 em{color:var(--gold-deep);font-style:italic;font-weight:400;}
+.trace-section .lede{font-size:1.05rem;color:var(--ink-soft);max-width:680px;margin-bottom:1.5rem;}
+
+.trace{background:var(--paper-warm);border:1.5px solid var(--ink);border-radius:14px;padding:1.4rem;margin-top:1rem;}
+.trace-step{display:grid;grid-template-columns:90px 1fr;gap:1rem;padding:.7rem 0;border-bottom:1px dashed var(--line-pale);align-items:flex-start;}
+.trace-step:last-child{border-bottom:none;}
+.trace-step .who{font-family:var(--mono);font-size:.7rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;}
+.trace-step .who .layer-pill{display:inline-block;background:var(--ink);color:var(--gold);padding:.1rem .4rem;border-radius:3px;font-size:.6rem;margin-top:.2rem;letter-spacing:.05em;}
+.trace-step .who.neu .layer-pill{background:var(--gold-deep);color:var(--paper);}
+.trace-step .who.sym .layer-pill{background:var(--rust);color:var(--paper);}
+.trace-step .what code{font-family:var(--mono);font-size:.86em;background:var(--paper-cool);padding:.05rem .3rem;border-radius:3px;}
+.trace-step .what em{color:var(--gold-deep);font-style:normal;font-weight:600;}
+
+/* ─── footer ─── */
+footer{border-top:1px solid var(--line-pale);padding:2rem;max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:.74rem;color:var(--muted);flex-wrap:wrap;gap:1rem;}
+footer a{border:none;color:var(--muted);}footer a:hover{color:var(--ink);}
+footer .links{display:flex;gap:1.4rem;}
+
+@media (max-width:960px){
+  .diagram-grid{grid-template-columns:1fr;}
+  .loop-overlay{display:none;}
+  .stack-row{grid-template-columns:1fr;gap:.2rem;}
+}
+@media (max-width:760px){
+  .topbar{padding:1rem;}
+  .hero,.diagram-wrap,.deploy-section,.trace-section{padding:1.6rem 1.2rem;}
+  .diagram{padding:1.2rem;}
+}
+</style>
+</head>
+<body>
+
+<!-- Hermes logo (winged H) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="hermes-logo" viewBox="-110 -78 220 144">
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M -28 -22 C -42 -42, -68 -62, -98 -68 C -94 -54, -84 -40, -72 -32 C -60 -24, -44 -20, -32 -18 Z" fill="#d4a747" fill-opacity="0.20"/>
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60"/>
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64"/>
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52"/>
+        </g>
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+        <path d="M 28 -22 C 42 -42, 68 -62, 98 -68 C 94 -54, 84 -40, 72 -32 C 60 -24, 44 -20, 32 -18 Z" fill="#d4a747" fill-opacity="0.20"/>
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60"/>
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64"/>
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52"/>
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56"/>
+          <path d="M 30 -22 C 34 4, 34 28, 28 56"/>
+          <path d="M -29 18 Q 0 12, 29 20"/>
+        </g>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<header class="topbar">
+  <a href="Hermes.html" class="home">← hermes</a>
+  <div class="actions">
+    <a href="Hermes.html" class="pill">overview</a>
+    <a href="Hermes Console.html" class="pill primary">try the console</a>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="kicker">Architecture · v0.1</div>
+  <h1>How <span class="hand">Hermes</span> thinks. <em>Neuro plus symbolic, in a tight loop.</em></h1>
+  <p class="lede">Hermes is two systems working together: an open-source language model that listens, and a deterministic Prolog core that reasons about strategies and standards. The loop between them — feed the symbolic skeleton a lesson plan and the LLM only has to ask "is this <em>that</em>?" — is what cuts inference cost enough to run on a teacher's laptop.</p>
+</section>
+
+<!-- ═══ THE DIAGRAM ═══ -->
+<section class="diagram-wrap">
+  <div class="eyebrow">the architecture · at a glance</div>
+  <h2>Inputs in, neurosymbolic core, <em>actionable outputs out.</em></h2>
+  <p class="subhead">A teacher's classroom audio (and student artifacts) enter on the left. The neurosymbolic core processes them. Discussion moves and pairings come out on the right. The dashed line between neuro and symbolic is the loop — they call each other.</p>
+
+  <div class="diagram">
+    <div class="diagram-grid">
+
+      <!-- ─── INPUTS COLUMN ─── -->
+      <div>
+        <div class="col-label"><span class="num">IN</span>multi-modal inputs</div>
+
+        <div class="tile input">
+          <h3>Speech</h3>
+          <div class="desc">Whisper-class ASR runs on-device. Teacher and student audio gets segmented by turn and speaker-diarized.</div>
+          <ul>
+            <li>on-device whisper.cpp</li>
+            <li>turn segmentation</li>
+            <li>speaker diarization</li>
+          </ul>
+        </div>
+
+        <div class="tile input">
+          <h3>Student work</h3>
+          <div class="desc">Written reflections, scratch work, exit tickets — typed or scanned. Used for semantic routing into the strategy zoo.</div>
+          <ul>
+            <li>typed reflections</li>
+            <li>scanned worksheets · OCR</li>
+            <li>exit tickets</li>
+          </ul>
+        </div>
+
+        <div class="tile input">
+          <h3>Lesson plan</h3>
+          <div class="desc">The teacher hands Hermes the plan up front. This <em>massively</em> narrows what the LLM has to listen for — see the loop note below.</div>
+          <ul>
+            <li>standards · 2.NBT.B.5</li>
+            <li>target strategies</li>
+            <li>roster &amp; priors</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- ─── CORE (neuro + symbolic) ─── -->
+      <div style="position:relative;">
+        <div class="col-label"><span class="num">CORE</span>the neurosymbolic core</div>
+
+        <div class="core">
+          <div class="core-header">
+            <span class="h-mark">
+              <svg viewBox="-110 -78 220 144" style="color:var(--gold);fill:currentColor;stroke:currentColor"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg>
+              hermes core
+            </span>
+            <span class="tag">runs locally · ideally</span>
+          </div>
+
+          <div class="core-meta">
+            <strong>"is this <em>that</em>?"</strong> — neuro asks, symbolic answers. Then symbolic asks neuro to paraphrase. Then neuro asks symbolic to verify. <em>That's the loop.</em>
+          </div>
+
+          <!-- NEURO -->
+          <div class="neuro">
+            <div class="layer-tag"><span class="dot"></span>neuro · the listener</div>
+            <h3>Open-source LLM <em>· mixture of experts</em></h3>
+            <p>Initially powered by API calls to <strong>REALLMs</strong> — IU's research platform for open-source models. Ideally, locally run on cheap hardware via <strong>Gemma</strong>-class models, so a teacher's laptop is the whole compute envelope.</p>
+
+            <div class="stack-list">
+              <div class="stack-row"><span class="what">routing</span><span class="where">pick which expert handles intent · paraphrase · classify</span></div>
+              <div class="stack-row"><span class="what">paraphrase</span><span class="where">restate teacher utterance back in its own register</span></div>
+              <div class="stack-row"><span class="what">propose</span><span class="where">draft <em>candidate</em> strategy / misconception labels</span></div>
+              <div class="stack-row"><span class="what">compose</span><span class="where">turn symbolic results into warm, brief teacher-facing prose</span></div>
+            </div>
+          </div>
+
+          <!-- SYMBOLIC -->
+          <div class="symbolic">
+            <div class="layer-tag"><span class="dot"></span>symbolic · the skeleton</div>
+            <h3>Deterministic core <em>· no slop, 2 always equals 2</em></h3>
+            <p>Prolog for good-old-fashioned AI and pattern recognition. Each strategy is a horn-clause rule that produces a trace. Misconceptions are <em>broken</em> rules. The LLM's proposals only count once they unify with the symbolic side.</p>
+
+            <div class="stack-list">
+              <div class="stack-row"><span class="what">standards</span><span class="where">CCSS &amp; state frameworks, machine-readable graph</span></div>
+              <div class="stack-row"><span class="what">strategies</span><span class="where">automata for student-invented strategies (COBO · RMB · chunking · ...)</span></div>
+              <div class="stack-row"><span class="what">misconceptions</span><span class="where">documented bugs from the math-ed literature, as Prolog clauses</span></div>
+              <div class="stack-row"><span class="what">incoherence</span><span class="where">Brandom-style frames at scene-level (Carspecken, 1999)</span></div>
+              <div class="stack-row"><span class="what">proof</span><span class="where">theorem proving — <em>why</em> two strategies are equivalent, or one contradicts</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- loop arrow overlay (decorative) -->
+        <div class="loop-overlay" aria-hidden="true">
+          <svg viewBox="0 0 42 120" fill="none">
+            <path d="M 4 30 C 32 35, 32 45, 4 50" stroke="var(--gold-deep)" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <path d="M 4 70 C 32 75, 32 85, 4 90" stroke="var(--rust)" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <polygon points="4,30 8,27 8,33" fill="var(--gold-deep)"/>
+            <polygon points="4,90 8,87 8,93" fill="var(--rust)"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ─── OUTPUTS COLUMN ─── -->
+      <div>
+        <div class="col-label"><span class="num">OUT</span>multi-modal outputs</div>
+
+        <div class="tile output">
+          <h3>Discussion moves</h3>
+          <div class="desc">Three flavors, in the language teachers already use. Drafted by neuro, grounded by symbolic.</div>
+          <ul>
+            <li>discussion questions</li>
+            <li>assessing questions</li>
+            <li>advancing questions</li>
+          </ul>
+        </div>
+
+        <div class="tile output">
+          <h3>Visual artifacts</h3>
+          <div class="desc">Number lines, strategy traces, misconception graphs — text or speech for accessibility.</div>
+          <ul>
+            <li>knowledge graphs</li>
+            <li>strategy SVGs</li>
+            <li>speech · screen-reader-ready</li>
+          </ul>
+        </div>
+
+        <div class="tile output">
+          <h3>Pairings</h3>
+          <div class="desc">Who to pair with whom for tomorrow's discussion, and <em>why</em> — based on roster history and strategy-divergence.</div>
+          <ul>
+            <li>productive contrasts</li>
+            <li>watch-list students</li>
+            <li>seating suggestions</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- LOOP NOTE -->
+    <div class="loop-note">
+      <span class="arrow">↻</span>
+      <div>
+        <strong>The loop is the trick.</strong> Generic LLM transcript-coding is ruinously expensive — every word is a fresh hard problem. Hermes flips it: <em>feed the symbolic core a lesson plan, and it already knows what to listen for.</em> The LLM only has to ask "is this <em>that</em>?" against a small candidate set. Inference cost drops by orders of magnitude. That's what makes local-first deployment realistic.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ DEPLOYMENT ═══ -->
+<section class="deploy-section">
+  <div class="eyebrow">deployment · privacy · cost</div>
+  <h2>Where Hermes <em>actually runs.</em></h2>
+  <p class="lede">A live classroom is the highest-stakes data context in education. Hermes is designed so the most natural deployment is also the most private one: on the teacher's own machine. The neuro side is the only thing that has to be big, and we're working to shrink it.</p>
+
+  <div class="deploy-grid">
+    <div class="deploy-card now">
+      <div class="stage">now · prototype</div>
+      <h4>REALLMs API <em>· research platform</em></h4>
+      <p>Indiana University's REALLMs platform hosts open-source models for researcher use. Audio &amp; transcripts go through REALLMs; the symbolic core runs locally. IU IRB-friendly.</p>
+      <div class="specs">
+        <span>API · open-source models</span>
+        <span>symbolic core · local</span>
+        <span>data scope · IU researcher</span>
+      </div>
+    </div>
+
+    <div class="deploy-card next">
+      <div class="stage">next · pilot</div>
+      <h4>Gemma <em>· on the laptop</em></h4>
+      <p>A Gemma-class model — small enough for a teacher's laptop or a $400 mini-PC under the SmartBoard. Symbolic core stays local. Audio never leaves the room. The lesson-plan loop is what makes the small model enough.</p>
+      <div class="specs">
+        <span>model · gemma 3 / 4-class</span>
+        <span>hardware · laptop or mini-PC</span>
+        <span>data scope · zero egress</span>
+      </div>
+    </div>
+
+    <div class="deploy-card later">
+      <div class="stage">later · school deployment</div>
+      <h4>School-server option <em>· optional</em></h4>
+      <p>For districts that want shared roster &amp; standards data across rooms, a single school-level server runs the LLM, classrooms run the symbolic core. Still no audio leaves the building.</p>
+      <div class="specs">
+        <span>shared · roster, standards graph</span>
+        <span>per-room · symbolic + ASR</span>
+        <span>data scope · district</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WORKED TRACE ═══ -->
+<section class="trace-section">
+  <div class="eyebrow">a worked trace</div>
+  <h2>"Why did Marcus say 100?" <em>— step by step.</em></h2>
+  <p class="lede">A real query through the loop. The right column tells you which side of the core answered: <span style="color:var(--gold-deep);font-weight:600">neuro</span> or <span style="color:var(--rust);font-weight:600">symbolic</span>.</p>
+
+  <div class="trace">
+    <div class="trace-step">
+      <div class="who">teacher<div class="layer-pill">in</div></div>
+      <div class="what">"For <code>38+27</code>, Marcus said 100. What happened?"</div>
+    </div>
+
+    <div class="trace-step">
+      <div class="who neu">neuro<div class="layer-pill">classify</div></div>
+      <div class="what">Intent: <em>diagnose-misconception</em>. Subject: <code>marcus</code>. Inputs: <code>[38,27]</code>. Output: <code>100</code>. Hand off to symbolic.</div>
+    </div>
+
+    <div class="trace-step">
+      <div class="who sym">symbolic<div class="layer-pill">prolog</div></div>
+      <div class="what">Run <code>why_did(marcus, [38,27], 100, M)</code>. Backtrack through misconception clauses. <em>Match</em>: <code>place_value_erasure</code> via <code>digit_stack → no_carry → round_up</code>.</div>
+    </div>
+
+    <div class="trace-step">
+      <div class="who sym">symbolic<div class="layer-pill">graph</div></div>
+      <div class="what">Locate <code>place_value_erasure</code> on misconception graph. Distance to last week's <em>loss-of-track</em>: 3 edges. Different branch.</div>
+    </div>
+
+    <div class="trace-step">
+      <div class="who sym">symbolic<div class="layer-pill">roster</div></div>
+      <div class="what">Roster says: Marcus has 4 prior <em>count-on</em> errors, 0 prior <em>place-value erasures</em>. <em>New</em> misconception for him.</div>
+    </div>
+
+    <div class="trace-step">
+      <div class="who neu">neuro<div class="layer-pill">compose</div></div>
+      <div class="what">Compose reply. Tone: <em>warm professional</em> per current setting. Attach panel: misconception map + Prolog trace as artifacts.</div>
+    </div>
+
+    <div class="trace-step">
+      <div class="who">teacher<div class="layer-pill">out</div></div>
+      <div class="what">Receives: paraphrase + cause + what's <em>different</em> from last week + remediation move (don't correct; pair with Sasha).</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <span>Hermes · architecture v0.1 · part of <a href="../../Critical Mathematics.html">Critical Math</a></span>
+  <div class="links">
+    <a href="Hermes.html">overview</a>
+    <a href="Hermes Console.html">console</a>
+    <a href="../../Critical Mathematics.html">project home</a>
+  </div>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="hermes-console">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hermes Console — Critical Math</title>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;0,8..60,700;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&family=Caveat:wght@400;600&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root {
+  --ink: #0d0c08;
+  --ink-soft: #1a1812;
+  --paper: #f4ead6;
+  --paper-warm: #ebdfc5;
+  --paper-cool: #ede4cf;
+  --gold: #d4a747;
+  --gold-deep: #b78930;
+  --gold-pale: #f0d68a;
+  --gold-glow: rgba(212,167,71,0.18);
+  --rust: #c45a3e;
+  --teal: #4d8a96;
+  --line: #2a2418;
+  --line-pale: rgba(13,12,8,0.12);
+  --muted: #6a6353;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, monospace;
+  --hand: 'Caveat', 'Patrick Hand', cursive;
+}
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html, body { background: var(--paper); color: var(--ink); font-family: var(--serif); font-size: 16px; -webkit-font-smoothing: antialiased; height: 100%; overflow: hidden; }
+body {
+  background-image:
+    radial-gradient(ellipse 800px 500px at 90% 0%, var(--gold-glow), transparent 70%),
+    radial-gradient(ellipse 600px 500px at 0% 100%, rgba(77,138,150,0.05), transparent 70%);
+  background-attachment: fixed;
+}
+body::before {
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.03 0 0 0 0.04 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  opacity:0.4;
+}
+button { font: inherit; cursor: pointer; }
+
+/* ─── shell ─── */
+.shell {
+  position: relative; z-index: 2;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0.8rem 1.4rem;
+  border-bottom: 1px solid var(--line-pale);
+  background: rgba(244,234,214,0.7); backdrop-filter: blur(8px);
+}
+.topbar .left { display: flex; align-items: center; gap: 1rem; }
+.topbar .home {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--muted); text-decoration: none;
+}
+.topbar .home:hover { color: var(--ink); }
+.topbar .title {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-family: var(--serif); font-weight: 600; font-size: 1.05rem;
+}
+.topbar .title .mark {
+  width: 32px; height: 32px; background: var(--ink); color: var(--gold);
+  border-radius: 50%; display: grid; place-items: center;
+}
+.topbar .title .mark svg { width: 70%; height: 70%; }
+.topbar .title .hand {
+  font-family: var(--hand); font-weight: 400; color: var(--gold-deep);
+  display: inline-block; transform: rotate(-2deg); font-size: 1.2rem;
+}
+.topbar .right { display: flex; align-items: center; gap: 0.6rem; }
+.disc-toggle {
+  display: flex; gap: 2px; background: var(--ink); padding: 3px;
+  border-radius: 100px; border: 1px solid var(--ink);
+}
+.disc-toggle button {
+  background: transparent; border: none; color: rgba(244,234,214,0.6);
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.12em;
+  text-transform: uppercase; padding: 0.4rem 0.8rem;
+  border-radius: 100px;
+}
+.disc-toggle button.active { background: var(--gold); color: var(--ink); }
+
+/* ─── main grid ─── */
+.main {
+  display: grid;
+  grid-template-columns: 230px 1fr 380px;
+  height: 100%; overflow: hidden;
+  transition: grid-template-columns 0.3s ease;
+}
+.main.no-panel { grid-template-columns: 230px 1fr 0; }
+
+/* ─── sidebar (scenarios) ─── */
+.sidebar {
+  border-right: 1px solid var(--line-pale);
+  padding: 1rem;
+  overflow-y: auto;
+  background: rgba(235,223,197,0.4);
+}
+.sidebar .section-label {
+  font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--muted); margin: 0.6rem 0.6rem 0.4rem;
+}
+.scenario {
+  display: block; width: 100%;
+  background: transparent; border: 1px solid transparent;
+  text-align: left; padding: 0.7rem 0.8rem; border-radius: 10px;
+  margin-bottom: 0.3rem; color: var(--ink);
+  font-family: var(--serif); font-size: 0.92rem; line-height: 1.3;
+  transition: all 0.15s;
+}
+.scenario:hover { background: var(--paper-warm); }
+.scenario.active {
+  background: var(--ink); color: var(--paper);
+  border-color: var(--ink);
+  transform: rotate(-0.5deg);
+  box-shadow: 2px 2px 0 var(--gold-deep);
+}
+.scenario .num {
+  font-family: var(--mono); font-size: 0.65rem;
+  color: var(--gold-deep); letter-spacing: 0.1em;
+  display: block; margin-bottom: 0.25rem;
+}
+.scenario.active .num { color: var(--gold); }
+.scenario .title { font-weight: 600; }
+.scenario .sub { font-size: 0.78rem; color: var(--muted); margin-top: 0.2rem; font-style: italic; }
+.scenario.active .sub { color: rgba(244,234,214,0.6); }
+
+.sidebar .new-thread {
+  margin-top: 1.2rem;
+  width: 100%; padding: 0.6rem 0.8rem;
+  background: transparent; border: 1px dashed var(--ink);
+  border-radius: 10px; font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.08em; color: var(--ink);
+}
+.sidebar .new-thread:hover { background: var(--paper-warm); }
+
+.sidebar .footer-note {
+  margin-top: 1.2rem; padding: 0.7rem 0.8rem;
+  font-family: var(--hand); font-size: 1rem; color: var(--muted);
+  line-height: 1.3; transform: rotate(-1deg);
+}
+
+/* ─── center: chat ─── */
+.chat {
+  display: flex; flex-direction: column;
+  overflow: hidden; position: relative;
+}
+.chat-head {
+  padding: 1rem 1.4rem 0.8rem;
+  border-bottom: 1px solid var(--line-pale);
+  display: flex; justify-content: space-between; align-items: flex-end;
+}
+.chat-head .title-block h2 {
+  font-family: var(--serif); font-weight: 600; font-size: 1.25rem;
+  letter-spacing: -0.01em;
+}
+.chat-head .title-block h2 em { color: var(--gold-deep); font-weight: 400; }
+.chat-head .title-block .meta {
+  font-family: var(--mono); font-size: 0.66rem; color: var(--muted);
+  letter-spacing: 0.12em; margin-top: 0.2rem; text-transform: uppercase;
+}
+.chat-head .panel-toggle {
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em;
+  background: transparent; border: 1px solid var(--ink);
+  border-radius: 100px; padding: 0.4rem 0.85rem; color: var(--ink);
+}
+.chat-head .panel-toggle:hover { background: var(--paper-warm); }
+.chat-head .panel-toggle.active { background: var(--ink); color: var(--gold); }
+
+.feed {
+  flex: 1; overflow-y: auto;
+  padding: 1.2rem 1.4rem 1rem;
+  scroll-behavior: smooth;
+}
+.feed::-webkit-scrollbar { width: 8px; }
+.feed::-webkit-scrollbar-thumb { background: var(--line-pale); border-radius: 4px; }
+
+.msg {
+  display: flex; gap: 0.7rem; margin-bottom: 1rem;
+  align-items: flex-start;
+  animation: msg-in 0.4s cubic-bezier(0.4,0,0.2,1) both;
+}
+@keyframes msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.msg .who {
+  width: 36px; height: 36px; border-radius: 50%;
+  flex-shrink: 0; display: grid; place-items: center;
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 600;
+}
+.msg .who.t { background: var(--paper-warm); color: var(--ink); border: 1.5px solid var(--ink); }
+.msg .who.h { background: var(--ink); color: var(--gold); }
+.msg .who.h svg { width: 70%; height: 70%; }
+.msg .who.h.thinking { animation: think 2.4s ease-in-out infinite; }
+.msg .who.h.speaking { animation: speak 0.6s ease-in-out infinite; }
+@keyframes think {
+  0%,100% { transform: rotate(-1deg) scale(1); }
+  50% { transform: rotate(1deg) scale(1.04); }
+}
+@keyframes speak {
+  0%,100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.msg .body {
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 14px; padding: 0.8rem 1rem;
+  max-width: 78%; font-size: 0.96rem; line-height: 1.55;
+}
+.msg.h .body { border-color: var(--ink); border-radius: 14px 14px 14px 4px; }
+.msg.t .body { border-radius: 14px 14px 4px 14px; background: var(--paper-warm); }
+.msg .body em { color: var(--gold-deep); font-style: normal; font-weight: 600; }
+.msg .body code {
+  font-family: var(--mono); font-size: 0.86em; color: var(--ink);
+  background: var(--paper-warm); padding: 0.05rem 0.3rem; border-radius: 4px;
+}
+.msg.h .body code { background: var(--paper-cool); }
+.msg .body .pml-codes {
+  display: flex; gap: 0.35rem; margin-top: 0.5rem; flex-wrap: wrap;
+}
+.msg .body .pml-codes .code {
+  font-family: var(--mono); font-size: 0.68rem; padding: 0.15rem 0.45rem;
+  border-radius: 4px; letter-spacing: 0.04em;
+  background: var(--paper-cool); border: 1px solid var(--line-pale);
+}
+.msg .body .pml-codes .code[data-m="s"] { background: var(--gold-pale); border-color: var(--gold-deep); color: var(--ink); }
+.msg .body .pml-codes .code[data-m="o"] { background: rgba(196,90,62,0.15); border-color: var(--rust); color: var(--rust); }
+.msg .body .pml-codes .code[data-m="n"] { background: rgba(77,138,150,0.18); border-color: var(--teal); color: var(--teal); }
+.msg .body .panel-cta {
+  margin-top: 0.7rem;
+  font-family: var(--mono); font-size: 0.7rem;
+  background: var(--ink); color: var(--gold); border: none;
+  padding: 0.4rem 0.8rem; border-radius: 100px;
+  letter-spacing: 0.06em;
+}
+.msg .body .panel-cta:hover { background: var(--gold); color: var(--ink); }
+.msg .body .panel-cta::after { content: ' →'; }
+
+.msg .body .neuro-trace {
+  margin-top: 0.6rem; padding-top: 0.5rem;
+  border-top: 1px dashed var(--line-pale);
+  font-family: var(--mono); font-size: 0.7rem; color: var(--muted);
+  display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;
+}
+.shell.discourse-fresh .neuro-trace { display: none; }
+.shell.discourse-math .neuro-trace .deep { display: none; }
+.neuro-trace .step { background: var(--paper-warm); padding: 0.1rem 0.4rem; border-radius: 3px; }
+.neuro-trace .step.deep { background: rgba(77,138,150,0.12); }
+
+/* typing indicator */
+.typing { display: inline-flex; gap: 0.2rem; padding: 0.3rem 0.5rem; }
+.typing span {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--gold-deep);
+  animation: typing 1.2s ease-in-out infinite;
+}
+.typing span:nth-child(2) { animation-delay: 0.15s; }
+.typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing {
+  0%, 80%, 100% { opacity: 0.3; transform: translateY(0); }
+  40% { opacity: 1; transform: translateY(-3px); }
+}
+
+/* composer */
+.composer {
+  border-top: 1px solid var(--line-pale);
+  padding: 0.9rem 1.4rem 1rem;
+  background: rgba(244,234,214,0.7); backdrop-filter: blur(8px);
+}
+.composer .field {
+  display: flex; gap: 0.6rem; align-items: flex-end;
+  background: var(--paper); border: 1.5px solid var(--ink);
+  border-radius: 18px; padding: 0.6rem 0.6rem 0.6rem 1rem;
+}
+.composer textarea {
+  flex: 1; border: none; background: transparent;
+  font: inherit; resize: none; outline: none;
+  min-height: 24px; max-height: 120px; line-height: 1.5;
+  font-size: 0.96rem;
+}
+.composer textarea::placeholder { color: var(--muted); font-style: italic; }
+.composer .send {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--ink); color: var(--gold); border: none;
+  display: grid; place-items: center; font-size: 1.1rem;
+}
+.composer .send:hover { background: var(--gold); color: var(--ink); }
+.composer .composer-meta {
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 0.66rem; color: var(--muted);
+  letter-spacing: 0.05em; margin-top: 0.5rem; padding: 0 0.3rem;
+}
+.composer .quick {
+  display: flex; gap: 0.3rem; flex-wrap: wrap;
+}
+.composer .quick button {
+  background: var(--paper-warm); border: 1px solid var(--line-pale);
+  border-radius: 100px; padding: 0.2rem 0.6rem;
+  font-family: var(--mono); font-size: 0.68rem; color: var(--ink);
+}
+.composer .quick button:hover { background: var(--gold-pale); border-color: var(--gold-deep); }
+
+/* ─── right: panel ─── */
+.panel {
+  border-left: 1px solid var(--line-pale);
+  background: var(--paper-warm);
+  overflow-y: auto;
+  padding: 1rem 1.1rem 1.4rem;
+  position: relative;
+}
+.main.no-panel .panel { display: none; }
+.panel .panel-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding-bottom: 0.6rem; border-bottom: 1px solid var(--line-pale);
+  margin-bottom: 0.9rem;
+}
+.panel .panel-head .label {
+  font-family: var(--mono); font-size: 0.66rem; letter-spacing: 0.15em;
+  text-transform: uppercase; color: var(--gold-deep);
+}
+.panel .panel-head .close {
+  background: transparent; border: 1px solid var(--ink);
+  border-radius: 50%; width: 24px; height: 24px;
+  display: grid; place-items: center; font-size: 0.85rem;
+}
+.panel-section { margin-bottom: 1.2rem; }
+.panel-section h4 {
+  font-family: var(--serif); font-weight: 600; font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+.panel-section p { font-size: 0.88rem; color: var(--ink-soft); line-height: 1.5; }
+.panel-section .sub-label {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--muted);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 0.4rem;
+}
+
+/* anticipation list */
+.anti-list { display: grid; gap: 0.4rem; }
+.anti-row {
+  display: grid; grid-template-columns: 56px 1fr auto; gap: 0.6rem;
+  align-items: center;
+  padding: 0.5rem 0.6rem;
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.anti-row .pct { font-family: var(--mono); color: var(--gold-deep); font-weight: 600; }
+.anti-row .strat-name { font-family: var(--mono); font-size: 0.78rem; }
+.anti-row .who-said { font-size: 0.76rem; color: var(--muted); font-style: italic; }
+.anti-row.alert { background: rgba(196,90,62,0.08); border-color: var(--rust); }
+.anti-row.alert .pct { color: var(--rust); }
+.anti-row .bar {
+  grid-column: 1 / -1;
+  height: 3px; background: var(--paper-warm); border-radius: 2px;
+  margin-top: 0.4rem;
+}
+.anti-row .bar-fill {
+  height: 100%; background: var(--gold-deep); border-radius: 2px;
+  transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+}
+.anti-row.alert .bar-fill { background: var(--rust); }
+
+/* number line viz */
+.numberline {
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 8px; padding: 1rem 0.8rem;
+}
+.numberline svg { width: 100%; height: auto; display: block; }
+.numberline .step-label {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--muted);
+  margin-top: 0.5rem; text-align: center;
+}
+
+/* prolog */
+.prolog-block {
+  background: var(--ink); color: var(--paper);
+  border-radius: 8px; padding: 0.8rem 0.9rem;
+  font-family: var(--mono); font-size: 0.78rem; line-height: 1.55;
+  overflow-x: auto;
+}
+.prolog-block .kw { color: var(--gold); }
+.prolog-block .com { color: rgba(244,234,214,0.4); font-style: italic; }
+.prolog-block .var { color: var(--gold-pale); }
+.prolog-block .str { color: #b9d4a8; }
+
+/* misconception graph */
+.misc-graph {
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 8px; padding: 0.6rem;
+}
+.misc-graph svg { width: 100%; height: auto; }
+
+/* talk-moves transcript */
+.talk-strip {
+  display: grid; gap: 0.4rem;
+}
+.talk-row {
+  display: grid; grid-template-columns: 50px 1fr;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 6px; font-size: 0.84rem;
+}
+.talk-row .turn-num { font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+.talk-row .text { line-height: 1.4; }
+.talk-row .codes { display: flex; gap: 0.25rem; margin-top: 0.3rem; flex-wrap: wrap; }
+.talk-row .codes .c {
+  font-family: var(--mono); font-size: 0.6rem; padding: 0.05rem 0.35rem;
+  border-radius: 3px; background: var(--paper-warm);
+  border: 1px solid var(--line-pale);
+}
+.talk-row .codes .c[data-m="s"] { background: var(--gold-pale); border-color: var(--gold-deep); }
+.talk-row .codes .c[data-m="o"] { background: rgba(196,90,62,0.15); border-color: var(--rust); color: var(--rust); }
+.talk-row .codes .c[data-m="n"] { background: rgba(77,138,150,0.18); border-color: var(--teal); color: var(--teal); }
+
+/* pairing cards */
+.pair {
+  background: var(--paper); border: 1px solid var(--ink);
+  border-radius: 10px; padding: 0.7rem;
+  margin-bottom: 0.5rem;
+}
+.pair .pair-row {
+  display: grid; grid-template-columns: 1fr auto 1fr;
+  gap: 0.5rem; align-items: center;
+}
+.pair .student {
+  text-align: center; padding: 0.4rem 0.3rem;
+  background: var(--paper-warm); border-radius: 6px;
+}
+.pair .student .name { font-weight: 600; font-size: 0.86rem; }
+.pair .student .strat { font-family: var(--mono); font-size: 0.66rem; color: var(--muted); margin-top: 0.15rem; }
+.pair .arrow { font-family: var(--hand); font-size: 1.4rem; color: var(--gold-deep); transform: rotate(-3deg); }
+.pair .why {
+  margin-top: 0.5rem; font-size: 0.8rem; line-height: 1.45;
+  color: var(--ink-soft); font-style: italic;
+}
+
+/* curric + standards */
+.curric-row {
+  display: flex; gap: 0.5rem; align-items: baseline;
+  padding: 0.4rem 0.5rem;
+  border-bottom: 1px dashed var(--line-pale); font-size: 0.82rem;
+}
+.curric-row .code { font-family: var(--mono); color: var(--gold-deep); font-size: 0.74rem; min-width: 80px; }
+.curric-row .desc { color: var(--ink-soft); }
+
+/* questions list */
+.q-list .q-row {
+  background: var(--paper); border-left: 3px solid var(--gold);
+  padding: 0.5rem 0.7rem; margin-bottom: 0.4rem;
+  font-size: 0.88rem; line-height: 1.45; font-style: italic;
+  border-radius: 0 6px 6px 0;
+}
+.q-list .q-row .q-tag {
+  font-family: var(--mono); font-size: 0.62rem; color: var(--muted);
+  letter-spacing: 0.1em; text-transform: uppercase; font-style: normal;
+  margin-bottom: 0.2rem; display: block;
+}
+
+/* mobile */
+@media (max-width: 920px) {
+  .main { grid-template-columns: 1fr; }
+  .main.no-panel { grid-template-columns: 1fr; }
+  .sidebar, .panel { display: none; }
+  .topbar .right .disc-toggle { display: none; }
+}
+
+/* TWEAKS PANEL */
+#tweaks {
+  position: fixed; bottom: 1rem; right: 1rem; z-index: 100;
+  background: var(--paper); border: 1.5px solid var(--ink);
+  border-radius: 14px; padding: 0.9rem 1rem;
+  font-family: var(--mono); font-size: 0.74rem;
+  width: 240px; max-width: calc(100vw - 2rem);
+  box-shadow: 4px 4px 0 var(--ink);
+  display: none;
+}
+#tweaks.open { display: block; }
+#tweaks h5 {
+  font-family: var(--serif); font-size: 0.95rem; font-weight: 600;
+  margin-bottom: 0.6rem; display: flex; justify-content: space-between;
+}
+#tweaks h5 button {
+  background: transparent; border: 1px solid var(--ink);
+  border-radius: 50%; width: 22px; height: 22px;
+  font-size: 0.8rem; display: grid; place-items: center;
+}
+#tweaks .tweak { margin-bottom: 0.7rem; }
+#tweaks .tweak .label { font-size: 0.62rem; letter-spacing: 0.12em; color: var(--muted); margin-bottom: 0.25rem; text-transform: uppercase; }
+#tweaks .opts { display: flex; flex-wrap: wrap; gap: 0.25rem; }
+#tweaks .opts button {
+  background: var(--paper-warm); border: 1px solid var(--line-pale);
+  border-radius: 100px; padding: 0.2rem 0.55rem; font-family: var(--mono); font-size: 0.7rem;
+}
+#tweaks .opts button.on { background: var(--ink); color: var(--gold); border-color: var(--ink); }
+#tweaks-toggle {
+  position: fixed; bottom: 1rem; right: 1rem; z-index: 99;
+  background: var(--ink); color: var(--gold); border: none;
+  border-radius: 100px; padding: 0.5rem 0.9rem;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  box-shadow: 3px 3px 0 var(--gold-deep);
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="hermes-logo" viewBox="-110 -78 220 144">
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M -28 -22 C -42 -42, -68 -62, -98 -68 C -94 -54, -84 -40, -72 -32 C -60 -24, -44 -20, -32 -18 Z" fill="#d4a747" fill-opacity="0.20"/>
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60"/>
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64"/>
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52"/>
+        </g>
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+        <path d="M 28 -22 C 42 -42, 68 -62, 98 -68 C 94 -54, 84 -40, 72 -32 C 60 -24, 44 -20, 32 -18 Z" fill="#d4a747" fill-opacity="0.20"/>
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60"/>
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64"/>
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52"/>
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56"/>
+          <path d="M 30 -22 C 34 4, 34 28, 28 56"/>
+          <path d="M -29 18 Q 0 12, 29 20"/>
+        </g>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<style>.mark svg, .who.h svg{fill:currentColor;stroke:currentColor;}</style>
+<div class="shell discourse-math" id="shell">
+
+  <!-- TOP BAR -->
+  <header class="topbar">
+    <div class="left">
+      <a href="Hermes.html" class="home">← hermes</a>
+      <div class="title">
+        <div class="mark"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div>
+        <span><span class="hand">Hermes</span> · console</span>
+      </div>
+    </div>
+    <div class="right">
+      <div class="disc-toggle" id="disc-toggle">
+        <button data-disc="fresh">freshman</button>
+        <button data-disc="math" class="active">math-ed</button>
+        <button data-disc="phil">philosophy</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+
+    <!-- SIDEBAR -->
+    <nav class="sidebar">
+      <div class="section-label">scripted demos</div>
+      <button class="scenario active" data-scenario="anticipate">
+        <span class="num">demo · 01</span>
+        <span class="title">Anticipating 38 + 27</span>
+        <span class="sub">5-Practices · planning</span>
+      </button>
+      <button class="scenario" data-scenario="transcript">
+        <span class="num">demo · 02</span>
+        <span class="title">Mapping a transcript</span>
+        <span class="sub">TalkMoves · PML</span>
+      </button>
+      <button class="scenario" data-scenario="misconception">
+        <span class="num">demo · 03</span>
+        <span class="title">Why did Marcus say 100?</span>
+        <span class="sub">misconception trace</span>
+      </button>
+      <button class="scenario" data-scenario="pairing">
+        <span class="num">demo · 04</span>
+        <span class="title">Suggest pairings</span>
+        <span class="sub">5-Practices · selecting</span>
+      </button>
+
+      <button class="new-thread">+ new thread</button>
+
+      <div class="footer-note">
+        Hermes does not save what you type. He listens; he replies; he forgets.
+      </div>
+    </nav>
+
+    <!-- CHAT -->
+    <main class="chat">
+      <div class="chat-head">
+        <div class="title-block">
+          <h2 id="scenario-title">Anticipating <em>38 + 27</em></h2>
+          <div class="meta" id="scenario-meta">5-practices · 01 · anticipating</div>
+        </div>
+        <button class="panel-toggle active" id="panel-toggle">side panel</button>
+      </div>
+
+      <div class="feed" id="feed"><!-- messages injected by JS --></div>
+
+      <div class="composer">
+        <div class="field">
+          <textarea id="composer-input" placeholder="ask Hermes a question…" rows="1"></textarea>
+          <button class="send" id="composer-send" aria-label="send">↑</button>
+        </div>
+        <div class="composer-meta">
+          <div class="quick" id="quick-prompts"></div>
+          <span>shift+↵ for newline · scripted demo</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- PANEL -->
+    <aside class="panel" id="panel">
+      <div class="panel-head">
+        <span class="label" id="panel-label">anticipation · 5p</span>
+        <button class="close" id="panel-close">×</button>
+      </div>
+      <div id="panel-body"><!-- content injected --></div>
+    </aside>
+
+  </div>
+</div>
+
+<!-- TWEAKS -->
+<button id="tweaks-toggle">tweaks</button>
+<div id="tweaks">
+  <h5>tweaks <button id="tweaks-close">×</button></h5>
+  <div class="tweak">
+    <div class="label">logo style</div>
+    <div class="opts" data-tweak="logo">
+      <button class="on" data-v="seuss">seussian</button>
+      <button data-v="geo">geometric</button>
+      <button data-v="cad">caduceus</button>
+    </div>
+  </div>
+  <div class="tweak">
+    <div class="label">voice register</div>
+    <div class="opts" data-tweak="voice">
+      <button data-v="warm">warm</button>
+      <button class="on" data-v="prof">professional</button>
+      <button data-v="play">playful</button>
+    </div>
+  </div>
+  <div class="tweak">
+    <div class="label">accent</div>
+    <div class="opts" data-tweak="accent">
+      <button class="on" data-v="gold">gold</button>
+      <button data-v="rust">+ rust</button>
+      <button data-v="teal">+ teal</button>
+    </div>
+  </div>
+  <div class="tweak">
+    <div class="label">panel layout</div>
+    <div class="opts" data-tweak="layout">
+      <button class="on" data-v="split">split</button>
+      <button data-v="overlay">overlay</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  SCENARIO SCRIPTS
+// ═══════════════════════════════════════════════════════════
+const SCENARIOS = {
+  anticipate: {
+    title: 'Anticipating <em>38 + 27</em>',
+    meta: '5-practices · 01 · anticipating',
+    panelLabel: 'anticipation · 5p',
+    quickPrompts: ['mark the watch-list', 'add chunking variant', 'pull standards'],
+    transcript: [
+      { who: 't', body: `Tomorrow I'm running a number-talk on <code>38 + 27</code>. Help me anticipate what the kids will try?`},
+      { who: 'h', body: `Five strategies are likely, ranked by what your roster has produced before. <em>RMB</em> dominates — kids who notice 38 wants 2 to make 40. <em>COBO</em> is second; bases first, then ones. A few will still <em>count on by ones</em> — that's the watch-list.<button class="panel-cta" data-panel="anticipate">open Anticipation panel</button>`,
+        neuro: ['gemma · intent', 'prolog · run/5', 'roster · 24 priors', 'reallm · rank'] },
+      { who: 't', body: `Mark the kids I should watch.`},
+      { who: 'h', body: `Watch <em>Marcus</em> — last unit he counted-on by ones for 23+19 and got 41 (lost 1). If RMB doesn't surface for him today, intervene.`,
+        neuro: ['prolog · trace(marcus,23+19)', 'misconception · loss-of-track'] },
+    ],
+    panel: () => panelAnticipation()
+  },
+  transcript: {
+    title: 'Mapping <em>a transcript</em>',
+    meta: 'talkmoves · pml · live',
+    panelLabel: 'transcript · coded',
+    quickPrompts: ['show divergent turns', 'who held the floor', 'export csv'],
+    transcript: [
+      { who: 't', body: `I'll paste yesterday's number-talk transcript. Code each turn for me, both TalkMoves and PML.`},
+      { who: 'h', body: `Six turns coded. Three are <em>operative</em> (rust): kids reasoning aloud about the number itself. Two are <em>normative</em> (teal): the class deciding what counts as "explaining". One <em>subjective</em> opener (gold).<div class="pml-codes"><span class="code" data-m="s">□S↓</span><span class="code" data-m="o">◇O↑</span><span class="code" data-m="o">◇O→</span><span class="code" data-m="n">□N↑</span></div><button class="panel-cta" data-panel="transcript">open coded transcript</button>`,
+        neuro: ['gemma · segment', 'prolog · code/3', 'reallm · pml-classify'] },
+      { who: 't', body: `What's the divergence here?`},
+      { who: 'h', body: `Turn 4: Marcus says <em>"100"</em>. The class doesn't push — they accept it as a valid contribution but don't engage. <em>That's</em> the divergence: the operative move (◇O↑) doesn't get met by a normative response. No one negotiates what counts as a good answer.`,
+        neuro: ['prolog · divergence/2', 'pml · □N↓ absent'] }
+    ],
+    panel: () => panelTranscript()
+  },
+  misconception: {
+    title: `Why did Marcus say <em>100</em>?`,
+    meta: 'misconception · diagnostic',
+    panelLabel: 'misconception · trace',
+    quickPrompts: ['related misconceptions', 'remediation moves', 'show prolog'],
+    transcript: [
+      { who: 't', body: `For <code>38 + 27</code>, Marcus said 100. What happened?`},
+      { who: 'h', body: `Most likely: he stacked digits and didn't carry — read 3+2=5, 8+7=15, concatenated to "5_15" → rounded out to "100" as a number that "sounds big enough". This is a <em>place-value erasure</em>, not a counting error.<button class="panel-cta" data-panel="misconception">open misconception map</button>`,
+        neuro: ['gemma · hypothesize', 'prolog · misconception(M, [38,27], 100)', 'graph · place_value_erasure'] },
+      { who: 't', body: `Is this the same misconception as last week's "23 + 19 = 42"?`},
+      { who: 'h', body: `Different. Last week was <em>loss-of-track</em> in counting on (off-by-one). Today is <em>place-value erasure</em>. Same student, different bug. They sit on different branches of the misconception graph.`,
+        neuro: ['prolog · same_student/2', 'graph · distance(loss-of-track, pv-erasure) = 3'] }
+    ],
+    panel: () => panelMisconception()
+  },
+  pairing: {
+    title: 'Suggest <em>pairings</em>',
+    meta: '5-practices · 04 · sequencing',
+    panelLabel: 'pairings · proposed',
+    quickPrompts: ['show alt pairings', 'why this order?', 'turn into seating'],
+    transcript: [
+      { who: 't', body: `I have student work from today. Suggest two pairings for tomorrow's discussion.`},
+      { who: 'h', body: `<em>Pair A</em> · Sasha (RMB · 40 + 25) with Marcus (count-on · got 100). The contrast surfaces what RMB protects against — Sasha can show "why I made 40 first."<br><br><em>Pair B</em> · Devi (COBO · 30+20, then 8+7) with Jun (chunking · 38+20, then +7). Both base-aware; the divergence is granularity. Productive at the meta level.<button class="panel-cta" data-panel="pairing">open pairing panel</button>`,
+        neuro: ['gemma · select', 'prolog · pair(S1,S2,K)', 'reallm · rank-by-divergence'] },
+      { who: 't', body: `Which pair should go first?`},
+      { who: 'h', body: `<em>Pair A</em>. Always start with the contrast that exposes the watch-list. Pair B refines after the place-value frame is in the room.`,
+        neuro: ['5p · sequencing rule', 'prolog · order/2'] }
+    ],
+    panel: () => panelPairing()
+  }
+};
+
+// ═══════════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════════
+const state = {
+  scenario: 'anticipate',
+  panelOpen: true,
+};
+
+// ═══════════════════════════════════════════════════════════
+//  RENDER MESSAGES
+// ═══════════════════════════════════════════════════════════
+const feed = document.getElementById('feed');
+function neuroHTML(steps) {
+  if (!steps) return '';
+  return `<div class="neuro-trace">${steps.map((s,i) => {
+    const deep = i >= 1 ? ' deep' : '';
+    return `<span class="step${deep}">${s}</span>`;
+  }).join('')}</div>`;
+}
+function renderMessage(msg, animate = true) {
+  const div = document.createElement('div');
+  div.className = `msg ${msg.who}`;
+  if (!animate) div.style.animation = 'none';
+  const who = msg.who === 'h'
+    ? `<div class="who h"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div>`
+    : `<div class="who t">T</div>`;
+  div.innerHTML = `${who}<div class="body">${msg.body}${neuroHTML(msg.neuro)}</div>`;
+  feed.appendChild(div);
+  div.querySelectorAll('.panel-cta').forEach(b => {
+    b.addEventListener('click', () => {
+      state.panelOpen = true;
+      applyPanelState();
+    });
+  });
+  feed.scrollTop = feed.scrollHeight;
+}
+
+function loadScenario(key) {
+  state.scenario = key;
+  const s = SCENARIOS[key];
+  document.getElementById('scenario-title').innerHTML = s.title;
+  document.getElementById('scenario-meta').textContent = s.meta;
+  document.getElementById('panel-label').textContent = s.panelLabel;
+  feed.innerHTML = '';
+  s.transcript.forEach((m, i) => {
+    setTimeout(() => renderMessage(m), i * 220);
+  });
+  // quick prompts
+  const qp = document.getElementById('quick-prompts');
+  qp.innerHTML = '';
+  s.quickPrompts.forEach(p => {
+    const b = document.createElement('button');
+    b.textContent = p;
+    b.addEventListener('click', () => askFollowup(p));
+    qp.appendChild(b);
+  });
+  // panel
+  s.panel();
+  // active state
+  document.querySelectorAll('.scenario').forEach(el => el.classList.toggle('active', el.dataset.scenario === key));
+}
+
+function askFollowup(text) {
+  renderMessage({ who: 't', body: text });
+  // append a thinking indicator
+  const thinking = document.createElement('div');
+  thinking.className = 'msg h';
+  thinking.innerHTML = `<div class="who h thinking"><svg viewBox="-110 -78 220 144"><!--
+        Seussian winged H. Wings sweep UP and OUT from the shoulders of the H,
+        like a caduceus or FTD florist mark. Each wing is a closed leaf-shape
+        with feather lines inside.
+      -->
+      <g fill="#d4a747" stroke="#d4a747" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <!-- LEFT WING — closed leaf, root at H-shoulder, tip up-and-back -->
+        <path
+          d="M -28 -22
+             C -42 -42, -68 -62, -98 -68
+             C -94 -54, -84 -40, -72 -32
+             C -60 -24, -44 -20, -32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <!-- feather rachises (radiating from root toward tip) -->
+        <g fill="none" stroke-width="2.2">
+          <path d="M -34 -20 C -52 -32, -72 -46, -92 -60" />
+          <path d="M -36 -24 C -54 -38, -72 -52, -86 -64" />
+          <path d="M -32 -16 C -54 -22, -76 -32, -94 -52" />
+        </g>
+        <!-- Seussian upturned feather tips -->
+        <path d="M -92 -60 q -2 -8 -8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M -86 -64 q -2 -7 -8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- RIGHT WING (mirror) -->
+        <path
+          d="M 28 -22
+             C 42 -42, 68 -62, 98 -68
+             C 94 -54, 84 -40, 72 -32
+             C 60 -24, 44 -20, 32 -18
+             Z"
+          fill="#d4a747" fill-opacity="0.20"
+        />
+        <g fill="none" stroke-width="2.2">
+          <path d="M 34 -20 C 52 -32, 72 -46, 92 -60" />
+          <path d="M 36 -24 C 54 -38, 72 -52, 86 -64" />
+          <path d="M 32 -16 C 54 -22, 76 -32, 94 -52" />
+        </g>
+        <path d="M 92 -60 q 2 -8 8 -10" fill="none" stroke-width="2.2"/>
+        <path d="M 86 -64 q 2 -7 8 -8" fill="none" stroke-width="2.2"/>
+
+        <!-- THE H — Seussian: bowed verticals, slight wobble in crossbar -->
+        <g fill="none" stroke-width="11" stroke-linecap="round">
+          <path d="M -30 -22 C -34 4, -34 28, -28 56" />
+          <path d="M 30 -22 C 34 4, 34 28, 28 56" />
+          <path d="M -29 18 Q 0 12, 29 20" />
+        </g>
+      </g>
+      <!-- two tiny Sneetch stars, off-axis -->
+      <g fill="#d4a747" opacity="0.78">
+        <path d="M -56 60 l 1.6 4.6 l 4.8 0 l -3.9 2.9 l 1.5 4.6 l -4 -2.8 l -4 2.8 l 1.5 -4.6 l -3.9 -2.9 l 4.8 0 z" />
+        <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
+      </g></svg></div><div class="body"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  feed.appendChild(thinking);
+  feed.scrollTop = feed.scrollHeight;
+  setTimeout(() => {
+    thinking.remove();
+    const reply = SCRIPTED_FOLLOWUPS[text] || `That's a thread I can pull on. <em>One sec</em> — let me check the prolog and the roster.`;
+    renderMessage({ who: 'h', body: reply, neuro: ['gemma · paraphrase', 'prolog · query'] });
+  }, 1100);
+}
+
+const SCRIPTED_FOLLOWUPS = {
+  'mark the watch-list': `Watch <em>Marcus</em>, <em>Aiden</em>. Both have count-on history with regrouping. If they don't shift to base-thinking by turn 3, intervene with the make-ten frame.`,
+  'add chunking variant': `Added. Chunking 38+27 as 38+20 → 58, then +7 → 65. Likely from <em>Jun</em>. I've put it at 35%.`,
+  'pull standards': `<em>2.NBT.B.5</em> · fluently add within 100 using place value and properties. <em>2.NBT.B.7</em> · base-ten reasoning with regrouping.`,
+  'show divergent turns': `Three of six turns are divergent. Turn 4 (Marcus) is the costliest — operative without a normative response. I've highlighted them in the panel.`,
+  'who held the floor': `Teacher: 41% of words. Sasha: 28%. Devi: 14%. Marcus: 6%. The bottom three students: 11% combined.`,
+  'export csv': `Ready when you click. <em>turn, speaker, talkmove, pml, divergence</em>. 6 rows.`,
+  'related misconceptions': `Three sit nearby in the graph: <em>partial-sums-no-carry</em>, <em>digit-as-quantity</em>, <em>magnitude-by-length</em>. All share the place-value erasure root.`,
+  'remediation moves': `Don't correct. Pair Marcus with Sasha tomorrow. Have Sasha present <em>"why I made 40 first"</em>. The make-ten frame does the work.`,
+  'show prolog': `<code>misconception(place_value_erasure, [A,B], C) :- digit_concat(A,B,Raw), round_up(Raw,C).</code>`,
+  'show alt pairings': `Alt: Sasha + Devi (both correct, different paths — meta-level discussion). Or Marcus + Aiden (same misconception — risky, but if Marcus is articulating, productive).`,
+  'why this order?': `Pair A first because the watch-list needs the place-value frame in the room before granularity matters. Sequencing rule from the 5 Practices: <em>error-revealing contrast precedes refinement contrast</em>.`,
+  'turn into seating': `Done. Pair A in the front-left. Pair B at the back-right. Marcus by the window — natural light helps him.`
+};
+
+// ═══════════════════════════════════════════════════════════
+//  PANELS
+// ═══════════════════════════════════════════════════════════
+function panelAnticipation() {
+  document.getElementById('panel-body').innerHTML = `
+    <div class="panel-section">
+      <div class="sub-label">ranked strategies</div>
+      <div class="anti-list">
+        ${[
+          ['62','RMB','Sasha · Devi', false],
+          ['48','COBO','Devi · Jun', false],
+          ['35','Chunking','Jun · Mei', false],
+          ['22','Rounding','Aiden', false],
+          ['18','count-on by ones','Marcus', true]
+        ].map(([p,n,w,a]) => `
+          <div class="anti-row${a?' alert':''}">
+            <span class="pct">${p}%</span>
+            <span class="strat-name">${n}</span>
+            <span class="who-said">${w}</span>
+            <div class="bar"><div class="bar-fill" style="width:${p}%"></div></div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">number-line · RMB · 38+27</div>
+      <div class="numberline">${numberlineSVG([
+        {at: 38, label: '38'},
+        {at: 40, label: '+2', via: 'jump'},
+        {at: 65, label: '+25', via: 'jump'}
+      ])}</div>
+      <div class="step-label">38 → 40 → 65 · "make-ten then add"</div>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">standards</div>
+      <div class="curric-row"><span class="code">2.NBT.B.5</span><span class="desc">add within 100 fluently</span></div>
+      <div class="curric-row"><span class="code">2.NBT.B.7</span><span class="desc">base-ten reasoning · regrouping</span></div>
+      <div class="curric-row"><span class="code">2.OA.B.2</span><span class="desc">add fluently within 20</span></div>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">questions Hermes might ask</div>
+      <div class="q-list">
+        <div class="q-row"><span class="q-tag">talk-move · revoicing</span>So you made 40 first — why 40 and not 39?</div>
+        <div class="q-row"><span class="q-tag">talk-move · agree-disagree</span>Does someone agree with Sasha's first step? Does someone see it differently?</div>
+      </div>
+    </div>
+  `;
+}
+
+function panelTranscript() {
+  document.getElementById('panel-body').innerHTML = `
+    <div class="panel-section">
+      <div class="sub-label">turn-by-turn · 6 turns</div>
+      <div class="talk-strip">
+        ${[
+          [1,'T',"Today we're solving 38 plus 27. Sasha?", [['s','□S↓'],['n','revoice']]],
+          [2,'Sasha','I made it 40 first.', [['s','□S↑'],['o','◇O↑']]],
+          [3,'T','You made it 40 — say more?', [['n','□N↑'],['n','press']]],
+          [4,'Marcus','um. 100.', [['o','◇O↑']]],
+          [5,'T','Okay. Devi, what did you try?', [['n','□N→'],['s','agree-dis. absent']]],
+          [6,'Devi','30 plus 20, then 8 plus 7.', [['s','□S↑'],['o','◇O→']]]
+        ].map(([n,s,t,codes]) => `
+          <div class="talk-row">
+            <div>
+              <div class="turn-num">${String(n).padStart(2,'0')} · ${s}</div>
+            </div>
+            <div>
+              <div class="text">${t}</div>
+              <div class="codes">${codes.map(([m,l]) => `<span class="c" data-m="${m}">${l}</span>`).join('')}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">divergence signature</div>
+      <p>Turn 4 stands out: <em>◇O↑</em> with no <em>□N</em> follow-up. Under PML this is a missed normative invitation — class declined to adjudicate Marcus's "100".</p>
+    </div>
+  `;
+}
+
+function panelMisconception() {
+  document.getElementById('panel-body').innerHTML = `
+    <div class="panel-section">
+      <div class="sub-label">graph trace · marcus · 38+27=100</div>
+      <div class="misc-graph">
+        <svg viewBox="0 0 280 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#6a6353"/>
+            </marker>
+          </defs>
+          <!-- nodes -->
+          <g font-family="IBM Plex Mono" font-size="9" text-anchor="middle">
+            <circle cx="50" cy="40" r="22" fill="#ebdfc5" stroke="#0d0c08" stroke-width="1.2"/>
+            <text x="50" y="38">38, 27</text>
+            <text x="50" y="50" font-size="8" fill="#6a6353">input</text>
+
+            <circle cx="140" cy="40" r="26" fill="#f0d68a" stroke="#b78930" stroke-width="1.5"/>
+            <text x="140" y="38">digit-stack</text>
+            <text x="140" y="50" font-size="8">3|2 · 8|7</text>
+
+            <circle cx="230" cy="40" r="22" fill="rgba(196,90,62,0.2)" stroke="#c45a3e" stroke-width="1.5"/>
+            <text x="230" y="38">"5_15"</text>
+            <text x="230" y="50" font-size="8" fill="#c45a3e">erasure</text>
+
+            <circle cx="230" cy="140" r="26" fill="#c45a3e" stroke="#0d0c08" stroke-width="1.5"/>
+            <text x="230" y="138" fill="#f4ead6">round-up</text>
+            <text x="230" y="150" font-size="8" fill="#f4ead6">→ 100</text>
+
+            <circle cx="50" cy="140" r="22" fill="#ede4cf" stroke="#0d0c08" stroke-dasharray="2 2" opacity="0.6"/>
+            <text x="50" y="138" opacity="0.6">RMB</text>
+            <text x="50" y="150" font-size="8" fill="#6a6353" opacity="0.6">not taken</text>
+
+            <circle cx="140" cy="140" r="22" fill="#ede4cf" stroke="#0d0c08" stroke-dasharray="2 2" opacity="0.6"/>
+            <text x="140" y="138" opacity="0.6">COBO</text>
+            <text x="140" y="150" font-size="8" fill="#6a6353" opacity="0.6">not taken</text>
+          </g>
+          <!-- edges -->
+          <g stroke="#6a6353" stroke-width="1.5" fill="none" marker-end="url(#arr)">
+            <path d="M 72 40 L 114 40"/>
+            <path d="M 166 40 L 208 40"/>
+            <path d="M 230 62 L 230 114"/>
+          </g>
+          <g stroke="#6a6353" stroke-width="1" stroke-dasharray="3 3" fill="none" opacity="0.4" marker-end="url(#arr)">
+            <path d="M 50 62 L 50 118"/>
+            <path d="M 72 50 Q 100 95, 120 132"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">prolog · trace</div>
+      <pre class="prolog-block"><span class="com">% why_did(Student, Problem, Answer, Why)</span>
+why_did(<span class="var">marcus</span>, [<span class="var">38</span>,<span class="var">27</span>], <span class="var">100</span>, <span class="str">place_value_erasure</span>) :-
+  digit_stack([<span class="var">38</span>,<span class="var">27</span>], <span class="var">Stacked</span>),
+  no_carry(<span class="var">Stacked</span>, <span class="var">Raw</span>),
+  round_up(<span class="var">Raw</span>, <span class="var">100</span>).</pre>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">remediation</div>
+      <p>Don't correct. Pair Marcus with Sasha; have Sasha present <em>"why I made 40 first"</em>. Place-value frame enters the room without targeting Marcus.</p>
+    </div>
+  `;
+}
+
+function panelPairing() {
+  document.getElementById('panel-body').innerHTML = `
+    <div class="panel-section">
+      <div class="sub-label">pair a · contrast</div>
+      <div class="pair">
+        <div class="pair-row">
+          <div class="student"><div class="name">Sasha</div><div class="strat">RMB · 65</div></div>
+          <div class="arrow">↔</div>
+          <div class="student"><div class="name">Marcus</div><div class="strat">count-on · 100</div></div>
+        </div>
+        <div class="why">Surfaces what RMB protects against. Sasha presents the make-ten frame; Marcus's place-value erasure becomes visible to the room without being targeted.</div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">pair b · refinement</div>
+      <div class="pair">
+        <div class="pair-row">
+          <div class="student"><div class="name">Devi</div><div class="strat">COBO · 65</div></div>
+          <div class="arrow">↔</div>
+          <div class="student"><div class="name">Jun</div><div class="strat">chunking · 65</div></div>
+        </div>
+        <div class="why">Both base-aware. Divergence at the level of granularity — both arrive correctly via different decompositions. Productive meta-level conversation about <em>which</em> base-ten move and when.</div>
+      </div>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">sequencing rule</div>
+      <p>Pair A first. <em>Error-revealing contrast precedes refinement contrast</em> (5 Practices · selecting + sequencing).</p>
+    </div>
+    <div class="panel-section">
+      <div class="sub-label">questions Hermes might ask</div>
+      <div class="q-list">
+        <div class="q-row"><span class="q-tag">to sasha</span>Why 40 — and not 39 or 41?</div>
+        <div class="q-row"><span class="q-tag">to the class</span>Whose answer surprised you most?</div>
+      </div>
+    </div>
+  `;
+}
+
+// number line generator
+function numberlineSVG(steps) {
+  const min = 0, max = 70;
+  const w = 280, pad = 14, h = 70;
+  const x = v => pad + ((v - min) / (max - min)) * (w - 2*pad);
+  let path = `<line x1="${pad}" y1="${h-22}" x2="${w-pad}" y2="${h-22}" stroke="#0d0c08" stroke-width="1.2"/>`;
+  // ticks every 10
+  for (let v = 0; v <= 70; v += 10) {
+    path += `<line x1="${x(v)}" y1="${h-26}" x2="${x(v)}" y2="${h-18}" stroke="#0d0c08" stroke-width="1"/>`;
+    path += `<text x="${x(v)}" y="${h-6}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#6a6353">${v}</text>`;
+  }
+  // jumps
+  let prev = 38;
+  steps.forEach((s, i) => {
+    if (i === 0) {
+      path += `<circle cx="${x(s.at)}" cy="${h-22}" r="4" fill="#0d0c08"/>`;
+      path += `<text x="${x(s.at)}" y="${h-30}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#0d0c08">${s.label}</text>`;
+      return;
+    }
+    const cx = (x(prev) + x(s.at)) / 2;
+    const ry = 16;
+    path += `<path d="M ${x(prev)} ${h-22} Q ${cx} ${h-22-ry*1.6}, ${x(s.at)} ${h-22}" fill="none" stroke="#b78930" stroke-width="1.6"/>`;
+    path += `<text x="${cx}" y="${h-22-ry*1.6+2}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#b78930">${s.label}</text>`;
+    path += `<circle cx="${x(s.at)}" cy="${h-22}" r="3.5" fill="#b78930"/>`;
+    prev = s.at;
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${path}</svg>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  EVENTS
+// ═══════════════════════════════════════════════════════════
+document.querySelectorAll('.scenario').forEach(b => {
+  b.addEventListener('click', () => loadScenario(b.dataset.scenario));
+});
+
+document.getElementById('panel-toggle').addEventListener('click', () => {
+  state.panelOpen = !state.panelOpen;
+  applyPanelState();
+});
+document.getElementById('panel-close').addEventListener('click', () => {
+  state.panelOpen = false;
+  applyPanelState();
+});
+function applyPanelState() {
+  const main = document.getElementById('main');
+  const tog = document.getElementById('panel-toggle');
+  if (state.panelOpen) {
+    main.classList.remove('no-panel');
+    tog.classList.add('active');
+  } else {
+    main.classList.add('no-panel');
+    tog.classList.remove('active');
+  }
+}
+
+document.querySelectorAll('#disc-toggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('#disc-toggle button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    const shell = document.getElementById('shell');
+    shell.classList.remove('discourse-fresh','discourse-math','discourse-phil');
+    shell.classList.add('discourse-' + b.dataset.disc);
+  });
+});
+
+// composer
+const inp = document.getElementById('composer-input');
+inp.addEventListener('input', () => {
+  inp.style.height = 'auto';
+  inp.style.height = Math.min(inp.scrollHeight, 120) + 'px';
+});
+inp.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendComposer();
+  }
+});
+document.getElementById('composer-send').addEventListener('click', sendComposer);
+function sendComposer() {
+  const text = inp.value.trim();
+  if (!text) return;
+  inp.value = '';
+  inp.style.height = 'auto';
+  askFollowup(text);
+}
+
+// tweaks
+const tweaksToggle = document.getElementById('tweaks-toggle');
+const tweaks = document.getElementById('tweaks');
+tweaksToggle.addEventListener('click', () => {
+  tweaks.classList.add('open');
+  tweaksToggle.style.display = 'none';
+});
+document.getElementById('tweaks-close').addEventListener('click', () => {
+  tweaks.classList.remove('open');
+  tweaksToggle.style.display = '';
+});
+document.querySelectorAll('#tweaks .opts').forEach(group => {
+  group.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+      btn.classList.add('on');
+      applyTweak(group.dataset.tweak, btn.dataset.v);
+    });
+  });
+});
+function applyTweak(key, val) {
+  const root = document.documentElement;
+  if (key === 'accent') {
+    if (val === 'gold') { root.style.setProperty('--gold', '#d4a747'); root.style.setProperty('--gold-deep', '#b78930'); }
+    if (val === 'rust') { root.style.setProperty('--gold', '#d4814a'); root.style.setProperty('--gold-deep', '#b85f30'); }
+    if (val === 'teal') { root.style.setProperty('--gold', '#7ab0ba'); root.style.setProperty('--gold-deep', '#4d8a96'); }
+  }
+  // logo + voice + layout = visual signal only in this demo (the wiring is real but the substance varies)
+}
+
+// initial render
+loadScenario('anticipate');
+applyPanelState();
+</script>
+</body>
+</html>

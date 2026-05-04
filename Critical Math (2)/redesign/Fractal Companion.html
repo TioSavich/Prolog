@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" data-page-id="fractal-companion">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fractal — Companion Reading</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Serif:ital,wght@0,400;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #110f08; --surface: #1a1710; --surface-raised: #242014;
+  --border: #3a3428; --border-soft: #2a2519;
+  --text: #d4cfc0; --text-strong: #ece6d4; --muted: #8a8470; --faint: #5e5a4e;
+  --accent: #e8a84c; --tension: #d4634a; --release: #5b9eae;
+  --m: #9b6b9e; --w: #6b9e8c;
+  --serif: 'IBM Plex Serif', 'Source Serif 4', Georgia, serif;
+  --display: 'Source Serif 4', 'IBM Plex Serif', Georgia, serif;
+  --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+html { background: var(--bg); color: var(--text); font-family: var(--serif); line-height: 1.7; font-size: 17px; -webkit-font-smoothing: antialiased; }
+body { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 5rem; }
+
+/* ─── site shell nav (reusable pattern) ─── */
+.site-shell {
+  display: grid; grid-template-columns: auto 1fr auto;
+  align-items: center; gap: 1rem;
+  padding-bottom: 1rem; margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+.site-shell .brand {
+  font-family: var(--mono); font-size: 0.72rem;
+  letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted);
+}
+.site-shell .brand b { color: var(--accent); font-weight: 500; }
+.site-shell .brand a { color: inherit; text-decoration: none; }
+.site-shell .crumbs {
+  font-family: var(--mono); font-size: 0.72rem; color: var(--faint);
+  text-align: center; letter-spacing: 0.02em;
+}
+.site-shell .crumbs .sep { color: var(--faint); margin: 0 0.4rem; opacity: 0.5; }
+.site-shell .crumbs .here { color: var(--accent); }
+.site-shell .discourse-buttons { display: flex; gap: 0.3rem; }
+.site-shell .discourse-btn {
+  font-family: var(--mono); font-size: 0.68rem;
+  background: none; border: 1px solid var(--border); color: var(--muted);
+  padding: 0.2rem 0.5rem; border-radius: 3px; cursor: pointer;
+  transition: all 0.2s;
+}
+.site-shell .discourse-btn.active { border-color: var(--accent); color: var(--accent); }
+.site-shell .discourse-btn:hover { color: var(--text); border-color: var(--muted); }
+
+/* ─── module rail (where am I) ─── */
+.module-rail {
+  display: flex; gap: 0.6rem; margin-bottom: 2.5rem;
+  overflow-x: auto; padding-bottom: 0.4rem;
+  scrollbar-width: thin;
+}
+.module-rail::-webkit-scrollbar { height: 2px; }
+.module-rail::-webkit-scrollbar-thumb { background: var(--border); }
+.rail-step {
+  flex: 1; min-width: 80px;
+  font-family: var(--mono); font-size: 0.64rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 0.6rem 0.5rem 0.5rem;
+  border-top: 1px solid var(--border);
+  text-decoration: none;
+  transition: color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+}
+.rail-step .n { display: block; color: var(--faint); margin-bottom: 0.1rem; font-size: 0.6rem; }
+.rail-step:hover { color: var(--text); border-color: var(--muted); }
+.rail-step.current {
+  color: var(--accent); border-top: 2px solid var(--accent); padding-top: calc(0.6rem - 1px);
+}
+.rail-step.current .n { color: var(--accent); }
+.rail-step.done { color: #a39c87; }
+.rail-step.done .n { color: var(--release); }
+.rail-step.done .n::before { content: '✓ '; }
+
+/* ─── hero ─── */
+.hero {
+  margin: 1rem 0 3rem;
+  position: relative;
+}
+.hero .kicker {
+  font-family: var(--mono); font-size: 0.7rem;
+  letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 1rem;
+}
+.hero h1 {
+  font-family: var(--display);
+  font-weight: 600; font-size: clamp(2.2rem, 6vw, 3.4rem);
+  line-height: 1.08; letter-spacing: -0.02em;
+  color: var(--text-strong);
+  margin-bottom: 1rem;
+}
+.hero h1 em { font-style: italic; color: var(--accent); font-weight: 400; }
+.hero .lede {
+  font-family: var(--display); font-size: 1.22rem; line-height: 1.55;
+  color: #c4bea8; max-width: 640px; font-style: italic;
+}
+
+/* ─── the geometric fractal visual ─── */
+.fractal-figure {
+  margin: 3rem auto; text-align: center; position: relative;
+  padding: 2rem 0;
+}
+.fractal-figure svg { max-width: 100%; height: auto; }
+.fractal-figure .caption {
+  font-family: var(--mono); font-size: 0.75rem; color: var(--muted);
+  margin-top: 1.2rem; max-width: 520px; margin-left: auto; margin-right: auto;
+  line-height: 1.55;
+}
+.fractal-figure .caption em { color: var(--text); font-style: normal; }
+
+/* ─── essay ─── */
+.essay p { margin-bottom: 1.2em; text-wrap: pretty; }
+.essay p.lead {
+  font-size: 1.12rem; font-style: italic; color: var(--text); font-family: var(--display);
+}
+.essay strong { color: var(--text-strong); font-weight: 600; }
+.essay em { color: #c4bea8; }
+.essay code {
+  font-family: var(--mono); font-size: 0.9em;
+  color: var(--accent); background: var(--surface-raised);
+  padding: 0.08rem 0.34rem; border-radius: 3px;
+}
+.essay .pull {
+  border-left: 3px solid var(--accent);
+  padding: 0.3rem 0 0.3rem 1.3rem;
+  margin: 2rem 0;
+  font-family: var(--display); font-style: italic;
+  font-size: 1.08rem; color: var(--text);
+}
+.section-mark {
+  display:flex; align-items: center; gap: 0.9rem;
+  margin: 3.4rem 0 1.4rem;
+  font-family: var(--mono); text-transform: uppercase;
+  font-size: 0.7rem; letter-spacing: 0.22em; color: var(--muted);
+}
+.section-mark > span:not(.mk) { white-space: nowrap; }
+.section-mark::before, .section-mark::after {
+  content: ''; flex: 1; height: 1px; background: var(--border); min-width: 1rem;
+}
+.section-mark .mk { color: var(--accent); opacity: 0.7; }
+.essay h2 {
+  font-family: var(--display); font-weight: 600; font-size: 1.5rem;
+  letter-spacing: -0.01em; color: var(--text-strong);
+  margin: 0 0 1rem;
+}
+
+/* ─── ring-cards: the nested automata as vocabulary ─── */
+.ring-cards {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 0.75rem; margin: 1.6rem 0 2.5rem;
+}
+.ring-card {
+  padding: 1rem 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  border-left: 3px solid var(--ring, var(--release));
+  border-radius: 4px;
+}
+.ring-card.r0 { --ring: var(--release); }
+.ring-card.r1 { --ring: var(--accent); }
+.ring-card.r2 { --ring: var(--m); }
+.ring-card.r3 { --ring: var(--w); }
+.ring-card.r4 { --ring: var(--tension); }
+.ring-card .head {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 0.3rem;
+}
+.ring-card .idx {
+  font-family: var(--mono); font-size: 0.65rem; color: var(--muted);
+  letter-spacing: 0.1em;
+}
+.ring-card .name {
+  font-family: var(--display); font-weight: 600; font-size: 1rem;
+  color: var(--text-strong);
+}
+.ring-card .hierarchy {
+  font-family: var(--mono); font-size: 0.62rem;
+  color: var(--ring); opacity: 0.85;
+  letter-spacing: 0.05em;
+}
+.ring-card p {
+  font-size: 0.88rem; color: #b8b0a0; line-height: 1.55;
+  margin: 0.4rem 0 0;
+}
+.ring-card .calls {
+  font-family: var(--mono); font-size: 0.68rem;
+  color: var(--muted); margin-top: 0.55rem;
+}
+.ring-card .calls .tgt { color: var(--ring); }
+
+/* ─── hierarchy table ─── */
+.hier-table {
+  width: 100%; border-collapse: collapse;
+  font-family: var(--mono); font-size: 0.82rem;
+  margin: 1.5rem 0 2.5rem;
+  background: var(--surface); border-radius: 4px; overflow: hidden;
+}
+.hier-table th, .hier-table td {
+  padding: 0.65rem 0.9rem; text-align: left;
+  border-bottom: 1px solid var(--border-soft);
+}
+.hier-table th {
+  font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--muted); background: var(--surface-raised);
+  font-weight: 500;
+}
+.hier-table td.grade { color: var(--accent); }
+.hier-table td.lang { color: var(--release); }
+.hier-table td.ex { color: var(--text-strong); }
+.hier-table tr:last-child td { border-bottom: none; }
+.hier-table tr.boundary td { color: var(--tension); background: rgba(212,99,74,0.05); }
+
+/* ─── layered discourse ─── */
+.layer { display: none; }
+.layer.on { display: block; }
+
+/* ─── footer nav ─── */
+.page-nav {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 0.8rem; margin-top: 3rem;
+}
+.page-nav a {
+  padding: 1.1rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text); text-decoration: none;
+  background: var(--surface);
+  transition: all 0.2s;
+}
+.page-nav a:hover {
+  border-color: var(--accent); background: var(--surface-raised);
+}
+.page-nav .dir {
+  font-family: var(--mono); font-size: 0.65rem;
+  color: var(--muted); letter-spacing: 0.15em;
+  text-transform: uppercase; margin-bottom: 0.25rem;
+}
+.page-nav .title {
+  font-family: var(--display); font-weight: 600; font-size: 1.02rem;
+  color: var(--text-strong);
+}
+.page-nav a:hover .title { color: var(--accent); }
+.page-nav .next { text-align: right; }
+
+@media (max-width: 640px) {
+  .site-shell { grid-template-columns: 1fr 1fr; }
+  .site-shell .crumbs { grid-column: 1 / -1; grid-row: 2; text-align: left; }
+  .ring-cards { grid-template-columns: 1fr; }
+  .hier-table { font-size: 0.72rem; }
+  .hier-table th, .hier-table td { padding: 0.5rem 0.6rem; }
+  .page-nav { grid-template-columns: 1fr; }
+  .page-nav .next { text-align: left; }
+}
+</style>
+</head>
+<body>
+
+<!-- ─── SITE SHELL ─── -->
+<nav class="site-shell">
+  <div class="brand"><a href="../../Critical Mathematics.html"><b>Critical</b> Mathematics</a></div>
+  <div class="crumbs"><span>modules</span><span class="sep">·</span><span class="here">06 · the fractal</span></div>
+  <div class="discourse-buttons">
+    <button class="discourse-btn active" data-level="freshman">freshman</button>
+    <button class="discourse-btn" data-level="mathEd">math ed</button>
+    <button class="discourse-btn" data-level="philosophy">philosophy</button>
+  </div>
+</nav>
+
+<!-- ─── MODULE RAIL ─── -->
+<div class="module-rail">
+  <a class="rail-step done" href="../../umedcta-formalization/more-zeeman/index.html"><span class="n">00</span>More Machine</a>
+  <a class="rail-step done" href="../../umedcta-formalization/more-zeeman/counting.html"><span class="n">01</span>Counting</a>
+  <a class="rail-step done" href="../../redesign/Strategies Index.html"><span class="n">02</span>Addition</a>
+  <a class="rail-step done" href="#"><span class="n">03</span>Subtraction</a>
+  <a class="rail-step done" href="#"><span class="n">04</span>Multiplication</a>
+  <a class="rail-step done" href="#"><span class="n">05</span>Division</a>
+  <a class="rail-step current" href="#"><span class="n">06</span>Fractal</a>
+  <a class="rail-step" href="../../umedcta-formalization/more-zeeman/boundary.html"><span class="n">07</span>Boundary</a>
+</div>
+
+<!-- ─── HERO ─── -->
+<header class="hero">
+  <div class="kicker">06 · The fractal</div>
+  <h1>A hermeneutic sphere falling through <em>flatland</em></h1>
+  <p class="lede">Each strategy is a circle. Each circle contains the smaller circles it calls. Stack them into a sphere. Drop the sphere through a plane. What passes through at any instant is one ring — but the whole sphere was always there.</p>
+</header>
+
+<!-- ─── the figure ─── -->
+<div class="fractal-figure">
+  <svg viewBox="-220 -220 440 440" width="520" aria-label="Nested concentric rings with inward-pointing invocation arcs" role="img">
+    <!-- background subtle grid -->
+    <defs>
+      <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stop-color="#e8a84c" stop-opacity="0.08"/>
+        <stop offset="60%" stop-color="#e8a84c" stop-opacity="0.02"/>
+        <stop offset="100%" stop-color="#e8a84c" stop-opacity="0"/>
+      </radialGradient>
+    </defs>
+    <circle r="210" fill="url(#halo)"/>
+    <!-- rings -->
+    <g fill="none" stroke-width="1.1">
+      <circle r="200" stroke="#6b9e8c" stroke-dasharray="3 3" opacity="0.9"/>
+      <circle r="150" stroke="#9b6b9e" stroke-dasharray="3 3" opacity="0.9"/>
+      <circle r="100" stroke="#e8a84c" opacity="0.95"/>
+      <circle r="55"  stroke="#5b9eae" opacity="0.95"/>
+    </g>
+    <!-- state dots on each ring -->
+    <g fill="#d4cfc0">
+      <!-- counting ring (r=55) - 4 states -->
+      <circle cx="0" cy="-55" r="3"/>
+      <circle cx="55" cy="0" r="3"/>
+      <circle cx="0" cy="55" r="3"/>
+      <circle cx="-55" cy="0" r="3"/>
+      <!-- cobo ring (r=100) - 4 states -->
+      <circle cx="0" cy="-100" r="3"/>
+      <circle cx="100" cy="0" r="3"/>
+      <circle cx="0" cy="100" r="3"/>
+      <circle cx="-100" cy="0" r="3"/>
+      <!-- rmb (r=150) -->
+      <circle cx="0" cy="-150" r="2.6"/>
+      <circle cx="142" cy="-46" r="2.6"/>
+      <circle cx="88" cy="121" r="2.6"/>
+      <circle cx="-88" cy="121" r="2.6"/>
+      <circle cx="-142" cy="-46" r="2.6"/>
+      <!-- chunking (r=200) -->
+      <circle cx="0" cy="-200" r="2.4"/>
+      <circle cx="190" cy="-62" r="2.4"/>
+      <circle cx="117" cy="162" r="2.4"/>
+      <circle cx="-117" cy="162" r="2.4"/>
+      <circle cx="-190" cy="-62" r="2.4"/>
+    </g>
+    <!-- invocation arcs: outer ring reaches inward -->
+    <g fill="none" stroke-dasharray="1 3" stroke-width="0.8">
+      <path d="M 100 0 Q 75 -25 55 0" stroke="#e8a84c" opacity="0.7"/>
+      <path d="M 142 -46 Q 110 -35 100 0" stroke="#9b6b9e" opacity="0.7"/>
+      <path d="M 190 -62 Q 150 -55 142 -46" stroke="#6b9e8c" opacity="0.7"/>
+    </g>
+    <!-- labels -->
+    <g font-family="IBM Plex Mono, monospace" font-size="9" fill="#8a8470">
+      <text x="0" y="-216" text-anchor="middle" fill="#6b9e8c">chunking</text>
+      <text x="0" y="-166" text-anchor="middle" fill="#9b6b9e">rmb</text>
+      <text x="0" y="-116" text-anchor="middle" fill="#e8a84c">cobo</text>
+      <text x="0" y="-71"  text-anchor="middle" fill="#5b9eae">counting</text>
+    </g>
+    <!-- center -->
+    <circle r="3" fill="#e8a84c"/>
+    <!-- the "plane of flatland" — horizontal line through -->
+    <line x1="-220" y1="0" x2="220" y2="0" stroke="#d4634a" stroke-width="0.5" stroke-dasharray="2 4" opacity="0.55"/>
+    <text x="214" y="-5" text-anchor="end" font-family="IBM Plex Mono, monospace" font-size="9" fill="#d4634a" opacity="0.8">flatland</text>
+  </svg>
+  <p class="caption"><em>Four strategy automata as concentric rings.</em> Dots mark states; dashed arcs mark <code>invokesCore</code> — the outer machine delegating its transition to the inner machine. The red dashed line is <em>flatland</em>: the slice you can observe at any single moment.</p>
+</div>
+
+<!-- ─── layered essay ─── -->
+<div class="essay">
+
+  <!-- FRESHMAN -->
+  <div class="layer on" data-layer="freshman">
+    <p class="lead">You already met each of these machines separately. Counting. COBO. Rearranging to make bases. Chunking. The trick is to see them all at once.</p>
+
+    <p>Picture counting as a small circle. It has four positions: idle, carry ten, carry hundred, halt. The child moves around this circle, one step at a time, to add by ones. That is the ground floor.</p>
+
+    <p>Now picture COBO as a slightly bigger circle wrapped around it. COBO has four positions of its own: initialize, add tens, add ones, accept. When COBO is at the <em>add ones</em> position, it can't actually add ones on its own. It reaches <em>inward</em>, into the counting circle, and says: you do it.</p>
+
+    <p>Rearranging to Make Bases wraps around COBO. Chunking wraps around COBO too. Each outer ring can only do the work it does <strong>because</strong> there is an inner ring to hand part of the work to.</p>
+
+    <div class="pull">A ring is not a step above the ring inside it. A ring is a ring that <em>contains</em> the ring inside it. The outer ring does not replace the inner; it uses it.</div>
+
+    <p>This is the shape of mathematical development, as children live it. No strategy is abandoned when the next one is invented. Counting stays at the core forever. It is just that the child learns to call counting from <em>inside</em> a larger machine, so they don't have to count as much.</p>
+
+    <p>And the whole structure is implicit in the first <em>NO!</em> A child saying <em>no</em> to counting-by-ones is already — in the same gesture — producing counting-on. The larger ring is born from saying <em>no</em> to staying put in the smaller one. Every strategy is a <em>no</em> to the sufficiency of the strategy inside it.</p>
+  </div>
+
+  <!-- MATH ED -->
+  <div class="layer" data-layer="mathEd">
+    <p class="lead">The developmental sequence documented by Carpenter &amp; Fennema is rendered here as <strong>nested finite-state automata with invocation</strong>. Each outer FSM's transition function is allowed to delegate to an inner FSM's run — and only to an inner one.</p>
+
+    <p>The figure above shows four rings from the addition subsystem. Reading inside-out:</p>
+
+    <div class="ring-cards">
+      <div class="ring-card r0">
+        <div class="head"><span class="idx">CORE</span><span class="hierarchy">regular</span></div>
+        <div class="name">Counting PDA</div>
+        <p>States: idle, inc_tens, inc_hundreds, halt. Input: a tick. Transition: advance by one; on overflow, carry up. Calls nothing.</p>
+      </div>
+      <div class="ring-card r1">
+        <div class="head"><span class="idx">SHELL 1</span><span class="hierarchy">context-free</span></div>
+        <div class="name">COBO</div>
+        <p>Counting On by Bases and Ones. Decomposes <em>b</em> into tens and ones; adds tens by jumping +10 each; then reaches inward for ones.</p>
+        <div class="calls">invokesCore → <span class="tgt">Counting</span> (at <code>q_add_ones</code>)</div>
+      </div>
+      <div class="ring-card r2">
+        <div class="head"><span class="idx">SHELL 2</span><span class="hierarchy">context-free</span></div>
+        <div class="name">Rearrange to Make Bases</div>
+        <p>Computes K = next_base − a, moves K from b into a, then delegates the recombined sum to COBO.</p>
+        <div class="calls">invokesCore → <span class="tgt">COBO</span> (at <code>q_recombine</code>)</div>
+      </div>
+      <div class="ring-card r3">
+        <div class="head"><span class="idx">SHELL 3</span><span class="hierarchy">context-free</span></div>
+        <div class="name">Chunking</div>
+        <p>Partitions <em>b</em> into arbitrary chunks (not just bases). Iterates over chunks; for each one, delegates the addition to COBO; accumulates.</p>
+        <div class="calls">invokesCore → <span class="tgt">COBO</span> (per chunk)</div>
+      </div>
+    </div>
+
+    <p>Because each outer FSM uses a bounded stack frame per invocation, the architecture stays within the context-free tier of the Chomsky hierarchy. That is enough for whole-number arithmetic — addition, subtraction, multiplication, division. It is <em>not</em> enough for fractions. The next module explains why.</p>
+
+    <div class="pull">Metamorphic accommodation (Norton 2008): a perturbation so recursive and persistent that the child cannot resolve it by adding another ring. They must change what a ring <em>is</em>. The fraction boundary is the first such site in the sequence.</div>
+  </div>
+
+  <!-- PHILOSOPHY -->
+  <div class="layer" data-layer="philosophy">
+    <p class="lead">The ring architecture is geometric, but its logic is the Chomsky hierarchy. Counting is regular: a finite tape advancing through a fixed transition table. The outer rings are context-free: each invocation pushes a frame. Fractions would require context-sensitive or higher — which is to say, a system that modifies its own transition table as it runs.</p>
+
+    <p>This is not a decorative reading of Hegel. The <em>NO!</em> of the opening page, the sublation it performs, and the determinate negation of Hegel's <em>Phenomenology</em> stand in exact structural correspondence to the ring geometry. A strategy's ring is what is <em>determinate</em>; its <em>no</em> to its own sufficiency produces the next ring; and the next ring carries the previous one inside, inverted (now a subroutine) and re-contained (now bounded).</p>
+
+    <div class="pull">Sublation is not an operation on a strategy; it is the birth of a ring whose transitions delegate to the previous ring. Each <em>Aufhebung</em> in the sequence is an <code>invokesCore</code>.</div>
+
+    <h2>The sphere through flatland</h2>
+
+    <p>Abbott's <em>Flatland</em> (1884) gives the image: a sphere passing through a plane appears, to a two-dimensional observer, as a point, then a circle, then a growing circle, then a shrinking one, then a point, then nothing. What was <em>always</em> a sphere can only be observed as a sequence of rings.</p>
+
+    <p>This is how the fractal architecture relates to the first <em>NO!</em> of the landing page. The entire developmental sequence — every strategy, every ring, every <em>invokesCore</em> — is implicit in the initial moment of resistance. Flattened into time (this child, this classroom, this moment), the sphere passes through as one ring after another. Compressed back into its implicit whole, it is a single <em>no</em> and the structure of that no's recursive self-negation.</p>
+
+    <h2>The Chomsky hierarchy as developmental ceiling</h2>
+
+    <table class="hier-table">
+      <thead>
+        <tr><th>Tier</th><th>Language class</th><th>Arithmetic content</th><th>Representative</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="grade">regular</td><td class="lang">finite-state</td><td>counting</td><td class="ex">the PDA at the core</td></tr>
+        <tr><td class="grade">context-free</td><td class="lang">pushdown</td><td>addition, subtraction</td><td class="ex">COBO, Sliding, CBBO</td></tr>
+        <tr><td class="grade">context-free</td><td class="lang">pushdown</td><td>multiplication, division</td><td class="ex">C2C, DR, Dealing</td></tr>
+        <tr class="boundary"><td class="grade">context-sensitive</td><td class="lang">linear-bounded</td><td>fractions</td><td class="ex">— boundary: flat-FSM insufficient —</td></tr>
+        <tr><td class="grade">recursively enumerable</td><td class="lang">turing</td><td>—</td><td class="ex">general mathematical reasoning</td></tr>
+      </tbody>
+    </table>
+
+    <p>Read Negarestani (2018) beside this. His argument — that finite-state recognition is not general intelligence, that higher syntactic complexity requires higher automata — is the negative version of the same claim: the fractal nesting is <em>necessary</em> for arithmetic, and <em>insufficient</em> for fractions. The boundary is the site of productive contact with the manuscript's central thesis, not its failure.</p>
+  </div>
+
+</div>
+
+<!-- ─── PAGE NAV ─── -->
+<nav class="page-nav">
+  <a href="../../umedcta-formalization/more-zeeman/counting.html">
+    <div class="dir">← previous</div>
+    <div class="title">Counting — the ground</div>
+  </a>
+  <a class="next" href="../../umedcta-formalization/more-zeeman/boundary.html">
+    <div class="dir">next →</div>
+    <div class="title">The Fraction Boundary</div>
+  </a>
+</nav>
+
+<script>
+// Discourse toggling — matches the pattern used in the existing fractal.html / counting.html
+const btns = document.querySelectorAll('.discourse-btn');
+const layers = document.querySelectorAll('[data-layer]');
+function setLevel(lv) {
+  try { localStorage.setItem('discourse-level', lv); } catch(e){}
+  layers.forEach(l => l.classList.toggle('on', l.dataset.layer === lv));
+  btns.forEach(b => b.classList.toggle('active', b.dataset.level === lv));
+  try { window.dispatchEvent(new CustomEvent('discourse-change', {detail:{level:lv}})); } catch(e){}
+}
+btns.forEach(b => b.addEventListener('click', ()=> setLevel(b.dataset.level)));
+try {
+  const saved = localStorage.getItem('discourse-level');
+  if (saved) setLevel(saved);
+} catch(e){}
+</script>
+
+</body>
+</html>
