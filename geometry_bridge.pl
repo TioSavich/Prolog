@@ -20,7 +20,8 @@
 
 geometry_kb_root('/Users/tio/Documents/GitHub/umedcta-formalization/geometry/').
 
-% Loader — consults schema.pl and every .pl in the tagging-module subdirs.
+% Loader — consults schema.pl, query.pl, and every .pl in the
+% tagging-module subdirs.
 load_geometry_kb :-
     geometry_kb_root(Root),
     atom_concat(Root, 'schema.pl', SchemaPath),
@@ -30,7 +31,9 @@ load_geometry_kb :-
     load_subdir(Root, van_hiele),
     load_subdir(Root, bootstrap),
     load_subdir(Root, standards),
-    load_subdir(Root, pck).
+    load_subdir(Root, pck),
+    atom_concat(Root, 'query.pl', QueryPath),
+    consult(QueryPath).
 
 load_subdir(Root, Sub) :-
     atom_concat(Root, Sub, SubPath),
