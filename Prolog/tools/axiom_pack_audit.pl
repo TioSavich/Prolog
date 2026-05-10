@@ -37,6 +37,21 @@ run_audit :-
         fail
     ).
 
+audit_passes :-
+    \+ ( audit_result(_, _, Result),
+         Result \== pass
+       ).
+
+audit_result(Name, Description, Result) :-
+    audit_obligation(Name, Description, Goal),
+    (   catch(call(Goal), Error, true)
+    ->  (   var(Error)
+        ->  Result = pass
+        ;   Result = error(Error)
+        )
+    ;   Result = failed
+    ).
+
 print_enabled_packs :-
     findall(Pack, incompatibility_semantics:enabled_axiom_pack(Pack), Packs0),
     sort(Packs0, Packs),
@@ -79,9 +94,12 @@ throws_normative_crisis(Goal, Context) :-
           true).
 
 all_default_packs_enabled :-
-    findall(Pack, incompatibility_semantics:enabled_axiom_pack(Pack), Packs0),
-    sort(Packs0, Packs),
+    enabled_packs(Packs),
     Packs == [domains, eml, geometry, number_theory, robinson].
+
+enabled_packs(Packs) :-
+    findall(Pack, incompatibility_semantics:enabled_axiom_pack(Pack), Packs0),
+    sort(Packs0, Packs).
 
 audit_obligation(default_packs_enabled,
                  'all five default axiom packs are enabled after load',
@@ -166,6 +184,11 @@ strength_value(Shape, Strength) :-
     restriction_set(Shape, Restrictions),
     length(Restrictions, Strength).
 
+geometry_strength_profile(Shape, Strength, Restrictions) :-
+    shape(Shape),
+    strength_value(Shape, Strength),
+    restriction_set(Shape, Restrictions).
+
 proper_entails(Strong, Weak) :-
     Strong \== Weak,
     incompatibility_semantics:entails_via_incompatibility(Strong, Weak).
@@ -193,6 +216,35 @@ geometry_cover_edge(Strong, Weak, ExtraRejections) :-
     restriction_set(Weak, WeakRestrictions),
     subtract(StrongRestrictions, WeakRestrictions, ExtraRejections).
 
+hierarchy_witness(geometry_cover(edge(Strong, Weak,
+                                      extra_rejections(ExtraRejections)))) :-
+    geometry_cover_edge(Strong, Weak, ExtraRejections).
+
+hierarchy_witness(domain_expansion(n_to_z(subtract(2, 3, -1)))) :-
+    with_domain(n, throws_normative_crisis(subtract(2, 3, _), natural_numbers)),
+    with_domain(z, safe([] => [o(minus(2, 3, -1))], [robinson, domains])).
+
+hierarchy_witness(domain_expansion(n_to_q(divide(1, 2, _),
+                                           partition(1, 2, 1 rdiv 2)))) :-
+    with_domain(n, throws_normative_crisis(divide(1, 2, _), natural_numbers)),
+    with_domain(q, incompatibility_semantics:check_norms(divide(1, 2, _))),
+    safe([] => [o(partition(1, 2, 1 rdiv 2))], [robinson, domains]).
+
+hierarchy_witness(eml_necessity_cashout(s(u), s(comp_nec(a)), s(a))) :-
+    safe([s(u)] => [s(comp_nec(a))], [eml]),
+    safe([s(u)] => [s(a)], [eml]).
+
+hierarchy_witness(eml_necessity_cashout(s(lg),
+                                        s(exp_nec(u_prime)),
+                                        s(u_prime))) :-
+    safe([s(lg)] => [s(exp_nec(u_prime))], [eml]),
+    safe([s(lg)] => [s(u_prime)], [eml]).
+
+hierarchy_witness(number_theory_self_defeat(is_complete([2, 3, 5]))) :-
+    safe([n(is_complete([2, 3, 5]))] =>
+         [n(neg(is_complete([2, 3, 5])))],
+         [number_theory]).
+
 print_hierarchy_witnesses :-
     writeln(''),
     writeln('=== Hierarchy Witnesses ==='),
@@ -203,14 +255,11 @@ print_hierarchy_witnesses :-
 
 print_geometry_hierarchy :-
     writeln('geometry_incompatibility_strength:'),
-    forall(shape(Shape),
-           ( strength_value(Shape, Strength),
-             restriction_set(Shape, Restrictions),
-             format('  strength(~w, ~w, rejects(~q)).~n',
-                    [Shape, Strength, Restrictions])
-           )),
-    findall(edge(Strong, Weak, extra_rejections(Extra)),
-            geometry_cover_edge(Strong, Weak, Extra),
+    forall(geometry_strength_profile(Shape, Strength, Restrictions),
+           format('  strength(~w, ~w, rejects(~q)).~n',
+                  [Shape, Strength, Restrictions])),
+    findall(Edge,
+            hierarchy_witness(geometry_cover(Edge)),
             Edges),
     sort(Edges, Sorted),
     forall(member(Edge, Sorted),

@@ -7,6 +7,7 @@
 :- use_module(math(sar_add_cobo), [run_cobo/4]).
 :- use_module(math(sar_sub_cobo_missing_addend), [run_cobo_ma/4]).
 :- use_module(math(sar_sub_sliding), [run_sliding/4]).
+:- ensure_loaded('../../tools/axiom_pack_audit').
 
 :- dynamic test_result/3.
 
@@ -88,6 +89,21 @@ run_tests :-
     run_test('Robinson pack can be switched off per query', (
         safe_proves([] => [o(plus(1, 2, 3))], [packs([robinson]), time_limit(1)]),
         \+ safe_proves([] => [o(plus(1, 2, 3))], [packs([geometry]), time_limit(1)])
+    )),
+
+    run_test('Axiom pack audit passes', (
+        audit_passes
+    )),
+
+    run_test('Axiom pack audit exposes geometry hierarchy witnesses', (
+        hierarchy_witness(geometry_cover(edge(square, rectangle, extra_rejections([r2, r4])))),
+        hierarchy_witness(geometry_cover(edge(trapezoid, quadrilateral, extra_rejections([r5]))))
+    )),
+
+    run_test('Axiom pack audit exposes non-geometry hierarchy witnesses', (
+        hierarchy_witness(domain_expansion(n_to_z(subtract(2, 3, -1)))),
+        hierarchy_witness(eml_necessity_cashout(s(lg), s(exp_nec(u_prime)), s(u_prime))),
+        hierarchy_witness(number_theory_self_defeat(is_complete([2, 3, 5])))
     )),
 
     run_test('COBO addition is deterministic', (
