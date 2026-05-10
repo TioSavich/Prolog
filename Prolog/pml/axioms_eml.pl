@@ -22,30 +22,18 @@
 
 % --- EML Material Inferences ---
 
+eml_transition(s(u), s(comp_nec(a))).        % Emergence of awareness
+eml_transition(s(u_prime), s(comp_nec(a))).  % Re-entry into the next cycle
+eml_transition(s(a), s(exp_poss(lg))).       % Possibility of release
+eml_transition(s(a), s(comp_poss(t))).       % Possibility of fixation
+eml_transition(s(t), s(comp_nec(neg(u)))).   % Deepened contraction
+eml_transition(s(lg), s(exp_nec(u_prime))).  % Sublation / release
+eml_transition(s(t_b), s(comp_nec(t_n))).    % Bad infinite (Being -> Nothing)
+eml_transition(s(t_n), s(comp_nec(t_b))).    % Bad infinite (Nothing -> Being)
+
 % Commitment 2: Emergence of Awareness (Temporal Compression)
-proves_impl([s(u)] => [s(comp_nec a)], _) :-
-    axiom_pack_enabled(eml).
-proves_impl([s(u_prime)] => [s(comp_nec a)], _) :-
-    axiom_pack_enabled(eml).
-
-% Commitment 3: The Tension of Awareness (Choice Point)
-proves_impl([s(a)] => [s(exp_poss lg)], _) :-  % Possibility of Release
-    axiom_pack_enabled(eml).
-proves_impl([s(a)] => [s(comp_poss t)], _) :-   % Possibility of Fixation
-    axiom_pack_enabled(eml).
-
-% Commitment 4: Dynamics of the Choice
-% 4a: Fixation (Deepened Contraction)
-proves_impl([s(t)] => [s(comp_nec neg(u))], _) :-
-    axiom_pack_enabled(eml).
-% 4b: Release (Sublation)
-proves_impl([s(lg)] => [s(exp_nec u_prime)], _) :-
-    axiom_pack_enabled(eml).
-
-% Hegel's Triad Oscillation:
-proves_impl([s(t_b)] => [s(comp_nec t_n)], _) :-
-    axiom_pack_enabled(eml).
-proves_impl([s(t_n)] => [s(comp_nec t_b)], _) :-
+proves_impl([A] => [C], _) :-
+    eml_transition(A, C),
     axiom_pack_enabled(eml).
 
 % --- EML Dynamics Structural Rule ---
@@ -59,7 +47,8 @@ proves_impl((Premises => Conclusions), History) :-
 
 % --- EML Helpers ---
 eml_axiom(A, C) :-
-    clause(incompatibility_semantics:proves_impl(([A] => [C]), _), true),
+    axiom_pack_enabled(eml),
+    eml_transition(A, C),
     is_eml_modality(C).
 
 is_eml_modality(s(comp_nec _)).

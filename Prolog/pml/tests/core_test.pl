@@ -187,6 +187,14 @@ test_pml_dynamics :-
         embodied_prover:proves([s(lg)] => [s(exp_nec u_prime)], 50, _, _)
     )),
 
+    run_test('Scene engine necessity transition: U -> A', (
+        incompatibility_semantics:safe_proves([s(u)] => [s(a)], [time_limit(1), packs([eml])])
+    )),
+
+    run_test('Scene engine necessity transition: LG -> U\'', (
+        incompatibility_semantics:safe_proves([s(lg)] => [s(u_prime)], [time_limit(1), packs([eml])])
+    )),
+
     run_test('Fixation pathway: T -> Box_down(neg(U))', (
         embodied_prover:proves([s(t)] => [s(comp_nec neg(u))], 50, _, _)
     )),

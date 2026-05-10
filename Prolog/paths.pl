@@ -7,15 +7,24 @@
  *    or: :- [paths].  at the top of an entry point
  */
 
-:- multifile file_search_path/2.
+:- multifile user:file_search_path/2.
+:- dynamic user:file_search_path/2.
 
-% Module directories (at repo root)
-file_search_path(pml,           'pml').
-file_search_path(arche_trace,   'arche-trace').
-file_search_path(strategies,    'strategies').
-file_search_path(learner,       'learner').
-file_search_path(formalization,  'formalization').
-file_search_path(misconceptions, 'misconceptions').
+:- prolog_load_context(directory, PrologRoot),
+   forall(member(Alias-Relative,
+                 [ pml-'pml',
+                   arche_trace-'arche-trace',
+                   strategies-'strategies',
+                   learner-'learner',
+                   formalization-'formalization',
+                   misconceptions-'misconceptions'
+                 ]),
+          ( directory_file_path(PrologRoot, Relative, Absolute),
+            ( user:file_search_path(Alias, Absolute)
+            -> true
+            ;  asserta(user:file_search_path(Alias, Absolute))
+            )
+          )).
 
 % Sub-directories within modules
 file_search_path(math,          strategies('math')).
