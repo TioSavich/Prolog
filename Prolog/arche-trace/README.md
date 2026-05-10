@@ -36,12 +36,27 @@ The engine includes axiom sets from their respective modules via `:- include(...
 PML operators (`s/1`, `comp_nec/1`, etc.) live canonically in `pml/pml_operators.pl`
 and are re-exported by the engine.
 
+## Axiom pack audit
+
+The quickest deterministic health check is:
+
+```sh
+swipl -q -s Prolog/tools/axiom_pack_audit.pl -g run_audit -t halt
+```
+
+It checks that all default axiom packs load, proves representative consequences
+inside each pack, rejects a cross-pack arithmetic proof under a geometry-only
+horizon, and prints hierarchy witnesses. The witnesses include the quadrilateral
+incompatibility strength order, natural-number-to-integer and natural-number-to-
+rational expansion points, EML necessity cash-out, and Euclid-style finite-prime-
+list self-defeat.
+
 ## Contents
 
 - `incompatibility_semantics.pl` — sequent calculus engine + axiom set loader
-- `embodied_prover.pl` — alternate prover with `proves/4` (resource-tracked, embodied
-  cost model). Still declares module name `incompatibility_semantics` — cannot be
-  loaded simultaneously with the engine. Needs its own module name (future cleanup).
+- `embodied_prover.pl` — alternate prover with `proves/4` (resource-tracked,
+  embodied cost model). Its module name is `embodied_prover`, so it can be loaded
+  beside the scene-agnostic engine.
 - `critique.pl` — sublation/critique mechanism (Being/Nothing/Becoming mediation)
 - `dialectical_engine.pl` — dialectical reasoning engine
 - `automata.pl` — trace generation and the `contains_trace/1` predicate used by
