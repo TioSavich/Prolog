@@ -486,6 +486,50 @@ button { font: inherit; cursor: pointer; }
   margin-top: 0.5rem; font-size: 0.8rem; line-height: 1.45;
   color: var(--ink-soft); font-style: italic;
 }
+.pair-graph-debug {
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 8px; padding: 0.65rem;
+}
+.pair-graph-debug svg { width: 100%; height: auto; display: block; }
+.pair-graph-empty,
+.pair-graph-error {
+  background: var(--paper); border: 1px dashed var(--line-pale);
+  border-radius: 8px; padding: 0.75rem;
+  font-size: 0.86rem; line-height: 1.45; color: var(--muted);
+}
+.pair-graph-error { border-color: var(--rust); color: var(--rust); }
+.pair-graph-legend {
+  display: flex; flex-wrap: wrap; gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+.pair-graph-legend span,
+.pair-edge-badge {
+  font-family: var(--mono); font-size: 0.58rem; letter-spacing: 0.08em;
+  text-transform: uppercase; border: 1px solid var(--line-pale);
+  border-radius: 999px; padding: 0.12rem 0.38rem;
+  background: var(--paper-warm); color: var(--muted);
+}
+.pair-edge-badge[data-kind="repair"] { border-color: var(--gold-deep); color: var(--gold-deep); }
+.pair-edge-badge[data-kind="domain"] { border-color: var(--teal); color: var(--teal); }
+.pair-edge-badge[data-kind="risk"] { border-color: var(--rust); color: var(--rust); }
+.pair-graph-note {
+  margin-top: 0.6rem; font-size: 0.78rem; line-height: 1.45;
+  color: var(--muted); font-style: italic;
+}
+.pair-edge-list {
+  display: grid; gap: 0.45rem;
+}
+.pair-edge-card {
+  background: var(--paper); border: 1px solid var(--line-pale);
+  border-radius: 8px; padding: 0.55rem 0.6rem;
+}
+.pair-edge-card .edge-title {
+  font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink);
+}
+.pair-edge-card .edge-meta {
+  display: flex; flex-wrap: wrap; gap: 0.3rem; margin-top: 0.35rem;
+}
 
 /* curric + standards */
 .curric-row {
@@ -850,6 +894,35 @@ const state = {
   mode: 'auto',
 };
 
+const PAIR_GRAPH_DEBUG_PAYLOAD = {
+  nodes: [
+    { id: 'ev_0001', label: 'Sasha', role: 'student' },
+    { id: 'ev_0004', label: 'Marcus', role: 'student' },
+    { id: 'ev_0006', label: 'Devi', role: 'student' },
+    { id: 'ev_0008', label: 'Jun', role: 'student' }
+  ],
+  edges: [
+    {
+      id: 'pair_ev_0001_ev_0004',
+      source: 'ev_0001',
+      target: 'ev_0004',
+      weight: 5,
+      reasons: ['repair_affordance', 'shared_domain(addition)'],
+      question_count: 2,
+      move_types: ['revoicing', 'decompression']
+    },
+    {
+      id: 'pair_ev_0006_ev_0008',
+      source: 'ev_0006',
+      target: 'ev_0008',
+      weight: 3,
+      reasons: ['shared_domain(addition)', 'strategy_refinement'],
+      question_count: 1,
+      move_types: ['comparison']
+    }
+  ]
+};
+
 // ═══════════════════════════════════════════════════════════
 //  MODE TOGGLE
 // ═══════════════════════════════════════════════════════════
@@ -879,6 +952,15 @@ function loadStoredMode() {
 function saveMode(value) {
   try { window.localStorage.setItem(MODE_STORAGE_KEY, value); }
   catch (err) { /* soft-fail */ }
+}
+
+function escapeHTML(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function modeBadgeHTML(mode) {
@@ -1255,6 +1337,10 @@ why_did(<span class="var">marcus</span>, [<span class="var">38</span>,<span clas
 function panelPairing() {
   document.getElementById('panel-body').innerHTML = `
     <div class="panel-section">
+      <div class="sub-label">debug graph · candidate rationales</div>
+      ${pairGraphHTML(PAIR_GRAPH_DEBUG_PAYLOAD)}
+    </div>
+    <div class="panel-section">
       <div class="sub-label">pair a · contrast</div>
       <div class="pair">
         <div class="pair-row">
@@ -1288,6 +1374,76 @@ function panelPairing() {
       </div>
     </div>
   `;
+}
+
+function pairGraphHTML(graph) {
+  if (!graph || !Array.isArray(graph.nodes) || !Array.isArray(graph.edges)) {
+    return `<div class="pair-graph-error">Pair graph payload unavailable.</div>`;
+  }
+  if (!graph.nodes.length || !graph.edges.length) {
+    return `<div class="pair-graph-empty">No pair candidates surfaced yet.</div>`;
+  }
+  const nodeById = new Map(graph.nodes.map(node => [node.id, node]));
+  const radius = 70;
+  const cx = 140;
+  const cy = 100;
+  const positions = new Map(graph.nodes.map((node, i) => {
+    const angle = (-Math.PI / 2) + (2 * Math.PI * i / graph.nodes.length);
+    return [node.id, {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle)
+    }];
+  }));
+  const edges = graph.edges
+    .filter(edge => positions.has(edge.source) && positions.has(edge.target))
+    .map(edge => {
+      const a = positions.get(edge.source);
+      const b = positions.get(edge.target);
+      const weight = Math.max(1.2, Math.min(4.5, Number(edge.weight || 1) * 0.7));
+      return `<line x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}" stroke="#b78930" stroke-width="${weight.toFixed(1)}" stroke-dasharray="4 4" opacity="0.72"/>`;
+    }).join('');
+  const nodes = graph.nodes.map(node => {
+    const p = positions.get(node.id);
+    const label = escapeHTML(node.label || 'event');
+    const role = escapeHTML(node.role || 'event');
+    return `<g>
+      <circle cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="22" fill="#f4ead6" stroke="#0d0c08" stroke-width="1.2"/>
+      <text x="${p.x.toFixed(1)}" y="${(p.y - 2).toFixed(1)}" text-anchor="middle" font-family="IBM Plex Mono" font-size="9" fill="#0d0c08">${label}</text>
+      <text x="${p.x.toFixed(1)}" y="${(p.y + 10).toFixed(1)}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="#6a6353">${role}</text>
+    </g>`;
+  }).join('');
+  return `<div class="pair-graph-debug" aria-label="Candidate pair graph">
+    <svg viewBox="0 0 280 200" role="img" aria-label="candidate pair rationale graph">
+      ${edges}
+      ${nodes}
+    </svg>
+    <div class="pair-graph-legend">
+      <span>candidate</span>
+      <span>dashed means no uptake logged</span>
+      <span>weight means priority</span>
+    </div>
+    <div class="pair-graph-note">Edges are candidate question-routing rationales, not proof of shared validity or mutual recognition.</div>
+  </div>
+  ${pairGraphEdgeListHTML(graph, nodeById)}`;
+}
+
+function pairGraphEdgeListHTML(graph, nodeById) {
+  const cards = graph.edges.map(edge => {
+    const source = nodeById.get(edge.source) || {};
+    const target = nodeById.get(edge.target) || {};
+    const reasons = Array.isArray(edge.reasons) ? edge.reasons : [];
+    const moves = Array.isArray(edge.move_types) ? edge.move_types : [];
+    const badges = reasons.concat(moves).slice(0, 6).map(item => {
+      const text = String(item);
+      const kind = text.includes('repair') ? 'repair' : text.includes('domain') ? 'domain' : text.includes('risk') ? 'risk' : 'plain';
+      return `<span class="pair-edge-badge" data-kind="${kind}">${escapeHTML(text)}</span>`;
+    }).join('');
+    return `<div class="pair-edge-card">
+      <div class="edge-title">${escapeHTML(source.label || edge.source)} ↔ ${escapeHTML(target.label || edge.target)} · priority ${escapeHTML(edge.weight || 1)}</div>
+      <div class="edge-meta">${badges || '<span class="pair-edge-badge">candidate</span>'}</div>
+    </div>`;
+  }).join('');
+  return `<div class="pair-edge-list">${cards}</div>`;
 }
 
 // number line generator
