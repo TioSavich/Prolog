@@ -27,4 +27,14 @@ if [[ -z "${HERMES_SWIPL:-}" && -x "$ROOT/runtime/swi-prolog/bin/swipl" ]]; then
   export HERMES_SWIPL="$ROOT/runtime/swi-prolog/bin/swipl"
 fi
 
-"$ROOT/.venv/bin/python" -m bridge.hermes_console_server "$@"
+if [[ -n "${HERMES_PYTHON:-}" ]]; then
+  PYTHON_BIN="$HERMES_PYTHON"
+elif [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PYTHON_BIN="$ROOT/.venv/bin/python"
+else
+  PYTHON_BIN="python3"
+fi
+
+export PYTHONPATH="$ROOT:$ROOT/vendor${PYTHONPATH:+:$PYTHONPATH}"
+
+"$PYTHON_BIN" -m bridge.hermes_console_server "$@"

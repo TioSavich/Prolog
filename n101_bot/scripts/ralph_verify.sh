@@ -4,8 +4,18 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+if [[ -n "${HERMES_PYTHON:-}" ]]; then
+  PYTHON_BIN="$HERMES_PYTHON"
+elif [[ -x "$ROOT/.venv/bin/python" ]]; then
+  PYTHON_BIN="$ROOT/.venv/bin/python"
+else
+  PYTHON_BIN="python3"
+fi
+
+export PYTHONPATH="$ROOT:$ROOT/vendor${PYTHONPATH:+:$PYTHONPATH}"
+
 echo "[n101_bot] persistent worker and bridge tests"
-"$ROOT/.venv/bin/python" -m pytest -q \
+"$PYTHON_BIN" -m pytest -q \
   ../packaging/tests/test_check_hermes_packaging.py \
   tests/test_persistent_prolog.py \
   tests/test_hc_bot_offline.py \
@@ -26,6 +36,6 @@ echo "[n101_bot] persistent worker and bridge tests"
   tests/test_prolog_reasoning.py
 
 echo "[n101_bot] packaging boundary"
-"$ROOT/.venv/bin/python" ../packaging/check_hermes_packaging.py
+"$PYTHON_BIN" ../packaging/check_hermes_packaging.py
 
 echo "[n101_bot] verification complete"
