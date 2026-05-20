@@ -727,6 +727,11 @@ const pairGraph = document.querySelector("#pair-graph");
 const revoiceOutput = document.querySelector("#revoice-output");
 const pairJson = document.querySelector("#pair-json");
 const modeSelect = document.querySelector("#mode-select");
+const API_ORIGIN = window.location.protocol === "file:" ? "http://127.0.0.1:8765" : "";
+
+function apiUrl(path) {
+  return `${API_ORIGIN}${path}`;
+}
 
 // ── Mode toggle persistence ──
 //
@@ -977,7 +982,7 @@ function addMessage(kind, text, codes = [], trace = "", opts = {}) {
 }
 
 async function loadModels() {
-  const res = await fetch("/api/models");
+  const res = await fetch(apiUrl("/api/models"));
   const data = await res.json();
   document.querySelector("#ollama-dot").classList.toggle("on", data.ollama_reachable);
   document.querySelector("#ollama-text").textContent = data.ollama_reachable ? "Ollama online" : "Ollama offline";
@@ -1002,7 +1007,7 @@ modelInput.addEventListener("change", () => {
 });
 
 document.querySelector("#reset").addEventListener("click", async () => {
-  await fetch("/api/reset", {
+  await fetch(apiUrl("/api/reset"), {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({model: modelInput.value, audience: audience.value})
@@ -1022,7 +1027,7 @@ form.addEventListener("submit", async (event) => {
   const pending = addMessage("hermes", "thinking...");
   const requestedMode = VALID_MODES.has(modeSelect.value) ? modeSelect.value : "auto";
   try {
-    const res = await fetch("/api/chat", {
+    const res = await fetch(apiUrl("/api/chat"), {
       method: "POST",
       headers: {"Content-Type": "application/json"},
       body: JSON.stringify({
@@ -1113,7 +1118,7 @@ async function loadN103Workflows() {
   pairOutput.textContent = "loading safe workflow metadata...";
   pairGraph.innerHTML = "";
   revoiceOutput.textContent = "Revoiced prompt will appear here.";
-  const res = await fetch("/api/n103_workflows");
+  const res = await fetch(apiUrl("/api/n103_workflows"));
   const packet = await res.json();
   if (!res.ok) throw new Error(packet.error || "workflow metadata failed");
   pairOutput.textContent = `${packet.course} workflows loaded: ${packet.privacy}. Use these cards to choose a pairing focus before sending safe annotated events.`;
@@ -1145,7 +1150,7 @@ document.querySelector("#clear-pair").addEventListener("click", () => {
 });
 
 async function requestPairGraph(events) {
-  const res = await fetch("/api/pair_graph", {
+  const res = await fetch(apiUrl("/api/pair_graph"), {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({events})
@@ -1156,7 +1161,7 @@ async function requestPairGraph(events) {
 }
 
 async function requestRevoice(questionMove, pairContext) {
-  const res = await fetch("/api/revoice", {
+  const res = await fetch(apiUrl("/api/revoice"), {
     method: "POST",
     headers: {"Content-Type": "application/json"},
     body: JSON.stringify({

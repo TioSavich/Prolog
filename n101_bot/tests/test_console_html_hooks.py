@@ -16,12 +16,12 @@ def test_console_has_research_safe_pair_graph_and_revoice_hooks():
     assert 'id="revoice-output"' in html
     assert 'id="load-canonical-sample"' in html
     assert 'id="load-workflows"' in html
-    assert 'fetch("/api/n103_workflows"' in html
+    assert 'fetch(apiUrl("/api/n103_workflows")' in html
     assert "loadN103Workflows" in html
     assert "async function requestPairGraph" in html
-    assert 'fetch("/api/pair_graph"' in html
+    assert 'fetch(apiUrl("/api/pair_graph")' in html
     assert "async function requestRevoice" in html
-    assert 'fetch("/api/revoice"' in html
+    assert 'fetch(apiUrl("/api/revoice")' in html
     assert "renderPairGraph" in html
     assert "renderRevoiceControls" in html
     assert "loadCanonicalPairSample" in html
@@ -63,3 +63,20 @@ def test_pair_sample_loader_does_not_embed_raw_student_work():
     assert "loadCanonicalPairSample()" in sample_loader
     for forbidden in ["JSON.stringify([", "text:", "student:"]:
         assert forbidden not in sample_loader
+
+
+def test_console_api_calls_work_when_html_is_opened_from_file():
+    html = _html()
+    assert 'window.location.protocol === "file:"' in html
+    assert 'const API_ORIGIN = window.location.protocol === "file:"' in html
+    assert "function apiUrl(path)" in html
+    for path in [
+        "/api/models",
+        "/api/reset",
+        "/api/chat",
+        "/api/n103_workflows",
+        "/api/pair_graph",
+        "/api/revoice",
+    ]:
+        assert f'fetch(apiUrl("{path}")' in html
+    assert 'fetch("/api/' not in html

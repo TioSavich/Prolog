@@ -7,6 +7,7 @@ from bridge.hermes_console_server import HermesHandler
 
 class FakeJsonHandler:
     _send_json = HermesHandler._send_json
+    _send_cors_headers = HermesHandler._send_cors_headers
 
     def __init__(self):
         self.status = None
@@ -34,4 +35,11 @@ def test_json_responses_are_marked_no_store():
     assert headers["Cache-Control"] == "no-store, max-age=0"
     assert headers["Pragma"] == "no-cache"
     assert headers["Expires"] == "0"
+    assert headers["Access-Control-Allow-Origin"] == "*"
+    assert headers["Access-Control-Allow-Headers"] == "Content-Type"
+    assert headers["Access-Control-Allow-Methods"] == "GET, POST, OPTIONS"
     assert handler.wfile.getvalue() == b'{"ok": true}'
+
+
+def test_handler_supports_browser_cors_preflight():
+    assert hasattr(HermesHandler, "do_OPTIONS")
