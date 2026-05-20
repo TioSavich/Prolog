@@ -508,6 +508,41 @@ pre {
   gap: 0.65rem;
   margin-top: 0.85rem;
 }
+.pair-graph-debug {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.65rem;
+}
+.pair-graph-debug svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+.pair-graph-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+.pair-graph-legend span,
+.pair-edge-badge {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.12rem 0.38rem;
+  background: var(--paper-warm);
+  color: var(--muted);
+  font: 0.58rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pair-graph-note {
+  margin-top: 0.6rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-style: italic;
+  line-height: 1.45;
+}
 .pair-edge {
   border: 1px solid var(--line);
   background: var(--paper-cool);
@@ -1303,6 +1338,91 @@ function renderQuestionMoves(pair) {
   return wrap;
 }
 
+function renderPairGraphDebug(graph) {
+  const wrap = document.createElement("div");
+  wrap.className = "pair-graph-debug";
+  wrap.setAttribute("aria-label", "Candidate pair graph");
+  const nodes = graph && Array.isArray(graph.nodes) ? graph.nodes : [];
+  const edges = graph && Array.isArray(graph.edges) ? graph.edges : [];
+  if (!nodes.length || !edges.length) {
+    wrap.textContent = "No pair candidates surfaced yet.";
+    return wrap;
+  }
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", "0 0 280 200");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "candidate pair rationale graph");
+  const radius = 70;
+  const cx = 140;
+  const cy = 100;
+  const positions = new Map(nodes.map((node, index) => {
+    const angle = (-Math.PI / 2) + (2 * Math.PI * index / nodes.length);
+    return [node.id, {
+      x: cx + radius * Math.cos(angle),
+      y: cy + radius * Math.sin(angle)
+    }];
+  }));
+  for (const edge of edges) {
+    if (!positions.has(edge.source) || !positions.has(edge.target)) continue;
+    const a = positions.get(edge.source);
+    const b = positions.get(edge.target);
+    const line = document.createElementNS(svgNS, "line");
+    const weight = Math.max(1.2, Math.min(4.5, Number(edge.weight || 1) * 0.7));
+    line.setAttribute("x1", a.x.toFixed(1));
+    line.setAttribute("y1", a.y.toFixed(1));
+    line.setAttribute("x2", b.x.toFixed(1));
+    line.setAttribute("y2", b.y.toFixed(1));
+    line.setAttribute("stroke", "#a97c24");
+    line.setAttribute("stroke-width", weight.toFixed(1));
+    line.setAttribute("stroke-dasharray", "4 4");
+    line.setAttribute("opacity", "0.72");
+    svg.appendChild(line);
+  }
+  for (const node of nodes) {
+    const point = positions.get(node.id);
+    if (!point) continue;
+    const group = document.createElementNS(svgNS, "g");
+    const circle = document.createElementNS(svgNS, "circle");
+    circle.setAttribute("cx", point.x.toFixed(1));
+    circle.setAttribute("cy", point.y.toFixed(1));
+    circle.setAttribute("r", "22");
+    circle.setAttribute("fill", "#f4ead6");
+    circle.setAttribute("stroke", "#0d0c08");
+    circle.setAttribute("stroke-width", "1.2");
+    const label = document.createElementNS(svgNS, "text");
+    label.setAttribute("x", point.x.toFixed(1));
+    label.setAttribute("y", (point.y - 2).toFixed(1));
+    label.setAttribute("text-anchor", "middle");
+    label.setAttribute("font-family", "ui-monospace, Menlo, Consolas, monospace");
+    label.setAttribute("font-size", "9");
+    label.setAttribute("fill", "#0d0c08");
+    label.textContent = String(node.label || "event").slice(0, 10);
+    const role = document.createElementNS(svgNS, "text");
+    role.setAttribute("x", point.x.toFixed(1));
+    role.setAttribute("y", (point.y + 10).toFixed(1));
+    role.setAttribute("text-anchor", "middle");
+    role.setAttribute("font-family", "ui-monospace, Menlo, Consolas, monospace");
+    role.setAttribute("font-size", "7");
+    role.setAttribute("fill", "#665f4f");
+    role.textContent = String(node.role || "event").slice(0, 12);
+    group.append(circle, label, role);
+    svg.appendChild(group);
+  }
+  const legend = document.createElement("div");
+  legend.className = "pair-graph-legend";
+  for (const text of ["candidate", "dashed means no uptake logged", "weight means priority"]) {
+    const token = document.createElement("span");
+    token.textContent = text;
+    legend.appendChild(token);
+  }
+  const note = document.createElement("div");
+  note.className = "pair-graph-note";
+  note.textContent = "Edges are candidate question-routing rationales, not proof of shared validity or mutual recognition.";
+  wrap.append(svg, legend, note);
+  return wrap;
+}
+
 function renderPairGraph(packet) {
   pairGraph.innerHTML = "";
   const pairs = Array.isArray(packet.pairs) ? packet.pairs : [];
@@ -1311,6 +1431,7 @@ function renderPairGraph(packet) {
     pairGraph.textContent = "No safe pair graph returned.";
     return;
   }
+  pairGraph.appendChild(renderPairGraphDebug(packet.graph));
   for (const edge of edges) {
     const pair = pairs.find(candidate => candidate.pair_id === edge.id) || {};
     const card = document.createElement("div");

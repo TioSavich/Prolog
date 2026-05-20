@@ -67,6 +67,22 @@ def test_pair_lab_uses_metadata_only_graph_workflow():
     assert "question-moves" in html
 
 
+def test_pair_graph_renderer_marks_edges_as_candidate_traces_not_uptake():
+    html = _html()
+    assert "function renderPairGraphDebug" in html
+    assert "candidate pair rationale graph" in html
+    assert "stroke-dasharray" in html
+    assert "dashed means no uptake logged" in html
+    assert "weight means priority" in html
+    assert "not proof of shared validity or mutual recognition" in html
+
+    render_block = html.split("function renderPairGraph(packet)", 1)[1].split(
+        "function hasSafeEventHandles",
+        1,
+    )[0]
+    assert "renderPairGraphDebug" in render_block
+
+
 def test_pair_sample_loader_does_not_embed_raw_student_work():
     html = _html()
     sample_loader = html.split('document.querySelector("#load-sample")', 1)[1].split(
