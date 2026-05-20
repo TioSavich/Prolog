@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import mimetypes
 import os
+import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -48,6 +49,20 @@ PAIR_GRAPH_FORBIDDEN_KEYS = {
     "source_id",
     "path",
     "evidence",
+}
+TRANSCRIPT_SPEAKER_RE = re.compile(
+    r"^\s*(student\s*\d+|s\d+|[A-Za-z][A-Za-z .'-]{0,40})\s*:\s+\S",
+    re.IGNORECASE,
+)
+NON_SPEAKER_LABELS = {
+    "answer",
+    "answers",
+    "note",
+    "prompt",
+    "question",
+    "response",
+    "state",
+    "trace",
 }
 
 N103_WORKFLOW_PACKET = {
@@ -106,6 +121,29 @@ def _resolve_mode(value: object) -> str:
     if candidate in VALID_MODES:
         return candidate
     return "auto"
+
+
+def _looks_like_discussion_transcript(text: str) -> bool:
+    """Detect speaker-labeled discussion text before it reaches chat rendering."""
+    labels: list[str] = []
+    for raw_line in text.splitlines():
+        match = TRANSCRIPT_SPEAKER_RE.match(raw_line)
+        if not match:
+            continue
+        label = re.sub(r"\s+", " ", match.group(1).strip().lower())
+        if label in NON_SPEAKER_LABELS:
+            continue
+        labels.append(label)
+    return len(set(labels)) >= 2
+
+
+def _resolve_optional_model(value: object) -> str | None:
+    if value is None:
+        return None
+    model = str(value).strip()
+    if not model or model.lower() == "default":
+        return None
+    return model
 
 
 def _bot_ask_with_mode(bot, question: str, *, temperature: float, mode: str):
@@ -265,6 +303,20 @@ class HermesHandler(BaseHTTPRequestHandler):
         if not message:
             self._send_json({"error": "message is required"}, status=400)
             return
+        if _looks_like_discussion_transcript(message):
+            self._send_json(
+                {
+                    "error": (
+                        "This looks like speaker-labeled student discussion text. "
+                        "Use the N103 Prolog analyzer so Hermes can canonicalize it "
+                        "before any REALLMS revoicing."
+                    ),
+                    "error_type": "chat_transcript_safety",
+                    "route": "n103_pipeline",
+                },
+                status=400,
+            )
+            return
         model = str(payload.get("model") or DEFAULT_MODEL)
         audience = str(payload.get("audience") or "teacher")
         temperature = float(payload.get("temperature", 0.2))
@@ -403,7 +455,7 @@ class HermesHandler(BaseHTTPRequestHandler):
                 status=400,
             )
             return
-        revoicer = RealLMSRevoicer(model=str(payload.get("model") or "default"))
+        revoicer = RealLMSRevoicer(model=_resolve_optional_model(payload.get("model")))
         result = revoicer.revoice(
             question_move=question_move,
             pair_context=pair_context,

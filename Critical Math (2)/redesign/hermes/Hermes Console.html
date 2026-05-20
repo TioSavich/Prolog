@@ -85,6 +85,54 @@ button { font: inherit; cursor: pointer; }
 }
 .disc-toggle button.active { background: var(--gold); color: var(--ink); }
 
+/* ── mode dropdown (auto / check / ask q's / lesson plan) ── */
+.mode-select {
+  border: 1px solid var(--ink); background: var(--paper); color: var(--ink);
+  border-radius: 100px; padding: 0.36rem 0.75rem;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.06em;
+  text-transform: lowercase; cursor: pointer;
+}
+.mode-select:focus { outline: 2px solid var(--gold-deep); outline-offset: 2px; }
+
+/* ── per-message mode badge ── */
+.mode-badge {
+  display: inline-block; font-family: var(--mono); font-size: 0.6rem;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  padding: 0.12rem 0.45rem; border-radius: 4px;
+  margin-bottom: 0.35rem; border: 1px solid currentColor;
+}
+.mode-badge.mode-auto { color: var(--muted); background: rgba(106,99,83,0.08); }
+.mode-badge.mode-check_answers { color: var(--teal); background: rgba(77,138,150,0.10); }
+.mode-badge.mode-ask_good_questions { color: #2e7a3a; background: rgba(46,122,58,0.10); }
+.mode-badge.mode-lesson_plan { color: #6b4090; background: rgba(107,64,144,0.10); }
+
+/* ── cards-used debug panel ── */
+.cards-used {
+  margin-top: 0.6rem; padding-top: 0.55rem;
+  border-top: 1px dashed var(--line-pale);
+  font-family: var(--mono); font-size: 0.74rem; color: var(--muted);
+}
+.cards-used summary {
+  cursor: pointer; color: var(--gold-deep); letter-spacing: 0.05em;
+  user-select: none;
+}
+.cards-used summary:hover { color: var(--ink); }
+.cards-used ul { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+.cards-used li {
+  padding: 0.32rem 0; border-bottom: 1px dashed var(--line-pale);
+  line-height: 1.45;
+}
+.cards-used li:last-child { border-bottom: 0; }
+.cards-used .kind {
+  display: inline-block; padding: 0.04rem 0.34rem; margin-right: 0.32rem;
+  border-radius: 3px; background: var(--paper-cool); color: var(--ink);
+  font-size: 0.64rem; letter-spacing: 0.06em; text-transform: uppercase;
+}
+.cards-used .id { color: var(--ink); margin-right: 0.32rem; }
+.cards-used .score { color: var(--gold-deep); margin-right: 0.32rem; }
+.cards-used .preview { color: var(--muted); font-family: var(--serif); }
+.cards-used.empty { color: var(--muted); font-style: italic; }
+
 /* ─── main grid ─── */
 .main {
   display: grid;
@@ -610,6 +658,12 @@ button { font: inherit; cursor: pointer; }
         <button data-disc="math" class="active">math-ed</button>
         <button data-disc="phil">philosophy</button>
       </div>
+      <select id="mode-select" class="mode-select" data-mode="auto" aria-label="Hermes mode">
+        <option value="auto">auto</option>
+        <option value="check_answers">check answers</option>
+        <option value="ask_good_questions">ask q's</option>
+        <option value="lesson_plan">lesson plan</option>
+      </select>
     </div>
   </header>
 
@@ -793,7 +847,68 @@ const SCENARIOS = {
 const state = {
   scenario: 'anticipate',
   panelOpen: true,
+  mode: 'auto',
 };
+
+// ═══════════════════════════════════════════════════════════
+//  MODE TOGGLE
+// ═══════════════════════════════════════════════════════════
+//
+// The dropdown drives card-selection bias on the wired server. The static
+// demo persists the user's choice via localStorage and reflects it on the
+// rendered messages so the design intent reads correctly.
+const MODE_STORAGE_KEY = 'hermes_mode';
+const VALID_MODES = new Set(['auto', 'check_answers', 'ask_good_questions', 'lesson_plan']);
+const MODE_BADGE_LABELS = {
+  auto: 'AUTO',
+  check_answers: 'CHECK',
+  ask_good_questions: "ASK Q'S",
+  lesson_plan: 'LESSON',
+};
+
+function loadStoredMode() {
+  try {
+    const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
+    if (saved && VALID_MODES.has(saved)) {
+      state.mode = saved;
+      const sel = document.getElementById('mode-select');
+      if (sel) { sel.value = saved; sel.dataset.mode = saved; }
+    }
+  } catch (err) { /* soft-fail */ }
+}
+function saveMode(value) {
+  try { window.localStorage.setItem(MODE_STORAGE_KEY, value); }
+  catch (err) { /* soft-fail */ }
+}
+
+function modeBadgeHTML(mode) {
+  const safe = VALID_MODES.has(mode) ? mode : 'auto';
+  return `<span class="mode-badge mode-${safe}" title="Hermes ran in ${safe} mode">${MODE_BADGE_LABELS[safe]}</span>`;
+}
+
+function cardsPanelHTML(cards) {
+  const list = Array.isArray(cards) ? cards : [];
+  if (!list.length) {
+    return `<details class="cards-used empty"><summary>🔍 cards used (0)</summary><div>No cards surfaced for this turn.</div></details>`;
+  }
+  const items = list.map(raw => {
+    const card = raw && typeof raw === 'object' ? raw : { body: String(raw || '') };
+    const parts = [];
+    if (card.kind) parts.push(`<span class="kind">${String(card.kind)}</span>`);
+    if (card.id || card.name) parts.push(`<span class="id">${String(card.id || card.name)}:</span>`);
+    if (typeof card.score === 'number') {
+      const scoreStr = card.score.toFixed ? card.score.toFixed(2) : card.score;
+      parts.push(`<span class="score">(${scoreStr})</span>`);
+    }
+    const preview = String(card.preview || card.body || card.summary || '').trim();
+    if (preview) {
+      const truncated = preview.length > 220 ? preview.slice(0, 217) + '…' : preview;
+      parts.push(`<span class="preview">${truncated.replace(/</g, '&lt;')}</span>`);
+    }
+    return `<li>${parts.join(' ')}</li>`;
+  }).join('');
+  return `<details class="cards-used"><summary>🔍 cards used (${list.length})</summary><ul>${items}</ul></details>`;
+}
 
 // ═══════════════════════════════════════════════════════════
 //  RENDER MESSAGES
@@ -866,7 +981,13 @@ function renderMessage(msg, animate = true) {
         <path d="M 60 -82 l 1.4 4 l 4.2 0 l -3.4 2.5 l 1.3 4 l -3.5 -2.5 l -3.5 2.5 l 1.3 -4 l -3.4 -2.5 l 4.2 0 z" />
       </g></svg></div>`
     : `<div class="who t">T</div>`;
-  div.innerHTML = `${who}<div class="body">${msg.body}${neuroHTML(msg.neuro)}</div>`;
+  // Mode badge + cards-used panel only on bot replies. The badge shows
+  // which mode the bot ran in for this turn; the panel is collapsed by
+  // default but exposes the structured cards Subagent 1 surfaces.
+  const isBot = msg.who === 'h';
+  const badge = isBot ? modeBadgeHTML(msg.mode || state.mode) : '';
+  const cards = isBot ? cardsPanelHTML(msg.cardsUsed) : '';
+  div.innerHTML = `${who}<div class="body">${badge}${msg.body}${neuroHTML(msg.neuro)}${cards}</div>`;
   feed.appendChild(div);
   div.querySelectorAll('.panel-cta').forEach(b => {
     b.addEventListener('click', () => {
@@ -1234,6 +1355,17 @@ document.querySelectorAll('#disc-toggle button').forEach(b => {
     shell.classList.add('discourse-' + b.dataset.disc);
   });
 });
+
+const modeSelectEl = document.getElementById('mode-select');
+if (modeSelectEl) {
+  modeSelectEl.addEventListener('change', () => {
+    const value = VALID_MODES.has(modeSelectEl.value) ? modeSelectEl.value : 'auto';
+    state.mode = value;
+    modeSelectEl.dataset.mode = value;
+    saveMode(value);
+  });
+}
+loadStoredMode();
 
 // composer
 const inp = document.getElementById('composer-input');

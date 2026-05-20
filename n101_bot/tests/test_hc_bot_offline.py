@@ -62,3 +62,29 @@ def test_bot_uses_reallms_renderer_when_api_key_is_configured(monkeypatch):
     assert record.final_answer == "Ask what property decides the classification."
     assert record.mode == "check_answers"
     assert calls[0] == {"model": "gemma-4-31B-it"}
+
+
+def test_bot_sanitizes_reallms_auth_failure_details(monkeypatch):
+    monkeypatch.setenv("REALLMS_API_KEY", "sk-real")
+    monkeypatch.delenv("HERMES_RENDERER", raising=False)
+
+    class FailingRealLMSChatClient:
+        def __init__(self, *, model):
+            pass
+
+        def chat(self, system_prompt, user_message, *, temperature):
+            raise hc_bot.RealLMSError(
+                "reallms returned 401: Authentication Error, Invalid proxy server token "
+                "passed. Received API Key = sk-...ABCD, Key Hash (Token) "
+                "=34045e69ff7de3a98f5e32ac07f3943be8700dbceaf4067d5c4a2d699e9530dc"
+            )
+
+    monkeypatch.setattr(hc_bot, "RealLMSChatClient", FailingRealLMSChatClient)
+    bot = HermeneuticBot()
+
+    record = bot.ask("What is a quantity?")
+
+    assert "rejected" in record.final_answer
+    assert "REALLMS_API_KEY" in record.final_answer
+    assert "sk-" not in record.final_thinking
+    assert "Key Hash" not in record.final_thinking

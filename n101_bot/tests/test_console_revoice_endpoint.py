@@ -44,9 +44,11 @@ class FakeRevoiceResult:
 
 class FakeRevoicer:
     calls = []
+    init_calls = []
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs
+        self.init_calls.append(kwargs)
 
     def revoice(self, *, question_move, pair_context):
         self.calls.append({"question_move": question_move, "pair_context": pair_context})
@@ -67,6 +69,7 @@ class FakeHandler:
 
 def _install_fake_revoicer(monkeypatch):
     FakeRevoicer.calls = []
+    FakeRevoicer.init_calls = []
     monkeypatch.setattr(hermes_console_server, "RealLMSRevoicer", FakeRevoicer)
 
 
@@ -91,6 +94,24 @@ def test_revoice_endpoint_accepts_safe_metadata(monkeypatch):
     assert FakeRevoicer.calls == [
         {"question_move": SAFE_QUESTION_MOVE, "pair_context": SAFE_PAIR_CONTEXT}
     ]
+    assert FakeRevoicer.init_calls == [{"model": "fake-reallms"}]
+
+
+def test_revoice_endpoint_treats_default_model_sentinel_as_configured_default(monkeypatch):
+    _install_fake_revoicer(monkeypatch)
+    handler = FakeHandler()
+
+    handler._handle_revoice(
+        {
+            "question_move": SAFE_QUESTION_MOVE,
+            "pair_context": SAFE_PAIR_CONTEXT,
+            "model": "default",
+        }
+    )
+
+    response = handler.responses[-1]
+    assert response["status"] == 200
+    assert FakeRevoicer.init_calls == [{"model": None}]
 
 
 def test_revoice_endpoint_rejects_raw_student_work(monkeypatch):

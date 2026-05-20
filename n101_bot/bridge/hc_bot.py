@@ -570,6 +570,22 @@ class HermeneuticBot:
             return "local Ollama renderer is not reachable"
         return "REALLMS_API_KEY is not configured"
 
+    def _is_reallms_auth_failure(self, reason: str) -> bool:
+        lowered = reason.lower()
+        return (
+            "401" in lowered
+            or "invalid proxy server token" in lowered
+            or "token_not_found" in lowered
+        )
+
+    def _sanitize_renderer_reason(self, reason: str) -> str:
+        text = str(reason)
+        if self._is_reallms_auth_failure(text):
+            return "REALLMS rejected the API key (401). Check REALLMS_API_KEY and restart Hermes."
+        text = re.sub(r"Received API Key\s*=\s*[^,}\s]+", "Received API Key = [redacted]", text)
+        text = re.sub(r"Key Hash \(Token\)\s*=\s*[0-9a-fA-F]+", "Key Hash (Token) = [redacted]", text)
+        return text
+
     def _use_ollama_renderer(self) -> bool:
         return os.environ.get("HERMES_RENDERER", "").strip().lower() == "ollama"
 
@@ -613,12 +629,19 @@ class HermeneuticBot:
         final_commitments: List[Commitment] = []
         first_commitments = first_commitments or []
         terms = ", ".join(detected) if detected else "none"
+        safe_reason = self._sanitize_renderer_reason(reason)
         if self._use_ollama_renderer():
             final_answer = (
                 "Ollama renderer is not reachable. Hermes still completed the Prolog read "
                 f"and detected terms: {terms}."
             )
             model_name = "ollama-unavailable"
+        elif self._is_reallms_auth_failure(reason):
+            final_answer = (
+                "REALLMS rejected the API key. Check REALLMS_API_KEY, restart Hermes, "
+                f"then try again. Hermes still completed the Prolog read and detected terms: {terms}."
+            )
+            model_name = "reallms-auth-error"
         else:
             final_answer = (
                 "REALLMS is not configured yet. Set REALLMS_API_KEY, then restart Hermes. "
@@ -638,7 +661,7 @@ class HermeneuticBot:
             first_thinking="",
             first_commitments=first_commitments,
             final_answer=final_answer,
-            final_thinking=reason,
+            final_thinking=safe_reason,
             final_commitments=final_commitments,
             repaired=bool(first_commitments),
             assessing=is_assessing,

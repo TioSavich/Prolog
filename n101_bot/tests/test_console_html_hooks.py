@@ -41,6 +41,16 @@ def test_console_revoice_payload_does_not_send_raw_student_work_keys():
         assert key not in revoice_function
 
 
+def test_console_revoice_sends_selected_model_not_default_sentinel():
+    html = _html()
+    revoice_function = html.split("async function requestRevoice", 1)[1].split(
+        "function renderRevoiceControls",
+        1,
+    )[0]
+    assert 'model: modelInput.value' in revoice_function
+    assert 'model: "default"' not in revoice_function
+
+
 def test_canonical_pair_sample_omits_raw_student_work_fields():
     html = _html()
     sample_block = html.split("const CANONICAL_PAIR_SAMPLE", 1)[1].split("];", 1)[0]
@@ -85,9 +95,31 @@ def test_console_api_calls_work_when_html_is_opened_from_file():
     assert 'fetch("/api/' not in html
 
 
+def test_chat_submit_routes_discussion_transcripts_to_pairer_before_chat():
+    html = _html()
+    assert "function looksLikeDiscussionTranscript" in html
+    assert "async function routeTranscriptThroughPairer" in html
+
+    submit_block = html.split('form.addEventListener("submit"', 1)[1].split(
+        "function renderRecord",
+        1,
+    )[0]
+    assert "looksLikeDiscussionTranscript(text)" in submit_block
+    assert "await routeTranscriptThroughPairer(text)" in submit_block
+    assert submit_block.index("looksLikeDiscussionTranscript(text)") < submit_block.index(
+        'addMessage("user", text)'
+    )
+
+
 def test_console_copy_defaults_to_reallms_not_gemma2b():
     html = _html()
     assert "gemma:2b" not in html
     assert "local Gemma console" not in html
     assert "Ollama" not in html
     assert "REALLMS" in html
+
+
+def test_console_renderer_status_distinguishes_key_presence_from_validated_readiness():
+    html = _html()
+    assert '`${renderer} key set`' in html
+    assert '`${renderer} ready`' not in html

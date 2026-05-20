@@ -734,6 +734,28 @@ function apiUrl(path) {
   return `${API_ORIGIN}${path}`;
 }
 
+const TRANSCRIPT_SPEAKER_RE = /^\s*(student\s*\d+|s\d+|[A-Za-z][A-Za-z .'-]{0,40})\s*:\s+\S/i;
+const NON_SPEAKER_LABELS = new Set(["answer", "answers", "note", "prompt", "question", "response", "state", "trace"]);
+
+function looksLikeDiscussionTranscript(text) {
+  const labels = new Set();
+  for (const rawLine of text.split(/\r?\n/)) {
+    const match = rawLine.match(TRANSCRIPT_SPEAKER_RE);
+    if (!match) continue;
+    const label = match[1].trim().toLowerCase().replace(/\s+/g, " ");
+    if (!NON_SPEAKER_LABELS.has(label)) labels.add(label);
+  }
+  return labels.size >= 2;
+}
+
+function setWorkspaceMode(mode) {
+  document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+  const active = document.querySelector(`.mode-btn[data-mode="${mode}"]`);
+  if (active) active.classList.add("active");
+  document.querySelector("#chat-workspace").classList.toggle("hidden", mode !== "chat");
+  document.querySelector("#pair-workspace").classList.toggle("active", mode === "pair");
+}
+
 // ── Mode toggle persistence ──
 //
 // The dropdown drives card-selection bias on the server. Saving + restoring
@@ -988,7 +1010,7 @@ async function loadModels() {
   const ready = data.renderer_ready !== undefined ? data.renderer_ready : data.ollama_reachable;
   const renderer = data.renderer || "reallms";
   document.querySelector("#renderer-dot").classList.toggle("on", Boolean(ready));
-  document.querySelector("#renderer-text").textContent = ready ? `${renderer} ready` : `${renderer} needs key`;
+  document.querySelector("#renderer-text").textContent = ready ? `${renderer} key set` : `${renderer} needs key`;
   modelList.innerHTML = "";
   for (const name of data.models || []) {
     const opt = document.createElement("option");
@@ -1025,10 +1047,16 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const text = message.value.trim();
   if (!text) return;
-  addMessage("user", text);
-  message.value = "";
   const pending = addMessage("hermes", "thinking...");
   const requestedMode = VALID_MODES.has(modeSelect.value) ? modeSelect.value : "auto";
+  if (looksLikeDiscussionTranscript(text)) {
+    message.value = "";
+    pending.remove();
+    await routeTranscriptThroughPairer(text);
+    return;
+  }
+  addMessage("user", text);
+  message.value = "";
   try {
     const res = await fetch(apiUrl("/api/chat"), {
       method: "POST",
@@ -1098,11 +1126,7 @@ for (const btn of document.querySelectorAll(".quick [data-q]")) {
 
 for (const btn of document.querySelectorAll(".mode-btn")) {
   btn.addEventListener("click", () => {
-    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    const mode = btn.dataset.mode;
-    document.querySelector("#chat-workspace").classList.toggle("hidden", mode !== "chat");
-    document.querySelector("#pair-workspace").classList.toggle("active", mode === "pair");
+    setWorkspaceMode(btn.dataset.mode);
   });
 }
 
@@ -1193,6 +1217,29 @@ async function requestN103Pipeline(transcript) {
   return data;
 }
 
+async function routeTranscriptThroughPairer(text) {
+  setWorkspaceMode("pair");
+  pairInput.value = text;
+  pairOutput.textContent = "analyzing transcript locally with Hermes Prolog...";
+  pairGraph.innerHTML = "";
+  revoiceOutput.textContent = "Revoiced prompt will appear here.";
+  try {
+    const packet = await requestN103Pipeline(text);
+    renderPairGraph(packet);
+    const pairCount = (packet.pairs || []).length;
+    pairOutput.textContent = `Safe Prolog analysis complete: ${packet.event_count || 0} event(s), ${pairCount} pair(s).`;
+    pairJson.textContent = JSON.stringify(packet, null, 2);
+    addMessage(
+      "hermes",
+      `I routed that transcript to the N103 pairer instead of sending it to REALLMS. Safe Prolog analysis complete: ${packet.event_count || 0} event(s), ${pairCount} pair(s).`
+    );
+  } catch (err) {
+    pairOutput.textContent = String(err);
+    pairJson.textContent = "analysis failed";
+    addMessage("hermes", `I routed that transcript to the N103 pairer, but analysis failed: ${String(err)}`);
+  }
+}
+
 async function requestRevoice(questionMove, pairContext) {
   const res = await fetch(apiUrl("/api/revoice"), {
     method: "POST",
@@ -1200,7 +1247,7 @@ async function requestRevoice(questionMove, pairContext) {
     body: JSON.stringify({
       question_move: questionMove,
       pair_context: pairContext,
-      model: "default"
+      model: modelInput.value
     })
   });
   const data = await res.json();
