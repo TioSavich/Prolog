@@ -29,6 +29,7 @@ mkdir -p "$HERMES_TMPDIR" "$XDG_CACHE_HOME" "$PYTHONPYCACHEPREFIX" "$HERMES_DERI
 echo "[n101_bot] persistent worker and bridge tests"
 "$PYTHON_BIN" -m pytest -q \
   ../packaging/tests/test_check_hermes_packaging.py \
+  ../packaging/tests/test_flash_sync_package.py \
   tests/test_path_contract.py \
   tests/test_persistent_prolog.py \
   tests/test_hc_bot_offline.py \

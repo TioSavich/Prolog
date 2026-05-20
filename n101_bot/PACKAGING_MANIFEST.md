@@ -32,6 +32,10 @@ do not track local runtimes, model weights, generated logs, caches, or student/c
   - representative required files: `n101_bot/tests/test_runtime_env.py`, `n101_bot/tests/test_path_contract.py`, `n101_bot/tests/test_runtime_scripts.py`
 - `n101_bot/samples/*.json`
 - `packaging/check_hermes_packaging.py`
+- `packaging/flash_sync_manifest.json`
+- `packaging/sync_flash_package.py`
+- `packaging/tests/*.py`
+  - representative required files: `packaging/tests/test_check_hermes_packaging.py`, `packaging/tests/test_flash_sync_package.py`
 
 ## Keep Out Of Git
 

@@ -29,6 +29,9 @@ REQUIRED_TRACKABLE = [
     "n101_bot/tests/test_runtime_env.py",
     "n101_bot/tests/test_path_contract.py",
     "n101_bot/tests/test_runtime_scripts.py",
+    "packaging/flash_sync_manifest.json",
+    "packaging/sync_flash_package.py",
+    "packaging/tests/test_flash_sync_package.py",
 ]
 
 REQUIRED_IGNORED = [

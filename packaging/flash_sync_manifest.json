@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "include_roots": [
+    ".gitignore",
+    "n101_bot",
+    "packaging"
+  ],
+  "exclude_patterns": [
+    ".DS_Store",
+    "data/**",
+    "runtime/**",
+    "n101_bot/.DS_Store",
+    "n101_bot/**/.DS_Store",
+    "n101_bot/.venv/**",
+    "n101_bot/models/**",
+    "n101_bot/llama32-1b.vindex/**",
+    "n101_bot/logs/**",
+    "n101_bot/.pytest_cache/**",
+    "n101_bot/**/__pycache__/**",
+    "n101_bot/**/*.pyc",
+    "n101_bot/runtime/**",
+    "packaging/**/__pycache__/**",
+    "packaging/**/*.pyc"
+  ],
+  "include_overrides": [
+    "n101_bot/runtime/README.md"
+  ],
+  "required_files": [
+    ".gitignore",
+    "n101_bot/PACKAGING_MANIFEST.md",
+    "n101_bot/bridge/path_contract.py",
+    "n101_bot/bridge/runtime_env.py",
+    "n101_bot/bridge/hermes_console_server.py",
+    "n101_bot/bridge/reallms_revoicer.py",
+    "n101_bot/scripts/console.sh",
+    "n101_bot/scripts/ralph_verify.sh",
+    "n101_bot/tests/test_path_contract.py",
+    "n101_bot/tests/test_runtime_env.py",
+    "n101_bot/tests/test_runtime_scripts.py",
+    "n101_bot/tests/test_reallms_revoicer.py",
+    "n101_bot/tests/test_console_revoice_endpoint.py",
+    "n101_bot/runtime/README.md",
+    "packaging/check_hermes_packaging.py",
+    "packaging/flash_sync_manifest.json",
+    "packaging/sync_flash_package.py",
+    "packaging/tests/test_check_hermes_packaging.py",
+    "packaging/tests/test_flash_sync_package.py"
+  ],
+  "ensure_dirs": [
+    "data/derived",
+    "data/outputs",
+    "runtime/tmp",
+    "runtime/cache",
+    "runtime/pycache"
+  ],
+  "never_create_dirs": [
+    "data/inputs"
+  ]
+}
