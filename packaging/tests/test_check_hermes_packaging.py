@@ -21,5 +21,6 @@ def test_non_git_package_mode_does_not_shell_out_to_git(tmp_path):
     checker = load_checker()
 
     assert checker.git_check_ignore("n101_bot/logs/results.csv", root=tmp_path) is True
+    assert checker.git_check_ignore("n101_bot/.DS_Store", root=tmp_path) is True
     assert checker.git_check_ignore("n101_bot/README.md", root=tmp_path) is False
     assert checker.tracked_files(root=tmp_path) == []

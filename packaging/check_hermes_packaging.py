@@ -47,6 +47,7 @@ FORBIDDEN_TRACK_PATTERNS = [
     "n101_bot/**/__pycache__/**",
     "n101_bot/.pytest_cache/**",
     "n101_bot/**/*.pyc",
+    "n101_bot/.DS_Store",
     "n101_bot/**/.DS_Store",
     "N101_Student_Packet.pdf",
     "N101coursenotes_f24.*",
