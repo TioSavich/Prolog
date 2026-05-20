@@ -5,9 +5,14 @@ import json
 import pytest
 
 from bridge.reallms_revoicer import (
+    DEFAULT_REALLMS_BASE_URL,
+    DEFAULT_REALLMS_MODEL,
+    RealLMSChatClient,
     RealLMSRevoicer,
     RevoiceSafetyError,
     build_revoicing_payload,
+    reallms_api_key_configured,
+    resolve_chat_completions_url,
 )
 
 
@@ -143,3 +148,71 @@ def test_revoicer_blocks_denylisted_model_output():
 
     assert result.blocked is True
     assert "shit" not in result.content
+
+
+def test_reallms_defaults_match_n103_run_pipeline():
+    assert DEFAULT_REALLMS_BASE_URL == "https://reallms.rescloud.iu.edu/direct/v1"
+    assert DEFAULT_REALLMS_MODEL == "gemma-4-31B-it"
+
+
+def test_reallms_chat_url_accepts_base_or_full_endpoint():
+    assert (
+        resolve_chat_completions_url("https://reallms.example.test/direct")
+        == "https://reallms.example.test/direct/v1/chat/completions"
+    )
+    assert (
+        resolve_chat_completions_url("https://reallms.example.test/direct/v1")
+        == "https://reallms.example.test/direct/v1/chat/completions"
+    )
+    assert (
+        resolve_chat_completions_url("https://reallms.example.test/direct/v1/chat/completions")
+        == "https://reallms.example.test/direct/v1/chat/completions"
+    )
+
+
+def test_reallms_api_key_configured_rejects_placeholders(monkeypatch):
+    monkeypatch.delenv("REALLMS_API_KEY", raising=False)
+    assert reallms_api_key_configured() is False
+    monkeypatch.setenv("REALLMS_API_KEY", "YOUR_KEY_HERE")
+    assert reallms_api_key_configured() is False
+    monkeypatch.setenv("REALLMS_API_KEY", "sk-real")
+    assert reallms_api_key_configured() is True
+
+
+def test_reallms_chat_client_posts_openai_compatible_payload_and_filters_output():
+    captured = {}
+
+    def fake_post(url, *, headers, json, timeout):
+        captured["url"] = url
+        captured["headers"] = headers
+        captured["json"] = json
+        captured["timeout"] = timeout
+        return FakeResponse(
+            {
+                "model": "gemma-4-31B-it",
+                "choices": [
+                    {
+                        "message": {
+                            "content": "Consider asking what property decides the classification."
+                        }
+                    }
+                ],
+            }
+        )
+
+    client = RealLMSChatClient(
+        base_url="https://reallms.example.test/direct/v1",
+        api_key="test-key",
+        model="gemma-4-31B-it",
+        http_post=fake_post,
+    )
+
+    result = client.chat("system prompt", "user content", temperature=0.3)
+
+    assert captured["url"] == "https://reallms.example.test/direct/v1/chat/completions"
+    assert captured["headers"]["Authorization"] == "Bearer test-key"
+    assert captured["json"]["model"] == "gemma-4-31B-it"
+    assert captured["json"]["temperature"] == 0.3
+    assert result.model == "gemma-4-31B-it"
+    assert result.content == "Consider asking what property decides the classification."
+    assert result.eval_count == 0

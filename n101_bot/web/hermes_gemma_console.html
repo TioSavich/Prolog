@@ -588,11 +588,11 @@ pre {
         </svg>
       </div>
       <div>
-        <h1>Hermes <span class="sub">local Gemma console</span></h1>
+        <h1>Hermes <span class="sub">REALLMS + Prolog console</span></h1>
       </div>
     </div>
     <div class="top-controls">
-      <div class="pill"><span class="dot" id="ollama-dot"></span><span id="ollama-text">checking Ollama</span></div>
+      <div class="pill"><span class="dot" id="renderer-dot"></span><span id="renderer-text">checking REALLMS</span></div>
       <div class="pill">Prolog loop · local</div>
     </div>
   </header>
@@ -600,14 +600,14 @@ pre {
   <main class="main">
     <aside class="sidebar">
       <p class="label">Surface</p>
-      <button class="mode-btn active" data-mode="chat"><span>01</span><strong>Hermes chat</strong><small>Gemma renders; Prolog reads.</small></button>
+      <button class="mode-btn active" data-mode="chat"><span>01</span><strong>Hermes chat</strong><small>REALLMS renders; Prolog reads.</small></button>
       <button class="mode-btn" data-mode="pair"><span>02</span><strong>N103 pairer</strong><small>Metadata events become discussion pairs.</small></button>
 
       <div class="model-box">
         <p class="label">Renderer</p>
         <div class="row">
           <select id="model-list"></select>
-          <input id="model-input" value="gemma:2b" aria-label="model">
+          <input id="model-input" value="gemma-4-31B-it" aria-label="model">
         </div>
         <div class="row">
           <select id="audience">
@@ -618,14 +618,14 @@ pre {
         <button id="reset">reset thread</button>
       </div>
 
-      <p class="note">DeepSeek is now optional. Use it when you want a slower reasoning pass; keep Gemma for live demos.</p>
+      <p class="note">Set REALLMS_API_KEY before launch. Hermes uses Prolog for symbolic checks and pair scoring.</p>
     </aside>
 
     <section class="workspace" id="chat-workspace">
       <header class="head">
         <div>
-          <h2>Gemma as <em>voice</em>, Prolog as skeleton</h2>
-          <div class="meta">N101/N103 local demo · no RealLMS API required</div>
+          <h2>REALLMS as <em>voice</em>, Prolog as skeleton</h2>
+          <div class="meta">N101/N103 research console · REALLMS key required for prose</div>
         </div>
         <div class="register" id="register">
           <button class="active" data-register="fresh">fresh</button>
@@ -668,10 +668,11 @@ pre {
           <button id="load-workflows" type="button">workflows</button>
           <button id="load-sample" type="button">sample</button>
           <button id="load-canonical-sample" type="button">canonical</button>
+          <button id="analyze-transcript" type="button">analyze</button>
         </div>
       </header>
       <form class="composer" id="pair-form">
-        <textarea id="pair-input" placeholder='[{"event_id":"ev_0003","actor":{"role":"teacher","pseudonym":"T"},"source":{"source_type":"teacher_note"},"symbolic":{},"pml":{}}]'></textarea>
+        <textarea id="pair-input" placeholder='Paste a transcript, or paste [{"event_id":"ev_0003","actor":{"role":"student","pseudonym":"S01"},"source":{"source_type":"n103_discussion"},"symbolic":{},"pml":{}}]'></textarea>
         <div class="quick">
           <button type="submit">pair</button>
           <button type="button" id="clear-pair">clear</button>
@@ -687,7 +688,7 @@ pre {
     <aside class="trace">
       <h3>Trace</h3>
       <div class="kv" id="trace-kv">
-        <div><span>model</span><span id="trace-model">gemma:2b</span></div>
+        <div><span>model</span><span id="trace-model">gemma-4-31B-it</span></div>
         <div><span>move</span><span id="trace-move">none</span></div>
         <div><span>terms</span><span id="trace-terms">none</span></div>
         <div><span>latency</span><span id="trace-time">0 ms</span></div>
@@ -984,8 +985,10 @@ function addMessage(kind, text, codes = [], trace = "", opts = {}) {
 async function loadModels() {
   const res = await fetch(apiUrl("/api/models"));
   const data = await res.json();
-  document.querySelector("#ollama-dot").classList.toggle("on", data.ollama_reachable);
-  document.querySelector("#ollama-text").textContent = data.ollama_reachable ? "Ollama online" : "Ollama offline";
+  const ready = data.renderer_ready !== undefined ? data.renderer_ready : data.ollama_reachable;
+  const renderer = data.renderer || "reallms";
+  document.querySelector("#renderer-dot").classList.toggle("on", Boolean(ready));
+  document.querySelector("#renderer-text").textContent = ready ? `${renderer} ready` : `${renderer} needs key`;
   modelList.innerHTML = "";
   for (const name of data.models || []) {
     const opt = document.createElement("option");
@@ -993,7 +996,7 @@ async function loadModels() {
     opt.textContent = name;
     modelList.appendChild(opt);
   }
-  modelInput.value = data.default_model || "gemma:2b";
+  modelInput.value = data.default_model || "gemma-4-31B-it";
   modelList.value = modelInput.value;
   traceModel.textContent = modelInput.value;
 }
@@ -1141,6 +1144,25 @@ document.querySelector("#load-workflows").addEventListener("click", () => {
 
 document.querySelector("#load-canonical-sample").addEventListener("click", loadCanonicalPairSample);
 
+document.querySelector("#analyze-transcript").addEventListener("click", async () => {
+  const transcript = pairInput.value.trim();
+  if (!transcript) {
+    pairOutput.textContent = "Paste transcript text first.";
+    return;
+  }
+  pairOutput.textContent = "analyzing with Hermes Prolog...";
+  pairGraph.innerHTML = "";
+  revoiceOutput.textContent = "Revoiced prompt will appear here.";
+  try {
+    const packet = await requestN103Pipeline(transcript);
+    renderPairGraph(packet);
+    pairOutput.textContent = `Safe Prolog analysis complete: ${packet.event_count || 0} event(s), ${(packet.pairs || []).length} pair(s).`;
+    pairJson.textContent = JSON.stringify(packet, null, 2);
+  } catch (err) {
+    pairOutput.textContent = String(err);
+  }
+});
+
 document.querySelector("#clear-pair").addEventListener("click", () => {
   pairInput.value = "";
   pairOutput.textContent = "Pairing output will appear here.";
@@ -1157,6 +1179,17 @@ async function requestPairGraph(events) {
   });
   const data = await res.json();
   if (!res.ok) throw new Error(data.error || "pair graph failed");
+  return data;
+}
+
+async function requestN103Pipeline(transcript) {
+  const res = await fetch(apiUrl("/api/n103_pipeline"), {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({transcript})
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "N103 analysis failed");
   return data;
 }
 
@@ -1290,7 +1323,7 @@ document.querySelector("#pair-form").addEventListener("submit", async (event) =>
 });
 
 loadModels().catch(err => {
-  document.querySelector("#ollama-text").textContent = "Ollama check failed";
+  document.querySelector("#renderer-text").textContent = "renderer check failed";
   console.error(err);
 });
 </script>

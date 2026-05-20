@@ -6,8 +6,15 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-MODEL="${HERMES_MODEL:-gemma:2b}"
+if [[ -f "$ROOT/.env" ]]; then
+  set -a
+  source "$ROOT/.env"
+  set +a
+fi
+
+MODEL="${HERMES_MODEL:-${REALLMS_MODEL:-gemma-4-31B-it}}"
 export HERMES_MODEL="$MODEL"
+export HERMES_RENDERER="${HERMES_RENDERER:-reallms}"
 export HERMES_APP_HOME="${HERMES_APP_HOME:-$ROOT}"
 export HERMES_TMPDIR="${HERMES_TMPDIR:-$ROOT/runtime/tmp}"
 export TMPDIR="$HERMES_TMPDIR"

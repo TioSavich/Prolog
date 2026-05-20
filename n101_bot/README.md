@@ -16,13 +16,12 @@ scripts/demo.sh "What is a quantity?"
 ```
 
 Pipeline: Prolog loads vocabulary → emits JSON → Python composes system
-prompt → calls DeepSeek-R1:14b via Ollama → Prolog validator checks the
-response against incompatibility rules → prints the answer and any
-violations.
+prompt → calls REALLMS by default → Prolog validator checks the response
+against incompatibility rules → prints the answer and any violations.
 
-The default renderer is `gemma:2b` through local Ollama. Override it with
-`--model deepseek-r1:14b` for a slower reasoning pass, or set
-`HERMES_MODEL=<ollama-tag>`.
+Set `REALLMS_API_KEY` before launching. The default model is
+`gemma-4-31B-it`; override it with `REALLMS_MODEL=<model>` or
+`HERMES_MODEL=<model>`.
 
 ## Local Hermes console
 
@@ -31,14 +30,10 @@ scripts/console.sh
 ```
 
 Then open `http://127.0.0.1:8765`. The console uses the Critical Math /
-Hermes visual language, calls the existing Prolog-in-the-loop bot, and keeps
-DeepSeek optional rather than default. The model field accepts any local Ollama
-tag, so a later Gemma 4/Gemma 4B install can be selected there.
-
-If Ollama or the selected local model is unavailable, Hermes falls back to
-offline Prolog mode. In that mode the chat pane reports the symbolic read
-instead of hanging on "thinking..."; pair graph and metadata-only N103 workflow
-tools still work.
+Hermes visual language, calls the existing Prolog-in-the-loop bot, and uses
+REALLMS for prose rendering. Without `REALLMS_API_KEY`, the chat pane returns
+a configuration message instead of hanging on "thinking..."; pair graph and
+metadata-only N103 workflow tools still work.
 
 ## Run the overnight test loop
 
@@ -81,4 +76,4 @@ Add a file under `vocabularies/n101/` named `<term>.pl` following the
 
 See [PLAN.md](PLAN.md). This experiment does NOT edit model weights.
 The `.vlp` emitter is real code but is not executed against a vindex
-in this prototype; Ollama + system-prompt injection is the runtime.
+in this prototype; REALLMS + system-prompt injection is the runtime.

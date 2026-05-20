@@ -15,6 +15,7 @@ def test_console_has_research_safe_pair_graph_and_revoice_hooks():
     assert 'id="pair-graph"' in html
     assert 'id="revoice-output"' in html
     assert 'id="load-canonical-sample"' in html
+    assert 'id="analyze-transcript"' in html
     assert 'id="load-workflows"' in html
     assert 'fetch(apiUrl("/api/n103_workflows")' in html
     assert "loadN103Workflows" in html
@@ -23,6 +24,8 @@ def test_console_has_research_safe_pair_graph_and_revoice_hooks():
     assert "async function requestRevoice" in html
     assert 'fetch(apiUrl("/api/revoice")' in html
     assert "renderPairGraph" in html
+    assert "requestN103Pipeline" in html
+    assert 'fetch(apiUrl("/api/n103_pipeline")' in html
     assert "renderRevoiceControls" in html
     assert "loadCanonicalPairSample" in html
 
@@ -80,3 +83,11 @@ def test_console_api_calls_work_when_html_is_opened_from_file():
     ]:
         assert f'fetch(apiUrl("{path}")' in html
     assert 'fetch("/api/' not in html
+
+
+def test_console_copy_defaults_to_reallms_not_gemma2b():
+    html = _html()
+    assert "gemma:2b" not in html
+    assert "local Gemma console" not in html
+    assert "Ollama" not in html
+    assert "REALLMS" in html

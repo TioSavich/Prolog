@@ -3,7 +3,7 @@
 Flow per turn:
   1. Prolog detects which vocabulary terms the student mentioned
   2. Compose focused system prompt (just those terms' cards)
-  3. Generate with Ollama
+  3. Render with REALLMS by default (Ollama only by explicit override)
   4. Prolog scans the answer for incompatibility triggers ("commitments")
   5. If anything fired, repair turn: append "Amy would correct this" and
      regenerate once
@@ -22,7 +22,13 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from .normalize import Normalization, normalize
-from .ollama_client import ChatResult, OllamaError, chat, ping
+from .ollama_client import ChatResult, OllamaError, chat as ollama_chat, ping as ollama_ping
+from .reallms_revoicer import (
+    DEFAULT_REALLMS_MODEL,
+    RealLMSChatClient,
+    RealLMSError,
+    reallms_api_key_configured,
+)
 from .prolog import (
     Commitment,
     DialogueState,
@@ -52,7 +58,7 @@ _GEOMETRY_CONTEXT_WITH_CARDS = getattr(
 
 ROOT = Path(__file__).resolve().parent.parent
 LOGS = ROOT / "logs"
-DEFAULT_MODEL = os.environ.get("HERMES_MODEL", "gemma:2b")
+DEFAULT_MODEL = os.environ.get("HERMES_MODEL") or os.environ.get("REALLMS_MODEL", DEFAULT_REALLMS_MODEL)
 
 
 @dataclass
@@ -356,7 +362,7 @@ class HermeneuticBot:
                 sys_prompt = sys_prompt + TEACHER_AUDIENCE_NOTE
         state_before = self.session.state
         if not self._renderer_available():
-            return self._offline_record(
+            return self._renderer_unavailable_record(
                 raw_question=question,
                 normalized_question=normalized_question,
                 norm=norm,
@@ -366,7 +372,7 @@ class HermeneuticBot:
                 state_before=state_before,
                 mode=mode,
                 cards_used=cards_used,
-                reason="local Ollama renderer is not reachable",
+                reason=self._renderer_unavailable_reason(),
             )
 
         # ── Pre-flight: Amy's move grammar may ask us NOT to answer ──
@@ -385,8 +391,8 @@ class HermeneuticBot:
         if move.assessing and effective_mode != "lesson_plan":
             try:
                 rendered = self._render_assessing(normalized_question, sys_prompt, move, temperature)
-            except OllamaError as exc:
-                return self._offline_record(
+            except (OllamaError, RealLMSError) as exc:
+                return self._renderer_unavailable_record(
                     raw_question=question,
                     normalized_question=normalized_question,
                     norm=norm,
@@ -448,9 +454,9 @@ class HermeneuticBot:
                 + "Template instruction: " + move.rendered_template()
             )
         try:
-            first = chat(self.session.model, advance_sys, normalized_question, temperature=temperature)
-        except OllamaError as exc:
-            return self._offline_record(
+            first = self._chat(advance_sys, normalized_question, temperature=temperature)
+        except (OllamaError, RealLMSError) as exc:
+            return self._renderer_unavailable_record(
                 raw_question=question,
                 normalized_question=normalized_question,
                 norm=norm,
@@ -484,8 +490,8 @@ class HermeneuticBot:
                 pivot = self._pivot_to_fmst(
                     normalized_question, sys_prompt, first_answer, first_commits, temperature,
                 )
-            except OllamaError as exc:
-                return self._offline_record(
+            except (OllamaError, RealLMSError) as exc:
+                return self._renderer_unavailable_record(
                     raw_question=question,
                     normalized_question=normalized_question,
                     norm=norm,
@@ -553,9 +559,41 @@ class HermeneuticBot:
     def _renderer_available(self) -> bool:
         if os.environ.get("HERMES_FORCE_OFFLINE") == "1":
             return False
-        return ping()
+        if self._use_ollama_renderer():
+            return ollama_ping()
+        return reallms_api_key_configured()
 
-    def _offline_record(
+    def _renderer_unavailable_reason(self) -> str:
+        if os.environ.get("HERMES_FORCE_OFFLINE") == "1":
+            return "renderer disabled by HERMES_FORCE_OFFLINE"
+        if self._use_ollama_renderer():
+            return "local Ollama renderer is not reachable"
+        return "REALLMS_API_KEY is not configured"
+
+    def _use_ollama_renderer(self) -> bool:
+        return os.environ.get("HERMES_RENDERER", "").strip().lower() == "ollama"
+
+    def _chat(
+        self,
+        system_prompt: str,
+        user_message: str,
+        *,
+        temperature: float,
+    ) -> ChatResult:
+        if self._use_ollama_renderer():
+            return ollama_chat(
+                self.session.model,
+                system_prompt,
+                user_message,
+                temperature=temperature,
+            )
+        return RealLMSChatClient(model=self.session.model).chat(
+            system_prompt,
+            user_message,
+            temperature=temperature,
+        )
+
+    def _renderer_unavailable_record(
         self,
         *,
         raw_question: str,
@@ -575,12 +613,18 @@ class HermeneuticBot:
         final_commitments: List[Commitment] = []
         first_commitments = first_commitments or []
         terms = ", ".join(detected) if detected else "none"
-        final_answer = (
-            "Offline Prolog mode: no local LLM renderer is available, so I can only "
-            f"report the symbolic read. Detected terms: {terms}. "
-            "Use the N103 pairer with metadata-only events, or configure Ollama/REALLMS "
-            "for prose revoicing."
-        )
+        if self._use_ollama_renderer():
+            final_answer = (
+                "Ollama renderer is not reachable. Hermes still completed the Prolog read "
+                f"and detected terms: {terms}."
+            )
+            model_name = "ollama-unavailable"
+        else:
+            final_answer = (
+                "REALLMS is not configured yet. Set REALLMS_API_KEY, then restart Hermes. "
+                f"Hermes still completed the Prolog read and detected terms: {terms}."
+            )
+            model_name = "reallms-unconfigured"
         is_assessing = move.assessing if assessing is None else assessing
         state_after = state_step(state_before, move.move_tag, len(final_commitments))
         record = TurnRecord(
@@ -600,7 +644,7 @@ class HermeneuticBot:
             assessing=is_assessing,
             state_before=state_before,
             state_after=state_after,
-            model="offline-prolog",
+            model=model_name,
             duration_ms=0,
             eval_tokens=0,
             mode=mode,
@@ -738,7 +782,7 @@ class HermeneuticBot:
             + "Template instruction: " + rendered
         )
         move_user = f"Student utterance: {question}\n\nRender the assessing question now."
-        return chat(self.session.model, move_sys, move_user, temperature=temperature)
+        return self._chat(move_sys, move_user, temperature=temperature)
 
     # private
 
@@ -825,8 +869,7 @@ class HermeneuticBot:
             f"Student utterance: {question}\n\n"
             f"Previous draft (you are rewriting this as an assessing question, not a corrected answer):\n{unsanitized_answer}"
         )
-        return chat(
-            self.session.model,
+        return self._chat(
             pivot_sys,
             pivot_user,
             temperature=temperature,

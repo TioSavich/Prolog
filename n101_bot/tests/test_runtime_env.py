@@ -14,6 +14,7 @@ def test_runtime_env_keeps_temp_and_cache_inside_app(tmp_path):
     assert (tmp_path / "runtime" / "tmp").is_dir()
     assert (tmp_path / "runtime" / "cache").is_dir()
     assert (tmp_path / "runtime" / "pycache").is_dir()
+    assert env["HERMES_MODEL"] == "gemma-4-31B-it"
 
 
 def test_runtime_env_preserves_existing_model_and_reallms_config(tmp_path):

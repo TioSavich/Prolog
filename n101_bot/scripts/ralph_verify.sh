@@ -19,7 +19,9 @@ echo "[n101_bot] persistent worker and bridge tests"
   tests/test_console_revoice_endpoint.py \
   tests/test_console_mode_endpoint.py \
   tests/test_n103_run_loader.py \
+  tests/test_n103_prolog_pipeline.py \
   tests/test_hermes_n103.py \
+  tests/test_console_n103_pipeline_endpoint.py \
   tests/test_prolog_reasoning.py
 
 echo "[n101_bot] verification complete"

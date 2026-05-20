@@ -8,16 +8,18 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from dataclasses import dataclass
 from typing import Any, Callable
 
 import requests
 
 from .denylist import FilterResult, filter_output
+from .ollama_client import ChatResult
 
 
-DEFAULT_REALLMS_BASE_URL = os.environ.get("REALLMS_BASE_URL", "https://reallms.uits.iu.edu/v1")
-DEFAULT_REALLMS_MODEL = os.environ.get("REALLMS_MODEL", "default")
+DEFAULT_REALLMS_BASE_URL = "https://reallms.rescloud.iu.edu/direct/v1"
+DEFAULT_REALLMS_MODEL = "gemma-4-31B-it"
 
 FORBIDDEN_INPUT_KEYS = {
     "raw_text",
@@ -38,6 +40,29 @@ class RevoiceSafetyError(ValueError):
 
 class RealLMSError(RuntimeError):
     pass
+
+
+def resolve_chat_completions_url(base_url: str | None = None) -> str:
+    value = (base_url or os.environ.get("REALLMS_BASE_URL") or DEFAULT_REALLMS_BASE_URL).strip()
+    value = value.rstrip("/")
+    if value.endswith("/chat/completions"):
+        return value
+    if value.endswith("/v1"):
+        return f"{value}/chat/completions"
+    return f"{value}/v1/chat/completions"
+
+
+def resolve_reallms_model(model: str | None = None) -> str:
+    return (model or os.environ.get("REALLMS_MODEL") or DEFAULT_REALLMS_MODEL).strip()
+
+
+def reallms_api_key_configured(api_key: str | None = None) -> bool:
+    api_key = (api_key if api_key is not None else os.environ.get("REALLMS_API_KEY") or "").strip()
+    if not api_key:
+        return False
+    if api_key in {"YOUR_KEY_HERE", "PASTE_KEY_HERE"}:
+        return False
+    return not api_key.startswith("sk-PASTE")
 
 
 @dataclass(frozen=True)
@@ -81,15 +106,15 @@ class RealLMSRevoicer:
     def __init__(
         self,
         *,
-        base_url: str = DEFAULT_REALLMS_BASE_URL,
+        base_url: str | None = None,
         api_key: str | None = None,
-        model: str = DEFAULT_REALLMS_MODEL,
+        model: str | None = None,
         timeout: float = 60.0,
         http_post: Callable[..., Any] = requests.post,
     ) -> None:
-        self.base_url = base_url.rstrip("/")
+        self.chat_url = resolve_chat_completions_url(base_url)
         self.api_key = api_key if api_key is not None else os.environ.get("REALLMS_API_KEY")
-        self.model = model
+        self.model = resolve_reallms_model(model)
         self.timeout = timeout
         self._http_post = http_post
 
@@ -104,7 +129,7 @@ class RealLMSRevoicer:
             pair_context=pair_context,
         )
         response = self._http_post(
-            f"{self.base_url}/chat/completions",
+            self.chat_url,
             headers=self._headers(),
             json={
                 "model": self.model,
@@ -128,6 +153,68 @@ class RealLMSRevoicer:
             provider="reallms",
             model=self.model,
             blocked=filtered.blocked,
+            filter_result=filtered,
+        )
+
+    def _headers(self) -> dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if self.api_key:
+            headers["Authorization"] = f"Bearer {self.api_key}"
+        return headers
+
+
+class RealLMSChatClient:
+    """OpenAI-compatible REALLMS chat client for Hermes' prose renderer."""
+
+    def __init__(
+        self,
+        *,
+        base_url: str | None = None,
+        api_key: str | None = None,
+        model: str | None = None,
+        timeout: float = 120.0,
+        http_post: Callable[..., Any] = requests.post,
+    ) -> None:
+        self.chat_url = resolve_chat_completions_url(base_url)
+        self.api_key = api_key if api_key is not None else os.environ.get("REALLMS_API_KEY")
+        self.model = resolve_reallms_model(model)
+        self.timeout = timeout
+        self._http_post = http_post
+
+    def chat(
+        self,
+        system_prompt: str,
+        user_message: str,
+        *,
+        temperature: float = 0.2,
+    ) -> ChatResult:
+        if not self.api_key or not reallms_api_key_configured(self.api_key):
+            raise RealLMSError("REALLMS_API_KEY is not configured")
+        start = time.monotonic()
+        response = self._http_post(
+            self.chat_url,
+            headers=self._headers(),
+            json={
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message},
+                ],
+                "temperature": temperature,
+            },
+            timeout=self.timeout,
+        )
+        duration_ms = (time.monotonic() - start) * 1000
+        if response.status_code != 200:
+            raise RealLMSError(f"reallms returned {response.status_code}: {response.text[:400]}")
+        content = _extract_chat_content(response.json())
+        filtered = filter_output(content)
+        return ChatResult(
+            content=filtered.text,
+            raw_content=content,
+            model=self.model,
+            total_duration_ms=duration_ms,
+            eval_count=0,
             filter_result=filtered,
         )
 

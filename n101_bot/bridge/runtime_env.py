@@ -45,7 +45,7 @@ def build_runtime_env(root: Path | str, *, base_env: Mapping[str, str] | None = 
     env["TMPDIR"] = str(tmp)
     env["XDG_CACHE_HOME"] = str(cache)
     env["PYTHONPYCACHEPREFIX"] = str(pycache)
-    env.setdefault("HERMES_MODEL", "gemma:2b")
+    env.setdefault("HERMES_MODEL", env.get("REALLMS_MODEL", "gemma-4-31B-it"))
 
     bundled_swipl = bundled_swipl_path(app_root)
     if "HERMES_SWIPL" not in env and bundled_swipl.exists():

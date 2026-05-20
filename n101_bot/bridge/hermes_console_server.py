@@ -1,13 +1,14 @@
 """Local Hermes console server.
 
 Runs a no-dependency HTTP server around the existing Prolog-in-the-loop bot.
-The default renderer is Gemma via Ollama; DeepSeek remains selectable but is no
-longer on the critical path for demos.
+The default renderer is REALLMS; Ollama is available only by explicit
+``HERMES_RENDERER=ollama`` override.
 """
 from __future__ import annotations
 
 import json
 import mimetypes
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
@@ -20,10 +21,16 @@ from .hermes_n103 import (
     recommend_pairs,
     render_markdown,
 )
+from .n103_prolog_pipeline import run_prolog_pair_pipeline
 from .ollama_client import OllamaError, list_models, ping
 from .persistent_prolog import PersistentPrologWorker
 from .prolog import reason
-from .reallms_revoicer import RealLMSError, RealLMSRevoicer, RevoiceSafetyError
+from .reallms_revoicer import (
+    RealLMSError,
+    RealLMSRevoicer,
+    RevoiceSafetyError,
+    reallms_api_key_configured,
+)
 from .runtime_env import runtime_preflight
 
 
@@ -171,14 +178,26 @@ class HermesHandler(BaseHTTPRequestHandler):
             self._send_file(WEB_ROOT / "hermes_gemma_console.html")
             return
         if self.path == "/api/models":
-            models = list_models()
+            renderer = os.environ.get("HERMES_RENDERER", "").strip().lower() or "reallms"
+            if renderer == "ollama":
+                models = list_models()
+                renderer_ready = ping()
+                legacy_ollama_reachable = renderer_ready
+            else:
+                renderer = "reallms"
+                models = []
+                renderer_ready = reallms_api_key_configured()
+                legacy_ollama_reachable = False
             if DEFAULT_MODEL not in models:
                 models.insert(0, DEFAULT_MODEL)
             self._send_json(
                 {
                     "default_model": DEFAULT_MODEL,
                     "models": models,
-                    "ollama_reachable": ping(),
+                    "renderer": renderer,
+                    "renderer_ready": renderer_ready,
+                    "reallms_configured": reallms_api_key_configured(),
+                    "ollama_reachable": legacy_ollama_reachable,
                 }
             )
             return
@@ -211,6 +230,9 @@ class HermesHandler(BaseHTTPRequestHandler):
                 return
             if self.path == "/api/pair_graph":
                 self._handle_pair_graph(payload)
+                return
+            if self.path == "/api/n103_pipeline":
+                self._handle_n103_pipeline(payload)
                 return
             if self.path == "/api/revoice":
                 self._handle_revoice(payload)
@@ -250,8 +272,8 @@ class HermesHandler(BaseHTTPRequestHandler):
         bot = STATE.get_bot(model, audience)
         try:
             record = _bot_ask_with_mode(bot, message, temperature=temperature, mode=mode)
-        except OllamaError as exc:
-            self._send_json({"error": str(exc), "ollama_reachable": ping()}, status=502)
+        except (OllamaError, RealLMSError) as exc:
+            self._send_json({"error": str(exc), "renderer_ready": False}, status=502)
             return
         record_dict = record.as_dict()
         # Echo mode + cards_used at the top level so the UI can render them
@@ -286,8 +308,8 @@ class HermesHandler(BaseHTTPRequestHandler):
         bot = STATE.get_bot(model, audience)
         try:
             record = _bot_ask_with_mode(bot, question, temperature=temperature, mode=mode)
-        except OllamaError as exc:
-            self._send_json({"error": str(exc), "ollama_reachable": ping()}, status=502)
+        except (OllamaError, RealLMSError) as exc:
+            self._send_json({"error": str(exc), "renderer_ready": False}, status=502)
             return
         self._send_json(
             {
@@ -339,6 +361,38 @@ class HermesHandler(BaseHTTPRequestHandler):
 
     def _handle_n103_workflows(self, payload: dict) -> None:
         self._send_json(N103_WORKFLOW_PACKET)
+
+    def _handle_n103_pipeline(self, payload: dict) -> None:
+        raw = payload.get("events")
+        if raw is None:
+            raw = payload.get("transcript") or payload.get("text")
+        if raw is None:
+            self._send_json(
+                {
+                    "error": "transcript or events are required",
+                    "error_type": "n103_pipeline_input",
+                },
+                status=400,
+            )
+            return
+        try:
+            events = _events_from_payload(raw)
+        except ValueError as exc:
+            self._send_json(
+                {"error": str(exc), "error_type": "n103_pipeline_input"},
+                status=400,
+            )
+            return
+        if not events:
+            self._send_json(
+                {
+                    "error": "no events could be parsed",
+                    "error_type": "n103_pipeline_input",
+                },
+                status=400,
+            )
+            return
+        self._send_json(run_prolog_pair_pipeline(events))
 
     def _handle_revoice(self, payload: dict) -> None:
         question_move = payload.get("question_move")
@@ -458,13 +512,14 @@ def _events_from_transcript(text: str) -> list[HermesEvent]:
 def main(argv: list[str] | None = None) -> int:
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run the local Hermes Gemma console.")
+    parser = argparse.ArgumentParser(description="Run the local Hermes REALLMS console.")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8765)
     args = parser.parse_args(argv)
 
     server = ThreadingHTTPServer((args.host, args.port), HermesHandler)
     print(f"Hermes console: http://{args.host}:{args.port}")
+    print(f"Default renderer: {os.environ.get('HERMES_RENDERER', '').strip().lower() or 'reallms'}")
     print(f"Default model: {DEFAULT_MODEL}")
     try:
         server.serve_forever()
