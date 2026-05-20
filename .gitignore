@@ -71,6 +71,9 @@ packaging/**/*.pyc
 Prolog.zip
 OldProlog.zip
 
+# Separate experimental neural-knowledge repo; keep out of the parent Prolog tree.
+larql/
+
 # Editor / OS / agent metadata
 .DS_Store
 .claude/
