@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import tempfile
 from pathlib import Path
 
 
@@ -17,10 +18,16 @@ def load_checker():
     return module
 
 
-def test_non_git_package_mode_does_not_shell_out_to_git(tmp_path):
+def test_non_git_package_mode_does_not_shell_out_to_git():
     checker = load_checker()
 
-    assert checker.git_check_ignore("n101_bot/logs/results.csv", root=tmp_path) is True
-    assert checker.git_check_ignore("n101_bot/.DS_Store", root=tmp_path) is True
-    assert checker.git_check_ignore("n101_bot/README.md", root=tmp_path) is False
-    assert checker.tracked_files(root=tmp_path) == []
+    with tempfile.TemporaryDirectory(dir="/private/tmp") as temp_dir:
+        root = Path(temp_dir)
+
+        assert checker.inside_git_worktree(root) is False
+        assert checker.git_check_ignore("n101_bot/logs/results.csv", root=root) is True
+        assert checker.git_check_ignore("n101_bot/.DS_Store", root=root) is True
+        assert checker.git_check_ignore("data/inputs/raw_transcript.txt", root=root) is True
+        assert checker.git_check_ignore("runtime/cache/CACHEDIR.TAG", root=root) is True
+        assert checker.git_check_ignore("n101_bot/README.md", root=root) is False
+        assert checker.tracked_files(root=root) == []

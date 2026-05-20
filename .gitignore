@@ -64,6 +64,9 @@ n101_bot/**/__pycache__/
 n101_bot/**/*.pyc
 n101_bot/**/.DS_Store
 
+data/
+runtime/
+
 packaging/**/__pycache__/
 packaging/**/*.pyc
 

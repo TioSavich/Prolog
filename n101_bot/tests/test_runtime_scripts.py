@@ -19,6 +19,9 @@ def test_console_script_resolves_python_for_flash_package():
     assert 'PYTHON_BIN="$HERMES_PYTHON"' in script
     assert 'PYTHON_BIN="$ROOT/.venv/bin/python"' in script
     assert 'PYTHON_BIN="python3"' in script
+    assert 'PACKAGE_ROOT="$(cd "$ROOT/.." && pwd)"' in script
+    assert 'export HERMES_DATA_ROOT="${HERMES_DATA_ROOT:-$PACKAGE_ROOT/data}"' in script
+    assert 'export HERMES_RUNTIME_ROOT="${HERMES_RUNTIME_ROOT:-$PACKAGE_ROOT/runtime}"' in script
     assert 'export PYTHONPATH="$ROOT:$ROOT/vendor${PYTHONPATH:+:$PYTHONPATH}"' in script
     assert '"$PYTHON_BIN" -m bridge.hermes_console_server "$@"' in script
 
@@ -30,6 +33,9 @@ def test_ralph_verify_script_resolves_python_for_flash_package():
     assert 'PYTHON_BIN="$HERMES_PYTHON"' in script
     assert 'PYTHON_BIN="$ROOT/.venv/bin/python"' in script
     assert 'PYTHON_BIN="python3"' in script
+    assert 'PACKAGE_ROOT="$(cd "$ROOT/.." && pwd)"' in script
+    assert 'export HERMES_DATA_ROOT="${HERMES_DATA_ROOT:-$PACKAGE_ROOT/data}"' in script
+    assert 'export HERMES_RUNTIME_ROOT="${HERMES_RUNTIME_ROOT:-$PACKAGE_ROOT/runtime}"' in script
     assert 'export PYTHONPATH="$ROOT:$ROOT/vendor${PYTHONPATH:+:$PYTHONPATH}"' in script
     assert '"$PYTHON_BIN" -m pytest -q' in script
     assert '"$PYTHON_BIN" ../packaging/check_hermes_packaging.py' in script

@@ -5,11 +5,14 @@ import os
 from pathlib import Path
 from typing import Mapping
 
+from .path_contract import resolve_path_contract
+
 DEFAULT_ROOT = Path(__file__).resolve().parent.parent
 
 
 def bundled_swipl_path(root: Path | str = DEFAULT_ROOT) -> Path:
-    return Path(root) / "runtime" / "swi-prolog" / "bin" / "swipl"
+    contract = resolve_path_contract(Path(root), env={})
+    return contract.bundled_runtime_root / "swi-prolog" / "bin" / "swipl"
 
 
 def resolve_umedcta_root(
@@ -70,18 +73,19 @@ def resolve_swipl(
 def build_runtime_env(root: Path | str, *, base_env: Mapping[str, str] | None = None) -> dict[str, str]:
     app_root = Path(root)
     env = dict(os.environ if base_env is None else base_env)
-    runtime = app_root / "runtime"
-    tmp = runtime / "tmp"
-    cache = runtime / "cache"
-    pycache = runtime / "pycache"
-    for directory in (tmp, cache, pycache):
-        directory.mkdir(parents=True, exist_ok=True)
+    contract = resolve_path_contract(app_root, env=env)
+    contract.ensure_writable_roots()
 
     env["HERMES_APP_HOME"] = str(app_root)
-    env["HERMES_TMPDIR"] = str(tmp)
-    env["TMPDIR"] = str(tmp)
-    env["XDG_CACHE_HOME"] = str(cache)
-    env["PYTHONPYCACHEPREFIX"] = str(pycache)
+    env["HERMES_DATA_ROOT"] = str(contract.data_root)
+    env["HERMES_INPUT_ROOT"] = str(contract.input_root)
+    env["HERMES_DERIVED_ROOT"] = str(contract.derived_root)
+    env["HERMES_OUTPUT_ROOT"] = str(contract.output_root)
+    env["HERMES_RUNTIME_ROOT"] = str(contract.runtime_root)
+    env["HERMES_TMPDIR"] = str(contract.tmp_dir)
+    env["TMPDIR"] = str(contract.tmp_dir)
+    env["XDG_CACHE_HOME"] = str(contract.cache_dir)
+    env["PYTHONPYCACHEPREFIX"] = str(contract.pycache_dir)
     env.setdefault("UMEDCTA_ROOT", str(resolve_umedcta_root(app_root, env=env)))
     env.setdefault("HERMES_MODEL", env.get("REALLMS_MODEL", "gemma-4-31B-it"))
 
@@ -95,8 +99,8 @@ def build_runtime_env(root: Path | str, *, base_env: Mapping[str, str] | None = 
 def runtime_preflight(root: Path | str, *, base_env: Mapping[str, str] | None = None) -> dict[str, object]:
     app_root = Path(root)
     incoming_env = dict(os.environ if base_env is None else base_env)
+    contract = resolve_path_contract(app_root, env=incoming_env)
     env = build_runtime_env(app_root, base_env=incoming_env)
-    runtime = app_root / "runtime"
     bundled_swipl = bundled_swipl_path(app_root)
 
     if incoming_env.get("HERMES_SWIPL") == str(bundled_swipl):
@@ -118,11 +122,11 @@ def runtime_preflight(root: Path | str, *, base_env: Mapping[str, str] | None = 
         Path(env["PYTHONPYCACHEPREFIX"]),
     ]
     local_runtime_dirs = all(
-        directory.exists() and directory.is_relative_to(runtime)
+        directory.exists() and directory.is_relative_to(contract.runtime_root)
         for directory in runtime_dirs
     )
 
-    return {
+    report = {
         "portable_ready": swipl_source == "bundled" and local_runtime_dirs,
         "swipl_source": swipl_source,
         "swipl_path": swipl_path,
@@ -140,3 +144,5 @@ def runtime_preflight(root: Path | str, *, base_env: Mapping[str, str] | None = 
         },
         "umedcta_root_source": umedcta_root_source(app_root, env=incoming_env),
     }
+    report.update(contract.preflight_payload())
+    return report

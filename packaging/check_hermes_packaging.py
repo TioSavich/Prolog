@@ -18,6 +18,7 @@ REQUIRED_TRACKABLE = [
     "n101_bot/bridge/hc_bot.py",
     "n101_bot/bridge/hermes_console_server.py",
     "n101_bot/bridge/runtime_env.py",
+    "n101_bot/bridge/path_contract.py",
     "n101_bot/src/vocabulary.pl",
     "n101_bot/src/hermes_worker.pl",
     "n101_bot/vocabularies/n101/quantity.pl",
@@ -26,6 +27,8 @@ REQUIRED_TRACKABLE = [
     "n101_bot/reallms/USAGE.md",
     "n101_bot/scripts/console.sh",
     "n101_bot/tests/test_runtime_env.py",
+    "n101_bot/tests/test_path_contract.py",
+    "n101_bot/tests/test_runtime_scripts.py",
 ]
 
 REQUIRED_IGNORED = [
@@ -36,6 +39,8 @@ REQUIRED_IGNORED = [
     "n101_bot/.pytest_cache/CACHEDIR.TAG",
     "n101_bot/bridge/__pycache__/hc_bot.cpython-312.pyc",
     "n101_bot/.DS_Store",
+    "data/inputs/raw_transcript.txt",
+    "runtime/cache/CACHEDIR.TAG",
     "N101_Student_Packet.pdf",
 ]
 
@@ -49,6 +54,8 @@ FORBIDDEN_TRACK_PATTERNS = [
     "n101_bot/**/*.pyc",
     "n101_bot/.DS_Store",
     "n101_bot/**/.DS_Store",
+    "data/**",
+    "runtime/**",
     "N101_Student_Packet.pdf",
     "N101coursenotes_f24.*",
 ]
