@@ -53,10 +53,27 @@ FORBIDDEN_TRACK_PATTERNS = [
 ]
 
 
-def git_check_ignore(path: str) -> bool:
+def inside_git_worktree(root: Path = ROOT) -> bool:
+    result = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        cwd=root,
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+    return result.returncode == 0 and result.stdout.strip() == "true"
+
+
+def forbidden_by_local_policy(path: str) -> bool:
+    return any(fnmatch.fnmatch(path, pattern) for pattern in FORBIDDEN_TRACK_PATTERNS)
+
+
+def git_check_ignore(path: str, *, root: Path = ROOT) -> bool:
+    if not inside_git_worktree(root):
+        return forbidden_by_local_policy(path)
     result = subprocess.run(
         ["git", "check-ignore", "-q", path],
-        cwd=ROOT,
+        cwd=root,
         check=False,
     )
     if result.returncode == 0:
@@ -72,10 +89,12 @@ def manifest_text() -> str:
     return MANIFEST.read_text(encoding="utf-8")
 
 
-def tracked_files() -> list[str]:
+def tracked_files(*, root: Path = ROOT) -> list[str]:
+    if not inside_git_worktree(root):
+        return []
     result = subprocess.run(
         ["git", "ls-files"],
-        cwd=ROOT,
+        cwd=root,
         check=True,
         text=True,
         capture_output=True,

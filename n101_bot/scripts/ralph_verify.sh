@@ -6,6 +6,7 @@ cd "$ROOT"
 
 echo "[n101_bot] persistent worker and bridge tests"
 "$ROOT/.venv/bin/python" -m pytest -q \
+  ../packaging/tests/test_check_hermes_packaging.py \
   tests/test_persistent_prolog.py \
   tests/test_hc_bot_offline.py \
   tests/test_runtime_env.py \
@@ -23,5 +24,8 @@ echo "[n101_bot] persistent worker and bridge tests"
   tests/test_hermes_n103.py \
   tests/test_console_n103_pipeline_endpoint.py \
   tests/test_prolog_reasoning.py
+
+echo "[n101_bot] packaging boundary"
+"$ROOT/.venv/bin/python" ../packaging/check_hermes_packaging.py
 
 echo "[n101_bot] verification complete"
