@@ -61,7 +61,10 @@ def runtime_preflight(root: Path | str, *, base_env: Mapping[str, str] | None = 
     runtime = app_root / "runtime"
     bundled_swipl = bundled_swipl_path(app_root)
 
-    if "HERMES_SWIPL" in incoming_env:
+    if incoming_env.get("HERMES_SWIPL") == str(bundled_swipl):
+        swipl_source = "bundled"
+        swipl_path = str(bundled_swipl)
+    elif "HERMES_SWIPL" in incoming_env:
         swipl_source = "env"
         swipl_path = incoming_env["HERMES_SWIPL"]
     elif bundled_swipl.exists():

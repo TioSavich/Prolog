@@ -76,6 +76,18 @@ def test_runtime_preflight_reports_bundled_swipl_ready(tmp_path):
     assert report["bundled_swipl"]["exists"] is True
 
 
+def test_runtime_preflight_treats_env_pointing_to_bundled_swipl_as_bundled(tmp_path):
+    bundled = tmp_path / "runtime" / "swi-prolog" / "bin" / "swipl"
+    bundled.parent.mkdir(parents=True)
+    bundled.write_text("#!/bin/sh\n", encoding="utf-8")
+
+    report = runtime_preflight(tmp_path, base_env={"HERMES_SWIPL": str(bundled)})
+
+    assert report["portable_ready"] is True
+    assert report["swipl_source"] == "bundled"
+    assert report["swipl_path"] == str(bundled)
+
+
 def test_runtime_preflight_reports_env_swipl_override(tmp_path):
     report = runtime_preflight(tmp_path, base_env={"HERMES_SWIPL": "/opt/swi/bin/swipl"})
 
