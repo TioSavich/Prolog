@@ -45,6 +45,7 @@ echo "[n101_bot] persistent worker and bridge tests"
   tests/test_reallms_revoicer.py \
   tests/test_reallms_smoke.py \
   tests/test_reallms_smoke_script.py \
+  tests/test_fake_demo_run.py \
   tests/test_console_revoice_endpoint.py \
   tests/test_console_mode_endpoint.py \
   tests/test_n103_run_loader.py \

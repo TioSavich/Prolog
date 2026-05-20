@@ -1,0 +1,177 @@
+[
+  {
+    "event_id": "ev_demo_0001",
+    "source": {
+      "source_type": "synthetic_teacher_note",
+      "metadata": {
+        "domain": "geometry",
+        "topic": "orientation"
+      }
+    },
+    "actor": {
+      "role": "teacher",
+      "pseudonym": "S01"
+    },
+    "substrate": {
+      "utterance_type": "strategy_report",
+      "observed_markers": [
+        "orientation_language",
+        "synthetic_demo_marker"
+      ],
+      "candidate_terms": [
+        "tilted_square_as_diamond",
+        "orientation_invariant_naming"
+      ],
+      "confidence": 0.88
+    },
+    "symbolic": {
+      "commitments": [
+        "shape_name_varies_by_orientation"
+      ],
+      "entitlements": [],
+      "missing_requirements": [
+        "orientation_invariant_attribute_language"
+      ],
+      "incompatibilities": [
+        "square_only_axis_aligned"
+      ],
+      "material_inferences": [
+        {
+          "handle": "orientation_invariant_shape_identity",
+          "metaphor": "classification_by_invariant_attributes",
+          "polarity": "compressive"
+        }
+      ],
+      "literature_handles": [
+        "synthetic_orientation_demo"
+      ],
+      "residuals": []
+    },
+    "pml": {
+      "mode": "objective",
+      "polarity": "compressive",
+      "force": "binding",
+      "operator": "comp_nec",
+      "validity_focus": [
+        "objective_truth"
+      ],
+      "pragmatic_horizon_level": "foreground",
+      "status": "candidate",
+      "confidence": 0.79
+    },
+    "carspecken": {
+      "action_impetus": "stabilize_shape_identity_by_appearance",
+      "identity_claim": null,
+      "identity_cost": 0.2,
+      "recognition_risk": "low",
+      "proprioceptive_delta": "contraction",
+      "internalized_audience": "classroom_shape_naming_norm",
+      "infinite_seed": false,
+      "apophatic_guardrail": "Reconstruct the visual horizon without diagnosing the learner."
+    },
+    "question_candidates": [
+      {
+        "question_id": "q_demo_0001",
+        "move_type": "FMST",
+        "target_commitment": "shape_name_varies_by_orientation",
+        "validity_register": "objective_truth",
+        "constraints_satisfied": [
+          "targets_live_commitment",
+          "opens_validity_claim",
+          "repair_affordance"
+        ],
+        "llm_revoiced": false
+      }
+    ],
+    "status": "pml_annotated"
+  },
+  {
+    "event_id": "ev_demo_0002",
+    "source": {
+      "source_type": "synthetic_writing",
+      "metadata": {
+        "domain": "geometry",
+        "topic": "definition"
+      }
+    },
+    "actor": {
+      "role": "learner",
+      "pseudonym": "S02"
+    },
+    "substrate": {
+      "utterance_type": "assertion",
+      "observed_markers": [
+        "exclusive_definition",
+        "prototype_reasoning",
+        "synthetic_demo_marker"
+      ],
+      "candidate_terms": [
+        "square_rectangle_classification",
+        "inclusive_definition"
+      ],
+      "confidence": 0.89
+    },
+    "symbolic": {
+      "commitments": [
+        "square_not_rectangle",
+        "rectangle_requires_longer_than_wide"
+      ],
+      "entitlements": [],
+      "missing_requirements": [
+        "attribute_based_definition",
+        "inclusive_hierarchy"
+      ],
+      "incompatibilities": [
+        "square_is_rectangle_under_inclusive_definition"
+      ],
+      "material_inferences": [
+        {
+          "handle": "orientation_invariant_shape_identity",
+          "metaphor": "classification_by_invariant_attributes",
+          "polarity": "compressive"
+        }
+      ],
+      "literature_handles": [
+        "synthetic_definition_demo"
+      ],
+      "residuals": []
+    },
+    "pml": {
+      "mode": "objective",
+      "polarity": "compressive",
+      "force": "binding",
+      "operator": "comp_nec",
+      "validity_focus": [
+        "objective_truth"
+      ],
+      "pragmatic_horizon_level": "foreground",
+      "status": "candidate",
+      "confidence": 0.83
+    },
+    "carspecken": {
+      "action_impetus": "stabilize_category_by_prototype",
+      "identity_claim": null,
+      "identity_cost": 0.25,
+      "recognition_risk": "medium",
+      "proprioceptive_delta": "contraction",
+      "internalized_audience": "school_geometry_definition_norm",
+      "infinite_seed": false,
+      "apophatic_guardrail": "Treat prototype reasoning as a resource to expand."
+    },
+    "question_candidates": [
+      {
+        "question_id": "q_demo_0002",
+        "move_type": "AQST",
+        "target_commitment": "rectangle_requires_longer_than_wide",
+        "validity_register": "objective_truth",
+        "constraints_satisfied": [
+          "targets_live_commitment",
+          "repair_affordance",
+          "opens_validity_claim"
+        ],
+        "llm_revoiced": false
+      }
+    ],
+    "status": "pml_annotated"
+  }
+]

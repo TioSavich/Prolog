@@ -27,8 +27,12 @@ def test_flash_sync_manifest_keeps_inputs_and_runtime_payloads_out():
     assert "data/outputs" in manifest["ensure_dirs"]
     assert "runtime/tmp" in manifest["ensure_dirs"]
     assert "n101_bot/bridge/path_contract.py" in manifest["required_files"]
+    assert "n101_bot/bridge/fake_demo_run.py" in manifest["required_files"]
     assert "n101_bot/scripts/console.sh" in manifest["required_files"]
     assert "n101_bot/scripts/ralph_verify.sh" in manifest["required_files"]
+    assert "n101_bot/scripts/fake_demo_run.sh" in manifest["required_files"]
+    assert "n101_bot/samples/fake_demo_events.json" in manifest["required_files"]
+    assert "n101_bot/tests/test_fake_demo_run.py" in manifest["required_files"]
 
 
 def test_plan_sync_files_excludes_untracked_like_data_and_cache_payloads(tmp_path):
