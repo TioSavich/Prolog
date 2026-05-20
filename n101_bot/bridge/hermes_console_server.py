@@ -14,9 +14,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from .event_importer import assert_pair_graph_safe, events_from_payload
 from .hc_bot import DEFAULT_MODEL, HermeneuticBot
 from .hermes_n103 import (
-    HermesEvent,
     analysis_payload,
     analyze_events,
     recommend_pairs,
@@ -39,17 +39,6 @@ ROOT = Path(__file__).resolve().parent.parent
 WEB_ROOT = ROOT / "web"
 
 VALID_MODES = ("auto", "check_answers", "ask_good_questions", "lesson_plan")
-PAIR_GRAPH_FORBIDDEN_KEYS = {
-    "raw_text",
-    "text",
-    "actor_id",
-    "student",
-    "student_id",
-    "student_name",
-    "source_id",
-    "path",
-    "evidence",
-}
 TRANSCRIPT_SPEAKER_RE = re.compile(
     r"^\s*(student\s*\d+|s\d+|[A-Za-z][A-Za-z .'-]{0,40})\s*:\s+\S",
     re.IGNORECASE,
@@ -399,7 +388,7 @@ class HermesHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "events list is required"}, status=400)
             return
         try:
-            _assert_pair_graph_safe(events)
+            assert_pair_graph_safe(events)
         except ValueError as exc:
             self._send_json(
                 {"error": str(exc), "error_type": "pair_graph_safety"},
@@ -431,7 +420,7 @@ class HermesHandler(BaseHTTPRequestHandler):
             )
             return
         try:
-            events = _events_from_payload(raw)
+            events = events_from_payload(raw)
         except ValueError as exc:
             self._send_json(
                 {"error": str(exc), "error_type": "n103_pipeline_input"},
@@ -507,71 +496,6 @@ class HermesHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.end_headers()
         self.wfile.write(data)
-
-
-def _assert_pair_graph_safe(value: Any, *, path: str = "$") -> None:
-    if isinstance(value, dict):
-        for key, child in value.items():
-            key_text = str(key)
-            if key_text in PAIR_GRAPH_FORBIDDEN_KEYS:
-                raise ValueError(f"unsafe pair_graph field at {path}.{key_text}")
-            _assert_pair_graph_safe(child, path=f"{path}.{key_text}")
-        return
-    if isinstance(value, list):
-        for index, child in enumerate(value):
-            _assert_pair_graph_safe(child, path=f"{path}[{index}]")
-        return
-
-
-def _events_from_payload(raw: object) -> list[HermesEvent]:
-    if isinstance(raw, str):
-        text = raw.strip()
-        if not text:
-            return []
-        try:
-            parsed = json.loads(text)
-        except json.JSONDecodeError:
-            return _events_from_transcript(text)
-        return _events_from_payload(parsed)
-    if isinstance(raw, dict):
-        for key in ("events", "posts", "messages"):
-            if isinstance(raw.get(key), list):
-                return _events_from_payload(raw[key])
-        raw = [raw]
-    if not isinstance(raw, list):
-        raise ValueError("events must be a JSON list, object, or transcript text")
-    events = []
-    for idx, item in enumerate(raw, start=1):
-        if not isinstance(item, dict):
-            raise ValueError("event rows must be objects")
-        events.append(
-            HermesEvent(
-                student=str(item.get("student") or item.get("speaker") or item.get("name") or "Unknown"),
-                text=str(item.get("text") or item.get("body") or item.get("message") or ""),
-                source=str(item.get("source") or "local"),
-                timestamp=str(item.get("timestamp") or item.get("time") or ""),
-                event_id=str(item.get("id") or item.get("event_id") or idx),
-            )
-        )
-    return [event for event in events if event.text.strip()]
-
-
-def _events_from_transcript(text: str) -> list[HermesEvent]:
-    events = []
-    for idx, line in enumerate(text.splitlines(), start=1):
-        if ":" not in line:
-            continue
-        speaker, body = line.split(":", 1)
-        events.append(
-            HermesEvent(
-                student=speaker.strip() or "Unknown",
-                text=body.strip(),
-                source="transcript",
-                event_id=str(idx),
-            )
-        )
-    return events
-
 
 def main(argv: list[str] | None = None) -> int:
     import argparse

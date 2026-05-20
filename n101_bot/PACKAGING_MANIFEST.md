@@ -14,7 +14,7 @@ do not track local runtimes, model weights, generated logs, caches, or student/c
 - `n101_bot/FOREST.md`
 - `n101_bot/requirements.txt`
 - `n101_bot/bridge/*.py`
-  - representative required files: `n101_bot/bridge/hc_bot.py`, `n101_bot/bridge/hermes_console_server.py`, `n101_bot/bridge/runtime_env.py`, `n101_bot/bridge/path_contract.py`
+  - representative required files: `n101_bot/bridge/hc_bot.py`, `n101_bot/bridge/hermes_console_server.py`, `n101_bot/bridge/runtime_env.py`, `n101_bot/bridge/path_contract.py`, `n101_bot/bridge/event_importer.py`
 - `n101_bot/src/*.pl`
   - representative required files: `n101_bot/src/vocabulary.pl`, `n101_bot/src/hermes_worker.pl`
 - `n101_bot/vocabularies/n101/*.pl`
@@ -29,7 +29,7 @@ do not track local runtimes, model weights, generated logs, caches, or student/c
   - representative required file: `n101_bot/scripts/console.sh`
 - `n101_bot/tests/*.py`
 - `n101_bot/tests/*.pl`
-  - representative required files: `n101_bot/tests/test_runtime_env.py`, `n101_bot/tests/test_path_contract.py`, `n101_bot/tests/test_runtime_scripts.py`
+  - representative required files: `n101_bot/tests/test_runtime_env.py`, `n101_bot/tests/test_path_contract.py`, `n101_bot/tests/test_event_importer.py`, `n101_bot/tests/test_runtime_scripts.py`
 - `n101_bot/samples/*.json`
 - `packaging/check_hermes_packaging.py`
 - `packaging/flash_sync_manifest.json`
