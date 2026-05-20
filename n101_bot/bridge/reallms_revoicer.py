@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 from dataclasses import dataclass
 from typing import Any, Callable
@@ -44,6 +45,8 @@ class RealLMSError(RuntimeError):
 
 def resolve_chat_completions_url(base_url: str | None = None) -> str:
     value = (base_url or os.environ.get("REALLMS_BASE_URL") or DEFAULT_REALLMS_BASE_URL).strip()
+    if not value:
+        value = DEFAULT_REALLMS_BASE_URL
     value = value.rstrip("/")
     if value.endswith("/chat/completions"):
         return value
@@ -53,7 +56,8 @@ def resolve_chat_completions_url(base_url: str | None = None) -> str:
 
 
 def resolve_reallms_model(model: str | None = None) -> str:
-    return (model or os.environ.get("REALLMS_MODEL") or DEFAULT_REALLMS_MODEL).strip()
+    value = (model or os.environ.get("REALLMS_MODEL") or DEFAULT_REALLMS_MODEL).strip()
+    return value or DEFAULT_REALLMS_MODEL
 
 
 def reallms_api_key_configured(api_key: str | None = None) -> bool:
@@ -124,14 +128,17 @@ class RealLMSRevoicer:
         question_move: dict[str, Any],
         pair_context: dict[str, Any],
     ) -> RevoiceResult:
+        if not reallms_api_key_configured(self.api_key):
+            raise RealLMSError("REALLMS_API_KEY is not configured")
         safe_payload = build_revoicing_payload(
             question_move=question_move,
             pair_context=pair_context,
         )
-        response = self._http_post(
+        response = _post_chat_payload(
+            self._http_post,
             self.chat_url,
             headers=self._headers(),
-            json={
+            payload={
                 "model": self.model,
                 "messages": [
                     {"role": "system", "content": _SYSTEM_PROMPT},
@@ -144,9 +151,7 @@ class RealLMSRevoicer:
             },
             timeout=self.timeout,
         )
-        if response.status_code != 200:
-            raise RealLMSError(f"reallms returned {response.status_code}: {response.text[:400]}")
-        content = _extract_chat_content(response.json())
+        content = _extract_chat_content(_response_json(response))
         filtered = filter_output(content)
         return RevoiceResult(
             content=filtered.text,
@@ -191,10 +196,11 @@ class RealLMSChatClient:
         if not self.api_key or not reallms_api_key_configured(self.api_key):
             raise RealLMSError("REALLMS_API_KEY is not configured")
         start = time.monotonic()
-        response = self._http_post(
+        response = _post_chat_payload(
+            self._http_post,
             self.chat_url,
             headers=self._headers(),
-            json={
+            payload={
                 "model": self.model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
@@ -205,9 +211,7 @@ class RealLMSChatClient:
             timeout=self.timeout,
         )
         duration_ms = (time.monotonic() - start) * 1000
-        if response.status_code != 200:
-            raise RealLMSError(f"reallms returned {response.status_code}: {response.text[:400]}")
-        content = _extract_chat_content(response.json())
+        content = _extract_chat_content(_response_json(response))
         filtered = filter_output(content)
         return ChatResult(
             content=filtered.text,
@@ -258,3 +262,55 @@ def _extract_chat_content(payload: dict[str, Any]) -> str:
     if not isinstance(content, str) or not content.strip():
         raise RealLMSError(f"reallms response missing content: {payload}")
     return content.strip()
+
+
+def _post_chat_payload(
+    http_post: Callable[..., Any],
+    chat_url: str,
+    *,
+    headers: dict[str, str],
+    payload: dict[str, Any],
+    timeout: float,
+) -> Any:
+    try:
+        response = http_post(
+            chat_url,
+            headers=headers,
+            json=payload,
+            timeout=timeout,
+        )
+    except requests.RequestException as exc:
+        raise RealLMSError(f"reallms request failed: {_sanitize_error_text(str(exc))}") from exc
+    if response.status_code != 200:
+        text = _sanitize_error_text(getattr(response, "text", "")[:400])
+        raise RealLMSError(f"reallms returned {response.status_code}: {text}")
+    return response
+
+
+def _response_json(response: Any) -> dict[str, Any]:
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        text = _sanitize_error_text(getattr(response, "text", ""))
+        raise RealLMSError(f"reallms returned invalid JSON: {text[:400]}") from exc
+    if not isinstance(payload, dict):
+        raise RealLMSError(f"reallms returned invalid JSON payload: {type(payload).__name__}")
+    return payload
+
+
+def _sanitize_error_text(text: str) -> str:
+    redacted = re.sub(
+        r"(Received API Key:\s*)[^.\s]+",
+        r"\1[redacted]",
+        text,
+        flags=re.IGNORECASE,
+    )
+    redacted = re.sub(
+        r"(Key Hash \(Token\):\s*)[^.\s]+",
+        r"\1[redacted]",
+        redacted,
+        flags=re.IGNORECASE,
+    )
+    redacted = re.sub(r"Bearer\s+[A-Za-z0-9._~+/=-]+", "Bearer [redacted]", redacted)
+    redacted = re.sub(r"\bsk-[A-Za-z0-9._~+/=-]+", "sk-[redacted]", redacted)
+    return redacted

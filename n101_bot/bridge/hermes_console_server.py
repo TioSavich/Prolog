@@ -224,7 +224,8 @@ class HermesHandler(BaseHTTPRequestHandler):
             else:
                 renderer = "reallms"
                 models = []
-                renderer_ready = reallms_api_key_configured()
+                renderer_configured = reallms_api_key_configured()
+                renderer_ready = renderer_configured and os.environ.get("HERMES_FORCE_OFFLINE") != "1"
                 legacy_ollama_reachable = False
             if DEFAULT_MODEL not in models:
                 models.insert(0, DEFAULT_MODEL)
@@ -234,6 +235,8 @@ class HermesHandler(BaseHTTPRequestHandler):
                     "models": models,
                     "renderer": renderer,
                     "renderer_ready": renderer_ready,
+                    "renderer_configured": reallms_api_key_configured(),
+                    "force_offline": os.environ.get("HERMES_FORCE_OFFLINE") == "1",
                     "reallms_configured": reallms_api_key_configured(),
                     "ollama_reachable": legacy_ollama_reachable,
                 }
@@ -447,6 +450,15 @@ class HermesHandler(BaseHTTPRequestHandler):
         self._send_json(run_prolog_pair_pipeline(events))
 
     def _handle_revoice(self, payload: dict) -> None:
+        if os.environ.get("HERMES_FORCE_OFFLINE") == "1":
+            self._send_json(
+                {
+                    "error": "revoicing disabled by HERMES_FORCE_OFFLINE",
+                    "error_type": "reallms_offline",
+                },
+                status=503,
+            )
+            return
         question_move = payload.get("question_move")
         pair_context = payload.get("pair_context")
         if not isinstance(question_move, dict) or not isinstance(pair_context, dict):

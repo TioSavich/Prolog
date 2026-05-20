@@ -114,6 +114,26 @@ def test_revoice_endpoint_treats_default_model_sentinel_as_configured_default(mo
     assert FakeRevoicer.init_calls == [{"model": None}]
 
 
+def test_revoice_endpoint_honors_force_offline_without_instantiating_revoicer(monkeypatch):
+    _install_fake_revoicer(monkeypatch)
+    monkeypatch.setenv("HERMES_FORCE_OFFLINE", "1")
+    handler = FakeHandler()
+
+    handler._handle_revoice(
+        {
+            "question_move": SAFE_QUESTION_MOVE,
+            "pair_context": SAFE_PAIR_CONTEXT,
+            "model": "fake-reallms",
+        }
+    )
+
+    response = handler.responses[-1]
+    assert response["status"] == 503
+    assert response["payload"]["error_type"] == "reallms_offline"
+    assert "HERMES_FORCE_OFFLINE" in response["payload"]["error"]
+    assert FakeRevoicer.init_calls == []
+
+
 def test_revoice_endpoint_rejects_raw_student_work(monkeypatch):
     _install_fake_revoicer(monkeypatch)
     handler = FakeHandler()
