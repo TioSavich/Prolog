@@ -1,0 +1,39 @@
+[
+  {
+    "student": "Alex",
+    "source": "forum",
+    "timestamp": "2026-05-04T09:12:00",
+    "text": "I think a square is not really a rectangle because a rectangle has to be longer than it is wide."
+  },
+  {
+    "student": "Bri",
+    "source": "zoom",
+    "timestamp": "2026-05-04T09:18:00",
+    "text": "A square can be both a square and a rectangle if the definition is about properties instead of how the picture looks."
+  },
+  {
+    "student": "Cam",
+    "source": "forum",
+    "timestamp": "2026-05-04T09:21:00",
+    "text": "The tilted one feels like a diamond, not a square, because squares sit flat on the page."
+  },
+  {
+    "student": "Drew",
+    "source": "zoom",
+    "timestamp": "2026-05-04T09:24:00",
+    "text": "The drawing changes but the properties do not, so I wonder whether the image or the definition should decide the name."
+  },
+  {
+    "student": "Eli",
+    "source": "forum",
+    "timestamp": "2026-05-04T09:30:00",
+    "text": "If the perimeter is bigger then the area should also be bigger, since it goes farther around."
+  },
+  {
+    "student": "Fin",
+    "source": "zoom",
+    "timestamp": "2026-05-04T09:35:00",
+    "text": "Area is not the shape itself. I am trying to separate the boundary from the region we are measuring."
+  }
+]
+

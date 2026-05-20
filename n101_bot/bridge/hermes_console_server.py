@@ -1,0 +1,467 @@
+"""Local Hermes console server.
+
+Runs a no-dependency HTTP server around the existing Prolog-in-the-loop bot.
+The default renderer is Gemma via Ollama; DeepSeek remains selectable but is no
+longer on the critical path for demos.
+"""
+from __future__ import annotations
+
+import json
+import mimetypes
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from typing import Any
+
+from .hc_bot import DEFAULT_MODEL, HermeneuticBot
+from .hermes_n103 import (
+    HermesEvent,
+    analysis_payload,
+    analyze_events,
+    recommend_pairs,
+    render_markdown,
+)
+from .ollama_client import OllamaError, list_models, ping
+from .persistent_prolog import PersistentPrologWorker
+from .prolog import reason
+from .reallms_revoicer import RealLMSError, RealLMSRevoicer, RevoiceSafetyError
+from .runtime_env import runtime_preflight
+
+
+ROOT = Path(__file__).resolve().parent.parent
+WEB_ROOT = ROOT / "web"
+
+VALID_MODES = ("auto", "check_answers", "ask_good_questions", "lesson_plan")
+PAIR_GRAPH_FORBIDDEN_KEYS = {
+    "raw_text",
+    "text",
+    "actor_id",
+    "student",
+    "student_id",
+    "student_name",
+    "source_id",
+    "path",
+    "evidence",
+}
+
+N103_WORKFLOW_PACKET = {
+    "course": "N103",
+    "privacy": "metadata_only_no_student_work",
+    "event_schema": {
+        "required": ["event_id", "actor", "source", "symbolic", "pml"],
+        "notes": [
+            "Use pseudonyms only in actor fields.",
+            "Send symbolic commitments and PML annotations, not student prose.",
+            "Keep raw forum text, names, source paths, and evidence out of console payloads.",
+        ],
+    },
+    "workflows": [
+        {
+            "unit": "Unit 3",
+            "title": "Inclusive and exclusive definitions of quadrilaterals",
+            "cluster": "defining_attributes_classification",
+            "prompt_focus": "Pair prototype reasoning with inclusive hierarchy reasoning.",
+            "pairing_use": "Use when events mention square/rectangle/rhombus membership, orientation, or definition-image tension.",
+            "question_moves": ["FMST", "AQST"],
+            "sample_event_count": 2,
+        },
+        {
+            "unit": "Unit 5",
+            "title": "Area on the geoboard and perimeter-area distinctions",
+            "cluster": "area_tiling_unit_iteration",
+            "prompt_focus": "Pair boundary-focused reasoning with region/unit-iteration reasoning.",
+            "pairing_use": "Use when events distinguish or conflate area, perimeter, length, unit, and measured region.",
+            "question_moves": ["AQST", "FQST"],
+            "sample_event_count": 2,
+        },
+        {
+            "unit": "Unit 8",
+            "title": "Transformations, congruence, and symmetry",
+            "cluster": "transformations_congruence_similarity",
+            "prompt_focus": "Pair visual congruence claims with transformation-based justifications.",
+            "pairing_use": "Use when events invoke turns, flips, slides, same shape, or orientation-invariant properties.",
+            "question_moves": ["FMST", "GQST"],
+            "sample_event_count": 2,
+        },
+    ],
+}
+
+
+def _resolve_mode(value: object) -> str:
+    """Coerce an incoming mode field to one of the four supported modes.
+
+    Unknown / missing / null values resolve to ``auto`` so the caller does
+    not have to special-case them. The four allowed values match the spec's
+    UI dropdown.
+    """
+    if value is None:
+        return "auto"
+    candidate = str(value).strip().lower()
+    if candidate in VALID_MODES:
+        return candidate
+    return "auto"
+
+
+def _bot_ask_with_mode(bot, question: str, *, temperature: float, mode: str):
+    """Call ``bot.ask`` while staying compatible with both old and new signatures.
+
+    Subagent 2 is in flight wiring ``mode`` into ``HermeneuticBot.ask``.
+    Until that lands, fall back to the existing positional signature so the
+    server keeps responding instead of crashing. The mode echo in the
+    response is still correct because the server resolves it locally.
+    """
+    try:
+        return bot.ask(question, temperature=temperature, mode=mode)
+    except TypeError:
+        return bot.ask(question, temperature=temperature)
+
+
+def _extract_cards_used(record) -> list:
+    """Best-effort fetch of ``record.cards_used`` with a graceful default.
+
+    Subagent 1 surfaces a structured cards list via geometry_context;
+    Subagent 2 exposes it on TurnRecord. Either parallel agent may be
+    mid-flight when this server runs, so missing fields collapse to ``[]``
+    instead of bringing the endpoint down.
+    """
+    cards = getattr(record, "cards_used", None)
+    if cards is None:
+        return []
+    if isinstance(cards, list):
+        return cards
+    # Defensive: if S2 hands us a tuple/iterable, normalize to a list.
+    try:
+        return list(cards)
+    except TypeError:
+        return []
+
+
+class ConsoleState:
+    def __init__(self) -> None:
+        self.model = DEFAULT_MODEL
+        self.audience = "teacher"
+        self.bot = HermeneuticBot(model=self.model, audience=self.audience)
+
+    def get_bot(self, model: str, audience: str) -> HermeneuticBot:
+        if model != self.model or audience != self.audience:
+            self.model = model
+            self.audience = audience
+            self.bot = HermeneuticBot(model=model, audience=audience)
+        return self.bot
+
+    def reset(self, model: str, audience: str) -> None:
+        self.model = model
+        self.audience = audience
+        self.bot = HermeneuticBot(model=model, audience=audience)
+
+
+STATE = ConsoleState()
+
+
+class HermesHandler(BaseHTTPRequestHandler):
+    server_version = "HermesConsole/0.1"
+
+    def do_GET(self) -> None:
+        if self.path == "/":
+            self._send_file(WEB_ROOT / "hermes_gemma_console.html")
+            return
+        if self.path == "/api/models":
+            models = list_models()
+            if DEFAULT_MODEL not in models:
+                models.insert(0, DEFAULT_MODEL)
+            self._send_json(
+                {
+                    "default_model": DEFAULT_MODEL,
+                    "models": models,
+                    "ollama_reachable": ping(),
+                }
+            )
+            return
+        if self.path == "/api/n103_workflows":
+            self._handle_n103_workflows({})
+            return
+        if self.path == "/api/runtime_preflight":
+            self._handle_runtime_preflight()
+            return
+        path = WEB_ROOT / self.path.lstrip("/")
+        if path.is_file() and path.resolve().is_relative_to(WEB_ROOT.resolve()):
+            self._send_file(path)
+            return
+        self._send_json({"error": "not found"}, status=404)
+
+    def do_POST(self) -> None:
+        try:
+            payload = self._read_json()
+            if self.path == "/api/chat":
+                self._handle_chat(payload)
+                return
+            if self.path == "/ask":
+                self._handle_ask(payload)
+                return
+            if self.path == "/api/reason":
+                self._handle_reason(payload)
+                return
+            if self.path == "/api/pair":
+                self._handle_pair(payload)
+                return
+            if self.path == "/api/pair_graph":
+                self._handle_pair_graph(payload)
+                return
+            if self.path == "/api/revoice":
+                self._handle_revoice(payload)
+                return
+            if self.path == "/api/reset":
+                model = str(payload.get("model") or DEFAULT_MODEL)
+                audience = str(payload.get("audience") or "teacher")
+                STATE.reset(model, audience)
+                self._send_json({"ok": True})
+                return
+            self._send_json({"error": "not found"}, status=404)
+        except RevoiceSafetyError as exc:
+            self._send_json(
+                {"error": str(exc), "error_type": "revoice_safety"},
+                status=400,
+            )
+        except RealLMSError as exc:
+            self._send_json(
+                {"error": str(exc), "error_type": "reallms"},
+                status=502,
+            )
+        except Exception as exc:  # keep the local demo server honest
+            self._send_json({"error": str(exc)}, status=500)
+
+    def log_message(self, fmt: str, *args: Any) -> None:
+        return
+
+    def _handle_chat(self, payload: dict) -> None:
+        message = str(payload.get("message") or "").strip()
+        if not message:
+            self._send_json({"error": "message is required"}, status=400)
+            return
+        model = str(payload.get("model") or DEFAULT_MODEL)
+        audience = str(payload.get("audience") or "teacher")
+        temperature = float(payload.get("temperature", 0.2))
+        mode = _resolve_mode(payload.get("mode"))
+        bot = STATE.get_bot(model, audience)
+        try:
+            record = _bot_ask_with_mode(bot, message, temperature=temperature, mode=mode)
+        except OllamaError as exc:
+            self._send_json({"error": str(exc), "ollama_reachable": ping()}, status=502)
+            return
+        record_dict = record.as_dict()
+        # Echo mode + cards_used at the top level so the UI can render them
+        # without having to dig into the record. Defensive defaults if S2's
+        # TurnRecord hasn't yet grown the new fields.
+        record_dict.setdefault("mode", mode)
+        record_dict.setdefault("cards_used", _extract_cards_used(record))
+        self._send_json(
+            {
+                "record": record_dict,
+                "mode": record_dict["mode"],
+                "cards_used": record_dict["cards_used"],
+            }
+        )
+
+    def _handle_ask(self, payload: dict) -> None:
+        """Mode-aware /ask endpoint per the chatbot-substrate spec.
+
+        Accepts {question, mode?} and returns the answer + thinking +
+        commitments + mode + cards_used + matched_concepts. The shape is
+        what `tests/test_console_mode_endpoint.py` (S5) and the Hermes
+        Console UI consume.
+        """
+        question = str(payload.get("question") or payload.get("message") or "").strip()
+        if not question:
+            self._send_json({"error": "question is required"}, status=400)
+            return
+        model = str(payload.get("model") or DEFAULT_MODEL)
+        audience = str(payload.get("audience") or "teacher")
+        temperature = float(payload.get("temperature", 0.2))
+        mode = _resolve_mode(payload.get("mode"))
+        bot = STATE.get_bot(model, audience)
+        try:
+            record = _bot_ask_with_mode(bot, question, temperature=temperature, mode=mode)
+        except OllamaError as exc:
+            self._send_json({"error": str(exc), "ollama_reachable": ping()}, status=502)
+            return
+        self._send_json(
+            {
+                "answer": record.final_answer,
+                "thinking": record.final_thinking,
+                "commitments": [c.as_dict() for c in record.final_commitments],
+                "mode": getattr(record, "mode", mode) or mode,
+                "cards_used": _extract_cards_used(record),
+                "matched_concepts": record.detected_terms,
+            }
+        )
+
+    def _handle_reason(self, payload: dict) -> None:
+        text = str(payload.get("text") or payload.get("message") or "")
+        self._send_json({"reason": reason(text).as_dict()})
+
+    def _handle_pair(self, payload: dict) -> None:
+        self._send_json(
+            {
+                "error": (
+                    "Legacy /api/pair accepts raw text and can echo evidence. "
+                    "Use /api/pair_graph with metadata-only event packets."
+                ),
+                "error_type": "pair_safety",
+            },
+            status=400,
+        )
+
+    def _handle_pair_graph(self, payload: dict) -> None:
+        events = payload.get("events")
+        if not isinstance(events, list):
+            self._send_json({"error": "events list is required"}, status=400)
+            return
+        try:
+            _assert_pair_graph_safe(events)
+        except ValueError as exc:
+            self._send_json(
+                {"error": str(exc), "error_type": "pair_graph_safety"},
+                status=400,
+            )
+            return
+        worker = PersistentPrologWorker()
+        try:
+            pairs = worker.request("pair_score", events=events)
+            graph = worker.request("pair_graph", events=events)
+        finally:
+            worker.close()
+        self._send_json({"pairs": pairs, "graph": graph})
+
+    def _handle_n103_workflows(self, payload: dict) -> None:
+        self._send_json(N103_WORKFLOW_PACKET)
+
+    def _handle_revoice(self, payload: dict) -> None:
+        question_move = payload.get("question_move")
+        pair_context = payload.get("pair_context")
+        if not isinstance(question_move, dict) or not isinstance(pair_context, dict):
+            self._send_json(
+                {"error": "question_move and pair_context are required"},
+                status=400,
+            )
+            return
+        revoicer = RealLMSRevoicer(model=str(payload.get("model") or "default"))
+        result = revoicer.revoice(
+            question_move=question_move,
+            pair_context=pair_context,
+        )
+        self._send_json({"revoice": result.as_dict()})
+
+    def _handle_runtime_preflight(self) -> None:
+        self._send_json({"runtime": runtime_preflight(ROOT)})
+
+    def _read_json(self) -> dict:
+        length = int(self.headers.get("Content-Length", "0"))
+        raw = self.rfile.read(length).decode("utf-8")
+        return json.loads(raw or "{}")
+
+    def _send_file(self, path: Path) -> None:
+        data = path.read_bytes()
+        ctype = mimetypes.guess_type(str(path))[0] or "text/html; charset=utf-8"
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+    def _send_json(self, payload: dict, *, status: int = 200) -> None:
+        data = json.dumps(payload).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        self.send_header("Content-Length", str(len(data)))
+        self.end_headers()
+        self.wfile.write(data)
+
+
+def _assert_pair_graph_safe(value: Any, *, path: str = "$") -> None:
+    if isinstance(value, dict):
+        for key, child in value.items():
+            key_text = str(key)
+            if key_text in PAIR_GRAPH_FORBIDDEN_KEYS:
+                raise ValueError(f"unsafe pair_graph field at {path}.{key_text}")
+            _assert_pair_graph_safe(child, path=f"{path}.{key_text}")
+        return
+    if isinstance(value, list):
+        for index, child in enumerate(value):
+            _assert_pair_graph_safe(child, path=f"{path}[{index}]")
+        return
+
+
+def _events_from_payload(raw: object) -> list[HermesEvent]:
+    if isinstance(raw, str):
+        text = raw.strip()
+        if not text:
+            return []
+        try:
+            parsed = json.loads(text)
+        except json.JSONDecodeError:
+            return _events_from_transcript(text)
+        return _events_from_payload(parsed)
+    if isinstance(raw, dict):
+        for key in ("events", "posts", "messages"):
+            if isinstance(raw.get(key), list):
+                return _events_from_payload(raw[key])
+        raw = [raw]
+    if not isinstance(raw, list):
+        raise ValueError("events must be a JSON list, object, or transcript text")
+    events = []
+    for idx, item in enumerate(raw, start=1):
+        if not isinstance(item, dict):
+            raise ValueError("event rows must be objects")
+        events.append(
+            HermesEvent(
+                student=str(item.get("student") or item.get("speaker") or item.get("name") or "Unknown"),
+                text=str(item.get("text") or item.get("body") or item.get("message") or ""),
+                source=str(item.get("source") or "local"),
+                timestamp=str(item.get("timestamp") or item.get("time") or ""),
+                event_id=str(item.get("id") or item.get("event_id") or idx),
+            )
+        )
+    return [event for event in events if event.text.strip()]
+
+
+def _events_from_transcript(text: str) -> list[HermesEvent]:
+    events = []
+    for idx, line in enumerate(text.splitlines(), start=1):
+        if ":" not in line:
+            continue
+        speaker, body = line.split(":", 1)
+        events.append(
+            HermesEvent(
+                student=speaker.strip() or "Unknown",
+                text=body.strip(),
+                source="transcript",
+                event_id=str(idx),
+            )
+        )
+    return events
+
+
+def main(argv: list[str] | None = None) -> int:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Run the local Hermes Gemma console.")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8765)
+    args = parser.parse_args(argv)
+
+    server = ThreadingHTTPServer((args.host, args.port), HermesHandler)
+    print(f"Hermes console: http://{args.host}:{args.port}")
+    print(f"Default model: {DEFAULT_MODEL}")
+    try:
+        server.serve_forever()
+    except KeyboardInterrupt:
+        pass
+    finally:
+        server.server_close()
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

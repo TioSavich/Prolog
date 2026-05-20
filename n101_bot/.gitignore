@@ -1,0 +1,13 @@
+# venv
+.venv/
+
+# generated artifacts (regenerable from prolog + ollama)
+logs/
+
+# python bytecode
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# OS
+.DS_Store

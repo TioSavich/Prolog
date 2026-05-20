@@ -1,0 +1,1293 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hermes Local Console</title>
+<style>
+:root {
+  --ink: #0d0c08;
+  --ink-soft: #1b1810;
+  --paper: #f4ead6;
+  --paper-warm: #ebdfc5;
+  --paper-cool: #ede4cf;
+  --gold: #d4a747;
+  --gold-deep: #a97c24;
+  --gold-pale: #f0d68a;
+  --rust: #b95238;
+  --teal: #3f7f89;
+  --line: rgba(13, 12, 8, 0.14);
+  --muted: #665f4f;
+  --serif: Georgia, "Times New Roman", serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(900px 600px at 92% -8%, rgba(212, 167, 71, 0.18), transparent 70%),
+    radial-gradient(740px 520px at -10% 104%, rgba(63, 127, 137, 0.12), transparent 68%),
+    var(--paper);
+  font: 16px/1.45 var(--serif);
+  overflow: hidden;
+}
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.38;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.05 0 0 0 0 0.04 0 0 0 0 0.03 0 0 0 0.04 0'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
+}
+
+button, input, textarea, select { font: inherit; }
+button { cursor: pointer; }
+
+.shell {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.15rem;
+  border-bottom: 1px solid var(--line);
+  background: rgba(244, 234, 214, 0.78);
+  backdrop-filter: blur(10px);
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+.mark {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--gold);
+  background: var(--ink);
+  flex: 0 0 auto;
+}
+.mark svg { width: 76%; height: 76%; }
+.brand h1 {
+  margin: 0;
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.brand .sub {
+  display: block;
+  margin-top: 0.08rem;
+  font: 0.66rem/1.2 var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.top-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  padding: 0.38rem 0.65rem;
+  background: rgba(235, 223, 197, 0.64);
+  font: 0.72rem var(--mono);
+  letter-spacing: 0.04em;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--rust);
+}
+.dot.on { background: var(--teal); }
+
+.main {
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr) 390px;
+  min-height: 0;
+}
+
+.sidebar {
+  border-right: 1px solid var(--line);
+  background: rgba(235, 223, 197, 0.42);
+  padding: 1rem;
+  overflow: auto;
+}
+.label {
+  margin: 0.35rem 0 0.45rem;
+  font: 0.64rem var(--mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.mode-btn {
+  width: 100%;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  border-radius: 8px;
+  padding: 0.72rem 0.78rem;
+  margin-bottom: 0.35rem;
+}
+.mode-btn:hover { background: var(--paper-warm); }
+.mode-btn.active {
+  color: var(--paper);
+  background: var(--ink);
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--gold-deep);
+  transform: rotate(-0.35deg);
+}
+.mode-btn span {
+  display: block;
+  font: 0.64rem var(--mono);
+  letter-spacing: 0.1em;
+  color: var(--gold-deep);
+  text-transform: uppercase;
+  margin-bottom: 0.18rem;
+}
+.mode-btn.active span { color: var(--gold); }
+.mode-btn strong { display: block; font-size: 0.96rem; }
+.mode-btn small { display: block; color: var(--muted); margin-top: 0.2rem; line-height: 1.25; }
+.mode-btn.active small { color: rgba(244, 234, 214, 0.62); }
+
+.model-box {
+  margin-top: 1.1rem;
+  padding: 0.75rem;
+  border: 1px dashed var(--ink);
+  border-radius: 8px;
+}
+.model-box input,
+.model-box select,
+.pair-form textarea,
+.composer textarea {
+  width: 100%;
+  border: 1.5px solid var(--ink);
+  border-radius: 8px;
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+}
+.model-box input,
+.model-box select { padding: 0.46rem 0.55rem; font: 0.76rem var(--mono); }
+.model-box .row { display: grid; gap: 0.42rem; margin-bottom: 0.6rem; }
+.model-box button,
+.pair-form button,
+.composer button,
+.trace button {
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--gold);
+  border-radius: 999px;
+  padding: 0.48rem 0.8rem;
+  font: 0.72rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.model-box button:hover,
+.pair-form button:hover,
+.composer button:hover,
+.trace button:hover {
+  background: var(--gold);
+  color: var(--ink);
+}
+.note {
+  margin-top: 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+  transform: rotate(-0.6deg);
+}
+
+.workspace {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 0;
+}
+.head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+  padding: 1rem 1.25rem 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+.head h2 { margin: 0; font-size: 1.25rem; font-weight: 600; }
+.head em { color: var(--gold-deep); font-style: normal; }
+.head .meta {
+  margin-top: 0.15rem;
+  font: 0.66rem var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+.register {
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--ink);
+  border-radius: 999px;
+  background: var(--ink);
+}
+.register button {
+  border: 0;
+  color: rgba(244, 234, 214, 0.66);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.38rem 0.68rem;
+  font: 0.66rem var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.register button.active {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+/* ── mode dropdown (auto / check / ask q's / lesson plan) ── */
+.mode-select {
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.34rem 0.7rem;
+  font: 0.7rem var(--mono);
+  letter-spacing: 0.06em;
+  text-transform: lowercase;
+  cursor: pointer;
+}
+.mode-select:focus { outline: 2px solid var(--gold-deep); outline-offset: 1px; }
+
+/* ── per-message mode badge ── */
+.mode-badge {
+  display: inline-block;
+  font: 0.6rem var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  margin-bottom: 0.32rem;
+  border: 1px solid currentColor;
+}
+.mode-badge.mode-auto { color: var(--muted); background: rgba(102, 95, 79, 0.08); }
+.mode-badge.mode-check_answers { color: var(--teal); background: rgba(63, 127, 137, 0.12); }
+.mode-badge.mode-ask_good_questions { color: #2e7a3a; background: rgba(46, 122, 58, 0.10); }
+.mode-badge.mode-lesson_plan { color: #6b4090; background: rgba(107, 64, 144, 0.10); }
+
+/* ── cards-used debug panel (per message) ── */
+.cards-used {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--line);
+  font: 0.74rem var(--mono);
+  color: var(--muted);
+}
+.cards-used summary {
+  cursor: pointer;
+  color: var(--gold-deep);
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+.cards-used summary:hover { color: var(--ink); }
+.cards-used ul {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+}
+.cards-used li {
+  padding: 0.32rem 0;
+  border-bottom: 1px dashed var(--line);
+  line-height: 1.4;
+}
+.cards-used li:last-child { border-bottom: 0; }
+.cards-used .kind {
+  display: inline-block;
+  padding: 0.05rem 0.32rem;
+  margin-right: 0.32rem;
+  border-radius: 3px;
+  background: var(--paper-cool);
+  color: var(--ink);
+  font-size: 0.66rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.cards-used .id {
+  color: var(--ink);
+  margin-right: 0.32rem;
+}
+.cards-used .score {
+  color: var(--gold-deep);
+  margin-right: 0.32rem;
+}
+.cards-used .preview {
+  color: var(--muted);
+  font-family: var(--serif);
+}
+.cards-used.empty { color: var(--muted); font-style: italic; }
+
+.feed {
+  min-height: 0;
+  overflow: auto;
+  padding: 1.15rem 1.25rem;
+}
+.msg {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+}
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  font: 0.72rem var(--mono);
+  border: 1.5px solid var(--ink);
+}
+.msg.user .avatar { background: var(--paper-warm); }
+.msg.hermes .avatar { background: var(--ink); color: var(--gold); }
+.bubble {
+  max-width: min(760px, 86%);
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 12px;
+  padding: 0.78rem 0.92rem;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.msg.user .bubble { background: var(--paper-warm); border-radius: 12px 12px 4px 12px; }
+.msg.hermes .bubble { border-color: var(--ink); border-radius: 12px 12px 12px 4px; }
+.codes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+.code {
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 0.14rem 0.4rem;
+  font: 0.66rem var(--mono);
+  background: var(--paper-cool);
+}
+.code.s { background: var(--gold-pale); border-color: var(--gold-deep); }
+.code.o { background: rgba(185, 82, 56, 0.14); color: var(--rust); border-color: var(--rust); }
+.code.n { background: rgba(63, 127, 137, 0.16); color: var(--teal); border-color: var(--teal); }
+.trace-line {
+  margin-top: 0.55rem;
+  padding-top: 0.5rem;
+  border-top: 1px dashed var(--line);
+  color: var(--muted);
+  font: 0.69rem var(--mono);
+}
+
+.composer {
+  padding: 0.85rem 1.25rem 1rem;
+  border-top: 1px solid var(--line);
+  background: rgba(244, 234, 214, 0.76);
+}
+.composer .field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.6rem;
+  align-items: end;
+}
+.composer textarea {
+  min-height: 48px;
+  max-height: 180px;
+  resize: vertical;
+  padding: 0.62rem 0.72rem;
+}
+.quick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.5rem;
+}
+.quick button {
+  border: 1px solid var(--line);
+  background: var(--paper-warm);
+  color: var(--ink);
+  padding: 0.22rem 0.58rem;
+}
+.quick button:hover { border-color: var(--gold-deep); background: var(--gold-pale); }
+
+.trace {
+  border-left: 1px solid var(--line);
+  background: var(--paper-warm);
+  padding: 1rem 1.05rem;
+  overflow: auto;
+}
+.trace h3 {
+  margin: 0 0 0.7rem;
+  font-size: 1rem;
+}
+.trace-section {
+  border-top: 1px solid var(--line);
+  padding-top: 0.72rem;
+  margin-top: 0.85rem;
+}
+.kv {
+  display: grid;
+  gap: 0.35rem;
+  font: 0.76rem var(--mono);
+}
+.kv div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.7rem;
+  border-bottom: 1px dashed var(--line);
+  padding-bottom: 0.3rem;
+}
+.kv span:last-child { color: var(--gold-deep); text-align: right; }
+.commit {
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 8px;
+  padding: 0.55rem 0.65rem;
+  margin-top: 0.45rem;
+  font-size: 0.86rem;
+}
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+  color: var(--paper);
+  background: var(--ink);
+  border-radius: 8px;
+  padding: 0.75rem;
+  font: 0.73rem/1.45 var(--mono);
+}
+
+.pair-form {
+  display: none;
+  grid-template-rows: auto 1fr;
+  min-height: 0;
+}
+.pair-form.active { display: grid; }
+.pair-form textarea {
+  min-height: 240px;
+  resize: vertical;
+  padding: 0.75rem;
+  font: 0.82rem/1.45 var(--mono);
+}
+.pair-output {
+  overflow: auto;
+  padding: 1.1rem 1.25rem;
+}
+.packet {
+  white-space: pre-wrap;
+  border: 1px solid var(--ink);
+  border-radius: 8px;
+  padding: 0.9rem;
+  background: var(--paper);
+  font-size: 0.92rem;
+}
+.pair-graph {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 0.85rem;
+}
+.pair-edge {
+  border: 1px solid var(--line);
+  background: var(--paper-cool);
+  border-radius: 8px;
+  padding: 0.62rem 0.7rem;
+}
+.pair-edge strong {
+  display: block;
+  font-size: 0.96rem;
+}
+.pair-edge .meta {
+  margin-top: 0.2rem;
+  font: 0.68rem var(--mono);
+  color: var(--muted);
+}
+.question-moves {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.55rem;
+}
+.question-move {
+  border-top: 1px dashed var(--line);
+  padding-top: 0.42rem;
+  font-size: 0.82rem;
+}
+.question-move .meta {
+  font: 0.66rem var(--mono);
+  color: var(--gold-deep);
+}
+.pair-edge button {
+  margin-top: 0.5rem;
+  border: 1px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 999px;
+  padding: 0.3rem 0.58rem;
+  font: 0.66rem var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pair-edge button:hover {
+  background: var(--gold);
+}
+.revoice-output {
+  margin-top: 0.85rem;
+  border: 1px dashed var(--ink);
+  border-radius: 8px;
+  padding: 0.75rem;
+  background: rgba(240, 214, 138, 0.28);
+  white-space: pre-wrap;
+}
+
+.hidden { display: none !important; }
+
+@media (max-width: 980px) {
+  body { overflow: auto; }
+  .shell { height: auto; min-height: 100vh; }
+  .main { grid-template-columns: 1fr; }
+  .sidebar, .trace { border: 0; }
+  .trace { border-top: 1px solid var(--line); }
+  .topbar, .head { align-items: start; flex-direction: column; }
+}
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark" aria-hidden="true">
+        <svg viewBox="-110 -78 220 144">
+          <g fill="currentColor" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M -28 -22 C -42 -42, -68 -62, -98 -68 C -94 -54, -84 -40, -72 -32 C -60 -24, -44 -20, -32 -18 Z" fill-opacity="0.20"/>
+            <g fill="none" stroke-width="2.2"><path d="M -34 -20 C -52 -32, -72 -46, -92 -60"/><path d="M -36 -24 C -54 -38, -72 -52, -86 -64"/><path d="M -32 -16 C -54 -22, -76 -32, -94 -52"/></g>
+            <path d="M 28 -22 C 42 -42, 68 -62, 98 -68 C 94 -54, 84 -40, 72 -32 C 60 -24, 44 -20, 32 -18 Z" fill-opacity="0.20"/>
+            <g fill="none" stroke-width="2.2"><path d="M 34 -20 C 52 -32, 72 -46, 92 -60"/><path d="M 36 -24 C 54 -38, 72 -52, 86 -64"/><path d="M 32 -16 C 54 -22, 76 -32, 94 -52"/></g>
+            <g fill="none" stroke-width="11"><path d="M -30 -22 C -34 4, -34 28, -28 56"/><path d="M 30 -22 C 34 4, 34 28, 28 56"/><path d="M -29 18 Q 0 12, 29 20"/></g>
+          </g>
+        </svg>
+      </div>
+      <div>
+        <h1>Hermes <span class="sub">local Gemma console</span></h1>
+      </div>
+    </div>
+    <div class="top-controls">
+      <div class="pill"><span class="dot" id="ollama-dot"></span><span id="ollama-text">checking Ollama</span></div>
+      <div class="pill">Prolog loop · local</div>
+    </div>
+  </header>
+
+  <main class="main">
+    <aside class="sidebar">
+      <p class="label">Surface</p>
+      <button class="mode-btn active" data-mode="chat"><span>01</span><strong>Hermes chat</strong><small>Gemma renders; Prolog reads.</small></button>
+      <button class="mode-btn" data-mode="pair"><span>02</span><strong>N103 pairer</strong><small>Metadata events become discussion pairs.</small></button>
+
+      <div class="model-box">
+        <p class="label">Renderer</p>
+        <div class="row">
+          <select id="model-list"></select>
+          <input id="model-input" value="gemma:2b" aria-label="model">
+        </div>
+        <div class="row">
+          <select id="audience">
+            <option value="teacher">teacher-facing</option>
+            <option value="student">student-facing</option>
+          </select>
+        </div>
+        <button id="reset">reset thread</button>
+      </div>
+
+      <p class="note">DeepSeek is now optional. Use it when you want a slower reasoning pass; keep Gemma for live demos.</p>
+    </aside>
+
+    <section class="workspace" id="chat-workspace">
+      <header class="head">
+        <div>
+          <h2>Gemma as <em>voice</em>, Prolog as skeleton</h2>
+          <div class="meta">N101/N103 local demo · no RealLMS API required</div>
+        </div>
+        <div class="register" id="register">
+          <button class="active" data-register="fresh">fresh</button>
+          <button data-register="math">math-ed</button>
+          <button data-register="phil">phil</button>
+        </div>
+        <select id="mode-select" class="mode-select" data-mode="auto" aria-label="Hermes mode">
+          <option value="auto">auto</option>
+          <option value="check_answers">check answers</option>
+          <option value="ask_good_questions">ask q's</option>
+          <option value="lesson_plan">lesson plan</option>
+        </select>
+      </header>
+      <div class="feed" id="feed">
+        <div class="msg hermes">
+          <div class="avatar">H</div>
+          <div class="bubble">I am running locally. Ask a methods question, or switch to the N103 pairer with metadata-only event packets.</div>
+        </div>
+      </div>
+      <form class="composer" id="chat-form">
+        <div class="field">
+          <textarea id="message" placeholder="Ask Hermes..." required></textarea>
+          <button type="submit">send</button>
+        </div>
+        <div class="quick">
+          <button type="button" data-q="What should I ask when an event is tagged square_not_rectangle and inclusive hierarchy?">square/rectangle</button>
+          <button type="button" data-q="What is a quantity?">quantity</button>
+          <button type="button" data-q="What follow-up supports a making-ten strategy without taking over the reasoning?">making ten</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="workspace pair-form" id="pair-workspace">
+      <header class="head">
+        <div>
+          <h2>N103 <em>pairing</em> lab</h2>
+          <div class="meta">metadata-only event packets · pseudonyms and event handles only</div>
+        </div>
+        <div class="quick">
+          <button id="load-workflows" type="button">workflows</button>
+          <button id="load-sample" type="button">sample</button>
+          <button id="load-canonical-sample" type="button">canonical</button>
+        </div>
+      </header>
+      <form class="composer" id="pair-form">
+        <textarea id="pair-input" placeholder='[{"event_id":"ev_0003","actor":{"role":"teacher","pseudonym":"T"},"source":{"source_type":"teacher_note"},"symbolic":{},"pml":{}}]'></textarea>
+        <div class="quick">
+          <button type="submit">pair</button>
+          <button type="button" id="clear-pair">clear</button>
+        </div>
+      </form>
+      <div class="pair-output">
+        <div class="packet" id="pair-output">Pairing output will appear here.</div>
+        <div class="pair-graph" id="pair-graph" aria-live="polite"></div>
+        <div class="revoice-output" id="revoice-output">Revoiced prompt will appear here.</div>
+      </div>
+    </section>
+
+    <aside class="trace">
+      <h3>Trace</h3>
+      <div class="kv" id="trace-kv">
+        <div><span>model</span><span id="trace-model">gemma:2b</span></div>
+        <div><span>move</span><span id="trace-move">none</span></div>
+        <div><span>terms</span><span id="trace-terms">none</span></div>
+        <div><span>latency</span><span id="trace-time">0 ms</span></div>
+      </div>
+      <div class="trace-section">
+        <p class="label">State</p>
+        <pre id="state">waiting</pre>
+      </div>
+      <div class="trace-section">
+        <p class="label">Commitments</p>
+        <div id="commitments"><div class="commit">none</div></div>
+      </div>
+      <div class="trace-section">
+        <p class="label">N103 packet</p>
+        <pre id="pair-json">waiting</pre>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script>
+const feed = document.querySelector("#feed");
+const form = document.querySelector("#chat-form");
+const message = document.querySelector("#message");
+const modelInput = document.querySelector("#model-input");
+const modelList = document.querySelector("#model-list");
+const audience = document.querySelector("#audience");
+const traceModel = document.querySelector("#trace-model");
+const traceMove = document.querySelector("#trace-move");
+const traceTerms = document.querySelector("#trace-terms");
+const traceTime = document.querySelector("#trace-time");
+const stateBox = document.querySelector("#state");
+const commitments = document.querySelector("#commitments");
+const pairInput = document.querySelector("#pair-input");
+const pairOutput = document.querySelector("#pair-output");
+const pairGraph = document.querySelector("#pair-graph");
+const revoiceOutput = document.querySelector("#revoice-output");
+const pairJson = document.querySelector("#pair-json");
+const modeSelect = document.querySelector("#mode-select");
+
+// ── Mode toggle persistence ──
+//
+// The dropdown drives card-selection bias on the server. Saving + restoring
+// the choice via localStorage means a teacher who opens the console with
+// "check_answers" picked yesterday gets the same instrument today.
+const MODE_STORAGE_KEY = "hermes_mode";
+const VALID_MODES = new Set(["auto", "check_answers", "ask_good_questions", "lesson_plan"]);
+function loadStoredMode() {
+  try {
+    const saved = window.localStorage.getItem(MODE_STORAGE_KEY);
+    if (saved && VALID_MODES.has(saved)) {
+      modeSelect.value = saved;
+      modeSelect.dataset.mode = saved;
+    }
+  } catch (err) {
+    // localStorage may be unavailable (private mode, etc.) — soft-fail.
+  }
+}
+function saveMode(value) {
+  try {
+    window.localStorage.setItem(MODE_STORAGE_KEY, value);
+  } catch (err) {
+    // soft-fail; the dropdown still works in-session.
+  }
+}
+modeSelect.addEventListener("change", () => {
+  const value = VALID_MODES.has(modeSelect.value) ? modeSelect.value : "auto";
+  modeSelect.dataset.mode = value;
+  saveMode(value);
+});
+loadStoredMode();
+
+const MODE_BADGE_LABELS = {
+  auto: "AUTO",
+  check_answers: "CHECK",
+  ask_good_questions: "ASK Q'S",
+  lesson_plan: "LESSON",
+};
+
+const CANONICAL_PAIR_SAMPLE = [
+  {
+    event_id: "ev_0003",
+    source: {
+      source_type: "teacher_note",
+      metadata: {domain: "geometry", topic: "orientation"}
+    },
+    actor: {role: "teacher", pseudonym: "T"},
+    substrate: {
+      utterance_type: "strategy_report",
+      observed_markers: ["student_work_report", "orientation_language"],
+      candidate_terms: ["tilted_square_as_diamond", "orientation_invariant_naming"],
+      confidence: 0.88
+    },
+    symbolic: {
+      commitments: ["student_names_by_orientation"],
+      entitlements: [],
+      missing_requirements: ["orientation_invariant_attribute_language"],
+      incompatibilities: ["square_only_axis_aligned"],
+      residuals: []
+    },
+    pml: {
+      mode: "objective",
+      polarity: "compressive",
+      force: "binding",
+      operator: "comp_nec",
+      validity_focus: ["objective_truth"],
+      pragmatic_horizon_level: "foreground",
+      status: "candidate",
+      confidence: 0.79
+    },
+    carspecken: {
+      action_impetus: "stabilize_shape_identity_by_appearance",
+      identity_claim: null,
+      identity_cost: 0.2,
+      recognition_risk: "low",
+      proprioceptive_delta: "contraction",
+      internalized_audience: "classroom_shape_naming_norm",
+      infinite_seed: false,
+      apophatic_guardrail: "Reconstruct the visual horizon without diagnosing the learner."
+    },
+    question_candidates: [{
+      question_id: "q_0003",
+      move_type: "FMST",
+      target_commitment: "student_names_by_orientation",
+      validity_register: "objective_truth",
+      constraints_satisfied: ["targets_live_commitment", "opens_validity_claim"],
+      llm_revoiced: false
+    }],
+    status: "pml_annotated"
+  },
+  {
+    event_id: "ev_0008",
+    source: {
+      source_type: "student_writing",
+      metadata: {domain: "geometry", topic: "definition"}
+    },
+    actor: {role: "student", pseudonym: "E"},
+    substrate: {
+      utterance_type: "assertion",
+      observed_markers: ["exclusive_definition", "prototype_reasoning"],
+      candidate_terms: ["square_rectangle_classification", "inclusive_definition"],
+      confidence: 0.89
+    },
+    symbolic: {
+      commitments: ["square_not_rectangle", "rectangle_requires_longer_than_wide"],
+      entitlements: [],
+      missing_requirements: ["attribute_based_definition", "inclusive_hierarchy"],
+      incompatibilities: ["square_is_rectangle_under_inclusive_definition"],
+      residuals: []
+    },
+    pml: {
+      mode: "objective",
+      polarity: "compressive",
+      force: "binding",
+      operator: "comp_nec",
+      validity_focus: ["objective_truth"],
+      pragmatic_horizon_level: "foreground",
+      status: "candidate",
+      confidence: 0.83
+    },
+    carspecken: {
+      action_impetus: "stabilize_category_by_prototype",
+      identity_claim: null,
+      identity_cost: 0.25,
+      recognition_risk: "medium",
+      proprioceptive_delta: "contraction",
+      internalized_audience: "school_geometry_definition_norm",
+      infinite_seed: false,
+      apophatic_guardrail: "Treat prototype reasoning as a resource to expand."
+    },
+    question_candidates: [{
+      question_id: "q_0008",
+      move_type: "AQST",
+      target_commitment: "rectangle_requires_longer_than_wide",
+      validity_register: "objective_truth",
+      constraints_satisfied: ["targets_live_commitment", "repair_affordance"],
+      llm_revoiced: false
+    }],
+    status: "pml_annotated"
+  }
+];
+
+function renderModeBadge(mode) {
+  const safeMode = VALID_MODES.has(mode) ? mode : "auto";
+  const badge = document.createElement("span");
+  badge.className = `mode-badge mode-${safeMode}`;
+  badge.textContent = MODE_BADGE_LABELS[safeMode] || safeMode.toUpperCase();
+  badge.title = `Hermes ran in ${safeMode} mode`;
+  return badge;
+}
+
+function renderCardsPanel(cards) {
+  // Defaults to a closed <details>. Empty/missing → still render the toggle
+  // but with a soft "(none)" label so the absence is visible, not silent.
+  const panel = document.createElement("details");
+  panel.className = "cards-used";
+  const summary = document.createElement("summary");
+  const list = Array.isArray(cards) ? cards : [];
+  summary.textContent = `🔍 cards used (${list.length})`;
+  panel.appendChild(summary);
+  if (!list.length) {
+    panel.classList.add("empty");
+    const empty = document.createElement("div");
+    empty.textContent = "No cards surfaced for this turn.";
+    panel.appendChild(empty);
+    return panel;
+  }
+  const ul = document.createElement("ul");
+  for (const raw of list) {
+    const card = raw && typeof raw === "object" ? raw : {body: String(raw || "")};
+    const li = document.createElement("li");
+    if (card.kind) {
+      const k = document.createElement("span");
+      k.className = "kind";
+      k.textContent = String(card.kind);
+      li.appendChild(k);
+    }
+    if (card.id || card.name) {
+      const idEl = document.createElement("span");
+      idEl.className = "id";
+      idEl.textContent = String(card.id || card.name) + ":";
+      li.appendChild(idEl);
+    }
+    if (typeof card.score === "number") {
+      const sc = document.createElement("span");
+      sc.className = "score";
+      sc.textContent = `(${card.score.toFixed ? card.score.toFixed(2) : card.score})`;
+      li.appendChild(sc);
+    }
+    const previewText = String(card.preview || card.body || card.summary || "").trim();
+    if (previewText) {
+      const pv = document.createElement("span");
+      pv.className = "preview";
+      // One-line preview — truncate to keep the panel scannable.
+      pv.textContent = previewText.length > 220
+        ? previewText.slice(0, 217) + "…"
+        : previewText;
+      li.appendChild(pv);
+    }
+    ul.appendChild(li);
+  }
+  panel.appendChild(ul);
+  return panel;
+}
+
+function addMessage(kind, text, codes = [], trace = "", opts = {}) {
+  const row = document.createElement("div");
+  row.className = `msg ${kind}`;
+  const av = document.createElement("div");
+  av.className = "avatar";
+  av.textContent = kind === "user" ? "T" : "H";
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  // Mode badge sits above the message body (bot replies only).
+  if (kind === "hermes" && opts.mode) {
+    bubble.appendChild(renderModeBadge(opts.mode));
+  }
+  const body = document.createElement("div");
+  body.className = "body";
+  body.textContent = text;
+  bubble.appendChild(body);
+  if (codes.length) {
+    const wrap = document.createElement("div");
+    wrap.className = "codes";
+    for (const c of codes) {
+      const el = document.createElement("span");
+      el.className = `code ${c.mode || ""}`;
+      el.textContent = c.text;
+      wrap.appendChild(el);
+    }
+    bubble.appendChild(wrap);
+  }
+  if (trace) {
+    const tr = document.createElement("div");
+    tr.className = "trace-line";
+    tr.textContent = trace;
+    bubble.appendChild(tr);
+  }
+  // Cards-used panel only on bot replies that reach the response path.
+  if (kind === "hermes" && opts.cardsUsed !== undefined) {
+    bubble.appendChild(renderCardsPanel(opts.cardsUsed));
+  }
+  row.append(av, bubble);
+  feed.appendChild(row);
+  feed.scrollTop = feed.scrollHeight;
+  return row;
+}
+
+async function loadModels() {
+  const res = await fetch("/api/models");
+  const data = await res.json();
+  document.querySelector("#ollama-dot").classList.toggle("on", data.ollama_reachable);
+  document.querySelector("#ollama-text").textContent = data.ollama_reachable ? "Ollama online" : "Ollama offline";
+  modelList.innerHTML = "";
+  for (const name of data.models || []) {
+    const opt = document.createElement("option");
+    opt.value = name;
+    opt.textContent = name;
+    modelList.appendChild(opt);
+  }
+  modelInput.value = data.default_model || "gemma:2b";
+  modelList.value = modelInput.value;
+  traceModel.textContent = modelInput.value;
+}
+
+modelList.addEventListener("change", () => {
+  modelInput.value = modelList.value;
+  traceModel.textContent = modelInput.value;
+});
+modelInput.addEventListener("change", () => {
+  traceModel.textContent = modelInput.value;
+});
+
+document.querySelector("#reset").addEventListener("click", async () => {
+  await fetch("/api/reset", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({model: modelInput.value, audience: audience.value})
+  });
+  feed.innerHTML = "";
+  addMessage("hermes", "Thread reset. I am listening with the selected local renderer.");
+  stateBox.textContent = "reset";
+  commitments.innerHTML = '<div class="commit">none</div>';
+});
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const text = message.value.trim();
+  if (!text) return;
+  addMessage("user", text);
+  message.value = "";
+  const pending = addMessage("hermes", "thinking...");
+  const requestedMode = VALID_MODES.has(modeSelect.value) ? modeSelect.value : "auto";
+  try {
+    const res = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        message: text,
+        model: modelInput.value,
+        audience: audience.value,
+        temperature: 0.2,
+        mode: requestedMode
+      })
+    });
+    const data = await res.json();
+    pending.remove();
+    if (!res.ok) {
+      addMessage("hermes", data.error || "local model call failed", [], "", {mode: requestedMode});
+      return;
+    }
+    // Server echoes mode + cards_used at top-level; record may also carry
+    // them once S2's TurnRecord lands. Prefer top-level so the UI keeps
+    // working even if the record shape drifts.
+    const resolvedMode = data.mode || (data.record && data.record.mode) || requestedMode;
+    const cardsUsed = data.cards_used !== undefined
+      ? data.cards_used
+      : (data.record && data.record.cards_used) || [];
+    renderRecord(data.record, {mode: resolvedMode, cardsUsed: cardsUsed});
+  } catch (err) {
+    pending.remove();
+    addMessage("hermes", String(err), [], "", {mode: requestedMode});
+  }
+});
+
+function renderRecord(record, extras = {}) {
+  const codes = [];
+  for (const term of record.detected_terms || []) codes.push({text: term, mode: "s"});
+  if (record.move?.move_tag) codes.push({text: record.move.move_tag, mode: record.assessing ? "n" : "o"});
+  const trace = `${record.model} · ${Math.round(record.duration_ms || 0)} ms · ${record.eval_tokens || 0} tokens`;
+  addMessage("hermes", record.final_answer || "(empty)", codes, trace, {
+    mode: extras.mode || record.mode || "auto",
+    cardsUsed: extras.cardsUsed !== undefined ? extras.cardsUsed : (record.cards_used || []),
+  });
+  traceModel.textContent = record.model || modelInput.value;
+  traceMove.textContent = `${record.move?.kind || "unknown"} → ${record.move?.move_tag || "none"}`;
+  traceTerms.textContent = (record.detected_terms || []).join(", ") || "none";
+  traceTime.textContent = `${Math.round(record.duration_ms || 0)} ms`;
+  stateBox.textContent = record.state_after?.rendered || "none";
+  const fired = [...(record.first_commitments || []), ...(record.final_commitments || [])];
+  commitments.innerHTML = "";
+  if (!fired.length) {
+    commitments.innerHTML = '<div class="commit">none</div>';
+  } else {
+    for (const c of fired) {
+      const el = document.createElement("div");
+      el.className = "commit";
+      el.textContent = `${c.term}: ${c.rule} (${c.trigger})`;
+      commitments.appendChild(el);
+    }
+  }
+}
+
+for (const btn of document.querySelectorAll(".quick [data-q]")) {
+  btn.addEventListener("click", () => {
+    message.value = btn.dataset.q;
+    message.focus();
+  });
+}
+
+for (const btn of document.querySelectorAll(".mode-btn")) {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    const mode = btn.dataset.mode;
+    document.querySelector("#chat-workspace").classList.toggle("hidden", mode !== "chat");
+    document.querySelector("#pair-workspace").classList.toggle("active", mode === "pair");
+  });
+}
+
+for (const btn of document.querySelectorAll("#register button")) {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("#register button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+  });
+}
+
+document.querySelector("#load-sample").addEventListener("click", () => {
+  loadCanonicalPairSample();
+});
+
+async function loadN103Workflows() {
+  pairOutput.textContent = "loading safe workflow metadata...";
+  pairGraph.innerHTML = "";
+  revoiceOutput.textContent = "Revoiced prompt will appear here.";
+  const res = await fetch("/api/n103_workflows");
+  const packet = await res.json();
+  if (!res.ok) throw new Error(packet.error || "workflow metadata failed");
+  pairOutput.textContent = `${packet.course} workflows loaded: ${packet.privacy}. Use these cards to choose a pairing focus before sending safe annotated events.`;
+  pairJson.textContent = JSON.stringify(packet, null, 2);
+}
+
+function loadCanonicalPairSample() {
+  pairInput.value = JSON.stringify(CANONICAL_PAIR_SAMPLE, null, 2);
+  pairOutput.textContent = "Canonical sample loaded. Pair to render the safe Prolog graph.";
+  pairGraph.innerHTML = "";
+  revoiceOutput.textContent = "Revoiced prompt will appear here.";
+  pairJson.textContent = "waiting";
+}
+
+document.querySelector("#load-workflows").addEventListener("click", () => {
+  loadN103Workflows().catch(err => {
+    pairOutput.textContent = String(err);
+  });
+});
+
+document.querySelector("#load-canonical-sample").addEventListener("click", loadCanonicalPairSample);
+
+document.querySelector("#clear-pair").addEventListener("click", () => {
+  pairInput.value = "";
+  pairOutput.textContent = "Pairing output will appear here.";
+  pairGraph.innerHTML = "";
+  revoiceOutput.textContent = "Revoiced prompt will appear here.";
+  pairJson.textContent = "waiting";
+});
+
+async function requestPairGraph(events) {
+  const res = await fetch("/api/pair_graph", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({events})
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "pair graph failed");
+  return data;
+}
+
+async function requestRevoice(questionMove, pairContext) {
+  const res = await fetch("/api/revoice", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      question_move: questionMove,
+      pair_context: pairContext,
+      model: "default"
+    })
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "revoice failed");
+  return data.revoice;
+}
+
+function renderRevoiceControls(edge, pair) {
+  const moves = Array.isArray(pair.question_moves) ? pair.question_moves : [];
+  const bestMove = moves.slice().sort((a, b) => (b.prompt_score || 0) - (a.prompt_score || 0))[0];
+  if (!bestMove) return null;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = `revoice ${bestMove.question_id}`;
+  button.addEventListener("click", async () => {
+    revoiceOutput.textContent = "revoicing...";
+    try {
+      const result = await requestRevoice(bestMove, {
+        pair_id: pair.pair_id,
+        event_a: pair.event_a,
+        event_b: pair.event_b,
+        pseudonym_a: pair.pseudonym_a,
+        pseudonym_b: pair.pseudonym_b,
+        roles: pair.roles,
+        score: pair.score,
+        reasons: pair.reasons
+      });
+      revoiceOutput.textContent = result.content || "(empty)";
+    } catch (err) {
+      revoiceOutput.textContent = String(err);
+    }
+  });
+  return button;
+}
+
+function renderQuestionMoves(pair) {
+  const moves = Array.isArray(pair.question_moves) ? pair.question_moves : [];
+  if (!moves.length) return null;
+  const wrap = document.createElement("div");
+  wrap.className = "question-moves";
+  for (const move of moves.slice(0, 3)) {
+    const item = document.createElement("div");
+    item.className = "question-move";
+    const label = document.createElement("div");
+    label.textContent = `${move.move_type || "move"} -> ${move.target_commitment || "commitment"}`;
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const reasons = Array.isArray(move.score_reasons) ? move.score_reasons.join(", ") : "";
+    meta.textContent = `${move.validity_register || "validity"} · score ${move.prompt_score || 0} · ${reasons}`;
+    item.append(label, meta);
+    wrap.appendChild(item);
+  }
+  return wrap;
+}
+
+function renderPairGraph(packet) {
+  pairGraph.innerHTML = "";
+  const pairs = Array.isArray(packet.pairs) ? packet.pairs : [];
+  const edges = packet.graph && Array.isArray(packet.graph.edges) ? packet.graph.edges : [];
+  if (!edges.length) {
+    pairGraph.textContent = "No safe pair graph returned.";
+    return;
+  }
+  for (const edge of edges) {
+    const pair = pairs.find(candidate => candidate.pair_id === edge.id) || {};
+    const card = document.createElement("div");
+    card.className = "pair-edge";
+    const title = document.createElement("strong");
+    title.textContent = `${pair.pseudonym_a || edge.source} + ${pair.pseudonym_b || edge.target}`;
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const reasons = Array.isArray(edge.reasons) ? edge.reasons.join(", ") : "";
+    meta.textContent = `weight ${edge.weight || 0} · questions ${edge.question_count || 0} · ${reasons}`;
+    card.append(title, meta);
+    const questionMoves = renderQuestionMoves(pair);
+    if (questionMoves) card.appendChild(questionMoves);
+    const revoiceButton = renderRevoiceControls(edge, pair);
+    if (revoiceButton) card.appendChild(revoiceButton);
+    pairGraph.appendChild(card);
+  }
+}
+
+function hasSafeEventHandles(events) {
+  return Array.isArray(events)
+    && events.length > 0
+    && events.every(event =>
+      event
+      && typeof event === "object"
+      && event.event_id
+      && event.actor
+      && event.source
+    );
+}
+
+document.querySelector("#pair-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  pairOutput.textContent = "pairing...";
+  pairGraph.innerHTML = "";
+  revoiceOutput.textContent = "Revoiced prompt will appear here.";
+  let parsedEvents = null;
+  try {
+    const parsed = JSON.parse(pairInput.value);
+    if (Array.isArray(parsed)) parsedEvents = parsed;
+  } catch (err) {
+    parsedEvents = null;
+  }
+  if (!hasSafeEventHandles(parsedEvents)) {
+    pairOutput.textContent = "Paste a metadata-only event packet with event_id, actor, and source fields. Do not paste raw student work or identifiers.";
+    pairJson.textContent = "metadata-only event packet required";
+    return;
+  }
+  try {
+    const graphPacket = await requestPairGraph(parsedEvents);
+    renderPairGraph(graphPacket);
+    pairOutput.textContent = "Safe Prolog pair graph rendered.";
+    pairJson.textContent = JSON.stringify(graphPacket, null, 2);
+  } catch (err) {
+    pairOutput.textContent = String(err);
+  }
+});
+
+loadModels().catch(err => {
+  document.querySelector("#ollama-text").textContent = "Ollama check failed";
+  console.error(err);
+});
+</script>
+</body>
+</html>

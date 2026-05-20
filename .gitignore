@@ -3,9 +3,69 @@ N101coursenotes_f24.md
 N101coursenotes_f24.docx
 N101_Student_Packet.pdf
 
-# Experimental prototype — preserved locally, not in git
-# See n101_bot/FOREST.md for the architecture this prototype sketched
-n101_bot/
+# Hermes operational prototype.
+# Track only reproducible source/docs/tests; keep local runtimes, model weights,
+# caches, generated logs, and student/course materials out of git.
+n101_bot/*
+!n101_bot/.gitignore
+!n101_bot/PACKAGING_MANIFEST.md
+!n101_bot/FOREST.md
+!n101_bot/PLAN.md
+!n101_bot/README.md
+!n101_bot/STATUS.md
+!n101_bot/requirements.txt
+
+!n101_bot/bridge/
+n101_bot/bridge/*
+!n101_bot/bridge/*.py
+
+!n101_bot/src/
+n101_bot/src/*
+!n101_bot/src/*.pl
+
+!n101_bot/vocabularies/
+n101_bot/vocabularies/*
+!n101_bot/vocabularies/n101/
+n101_bot/vocabularies/n101/*
+!n101_bot/vocabularies/n101/*.pl
+
+!n101_bot/web/
+n101_bot/web/*
+!n101_bot/web/*.html
+
+!n101_bot/runtime/
+n101_bot/runtime/*
+!n101_bot/runtime/README.md
+
+!n101_bot/reallms/
+n101_bot/reallms/*
+!n101_bot/reallms/*.md
+
+!n101_bot/scripts/
+n101_bot/scripts/*
+!n101_bot/scripts/*.sh
+!n101_bot/scripts/*.py
+
+!n101_bot/tests/
+n101_bot/tests/*
+!n101_bot/tests/*.py
+!n101_bot/tests/*.pl
+
+!n101_bot/samples/
+n101_bot/samples/*
+!n101_bot/samples/*.json
+
+n101_bot/.venv/
+n101_bot/models/
+n101_bot/llama32-1b.vindex/
+n101_bot/logs/
+n101_bot/.pytest_cache/
+n101_bot/**/__pycache__/
+n101_bot/**/*.pyc
+n101_bot/**/.DS_Store
+
+packaging/**/__pycache__/
+packaging/**/*.pyc
 
 # Snapshots of the pre-submodule Prolog code — superseded by Prolog/ submodule
 Prolog.zip
