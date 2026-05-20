@@ -448,6 +448,29 @@ button { cursor: pointer; }
   padding-top: 0.72rem;
   margin-top: 0.85rem;
 }
+.runtime-status {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+.runtime-status .runtime-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.65rem;
+  border-bottom: 1px dashed var(--line);
+  padding-bottom: 0.25rem;
+  font: 0.68rem var(--mono);
+}
+.runtime-status .runtime-row span:first-child {
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.runtime-status .runtime-row span:last-child {
+  max-width: 58%;
+  overflow-wrap: anywhere;
+  text-align: right;
+}
 .kv {
   display: grid;
   gap: 0.35rem;
@@ -722,6 +745,15 @@ pre {
 
     <aside class="trace">
       <h3>Trace</h3>
+      <div class="trace-section">
+        <p class="label">Runtime</p>
+        <div class="runtime-status" id="runtime-status">
+          <div class="runtime-row"><span>portable runtime</span><span>checking</span></div>
+        </div>
+        <div class="runtime-status" id="runtime-roots">
+          <div class="runtime-row"><span>data/inputs</span><span>not checked</span></div>
+        </div>
+      </div>
       <div class="kv" id="trace-kv">
         <div><span>model</span><span id="trace-model">gemma-4-31B-it</span></div>
         <div><span>move</span><span id="trace-move">none</span></div>
@@ -1037,6 +1069,49 @@ function addMessage(kind, text, codes = [], trace = "", opts = {}) {
   feed.appendChild(row);
   feed.scrollTop = feed.scrollHeight;
   return row;
+}
+
+function runtimeRow(label, value) {
+  const row = document.createElement("div");
+  row.className = "runtime-row";
+  const key = document.createElement("span");
+  key.textContent = label;
+  const val = document.createElement("span");
+  val.textContent = value;
+  row.append(key, val);
+  return row;
+}
+
+function pathStatus(entry) {
+  if (!entry || typeof entry !== "object") return "unknown";
+  const exists = entry.exists ? "exists" : "missing";
+  const path = entry.path || "";
+  return path ? `${exists} · ${path}` : exists;
+}
+
+function renderRuntimePreflight(runtime) {
+  const status = document.querySelector("#runtime-status");
+  const roots = document.querySelector("#runtime-roots");
+  status.innerHTML = "";
+  roots.innerHTML = "";
+  status.append(
+    runtimeRow("portable runtime", runtime.portable_ready ? "ready" : "not ready"),
+    runtimeRow("SWI", `${runtime.swipl_source || "unknown"} · ${runtime.swipl_path || "unknown"}`),
+    runtimeRow("local dirs", runtime.local_runtime_dirs ? "inside runtime root" : "check paths"),
+    runtimeRow("umedcta", runtime.umedcta_root_source || "unknown")
+  );
+  roots.append(
+    runtimeRow("data root", pathStatus(runtime.data_root)),
+    runtimeRow("data/inputs", pathStatus(runtime.input_root)),
+    runtimeRow("data/outputs", pathStatus(runtime.output_root)),
+    runtimeRow("runtime root", pathStatus(runtime.runtime_root))
+  );
+}
+
+async function loadRuntimePreflight() {
+  const res = await fetch(apiUrl("/api/runtime_preflight"));
+  const data = await res.json();
+  renderRuntimePreflight(data.runtime || {});
 }
 
 async function loadModels() {
@@ -1492,6 +1567,10 @@ document.querySelector("#pair-form").addEventListener("submit", async (event) =>
 
 loadModels().catch(err => {
   document.querySelector("#renderer-text").textContent = "renderer check failed";
+  console.error(err);
+});
+loadRuntimePreflight().catch(err => {
+  document.querySelector("#runtime-status").textContent = "runtime check failed";
   console.error(err);
 });
 </script>

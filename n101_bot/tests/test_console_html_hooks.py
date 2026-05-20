@@ -139,3 +139,14 @@ def test_console_renderer_status_distinguishes_key_presence_from_validated_readi
     html = _html()
     assert '`${renderer} key set`' in html
     assert '`${renderer} ready`' not in html
+
+
+def test_console_has_runtime_preflight_dashboard():
+    html = _html()
+    assert 'id="runtime-status"' in html
+    assert 'id="runtime-roots"' in html
+    assert "async function loadRuntimePreflight" in html
+    assert 'fetch(apiUrl("/api/runtime_preflight")' in html
+    assert "renderRuntimePreflight" in html
+    assert "data/inputs" in html
+    assert "portable runtime" in html
