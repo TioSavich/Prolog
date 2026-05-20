@@ -1,0 +1,5 @@
+{
+  "run_id": "fake_manifest_demo",
+  "events_file": "fake_demo_events.json",
+  "description": "Synthetic canonical event fixture for testing the Hermes manifest boundary."
+}
