@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import List, Optional, Tuple
 
 from .normalize import Normalization, normalize
-from .ollama_client import ChatResult, chat
+from .ollama_client import ChatResult, OllamaError, chat, ping
 from .prolog import (
     Commitment,
     DialogueState,
@@ -355,6 +355,19 @@ class HermeneuticBot:
             else:
                 sys_prompt = sys_prompt + TEACHER_AUDIENCE_NOTE
         state_before = self.session.state
+        if not self._renderer_available():
+            return self._offline_record(
+                raw_question=question,
+                normalized_question=normalized_question,
+                norm=norm,
+                detected=detected,
+                entitlements=entitlements,
+                move=move,
+                state_before=state_before,
+                mode=mode,
+                cards_used=cards_used,
+                reason="local Ollama renderer is not reachable",
+            )
 
         # ── Pre-flight: Amy's move grammar may ask us NOT to answer ──
         #
@@ -370,7 +383,22 @@ class HermeneuticBot:
         # route — probing observations and probing questions are the
         # deliverables.
         if move.assessing and effective_mode != "lesson_plan":
-            rendered = self._render_assessing(normalized_question, sys_prompt, move, temperature)
+            try:
+                rendered = self._render_assessing(normalized_question, sys_prompt, move, temperature)
+            except OllamaError as exc:
+                return self._offline_record(
+                    raw_question=question,
+                    normalized_question=normalized_question,
+                    norm=norm,
+                    detected=detected,
+                    entitlements=entitlements,
+                    move=move,
+                    state_before=state_before,
+                    mode=mode,
+                    cards_used=cards_used,
+                    reason=str(exc),
+                    assessing=True,
+                )
             final_answer, final_think = strip_thinking(rendered.content)
             final_commits = commitments(final_answer)
             state_after = state_step(state_before, move.move_tag, len(final_commits))
@@ -419,7 +447,21 @@ class HermeneuticBot:
                 + "Visible output should be only the teacher-facing suggestion.\n"
                 + "Template instruction: " + move.rendered_template()
             )
-        first = chat(self.session.model, advance_sys, normalized_question, temperature=temperature)
+        try:
+            first = chat(self.session.model, advance_sys, normalized_question, temperature=temperature)
+        except OllamaError as exc:
+            return self._offline_record(
+                raw_question=question,
+                normalized_question=normalized_question,
+                norm=norm,
+                detected=detected,
+                entitlements=entitlements,
+                move=move,
+                state_before=state_before,
+                mode=mode,
+                cards_used=cards_used,
+                reason=str(exc),
+            )
         first_answer, first_think = strip_thinking(first.content)
         first_commits = commitments(first_answer)
 
@@ -438,9 +480,26 @@ class HermeneuticBot:
         # surfaces the misconception — and we mark the turn as
         # assessing, so the dialogue-state tracker sees it correctly.
         if first_commits:
-            pivot = self._pivot_to_fmst(
-                normalized_question, sys_prompt, first_answer, first_commits, temperature,
-            )
+            try:
+                pivot = self._pivot_to_fmst(
+                    normalized_question, sys_prompt, first_answer, first_commits, temperature,
+                )
+            except OllamaError as exc:
+                return self._offline_record(
+                    raw_question=question,
+                    normalized_question=normalized_question,
+                    norm=norm,
+                    detected=detected,
+                    entitlements=entitlements,
+                    move=move,
+                    state_before=state_before,
+                    mode=mode,
+                    cards_used=cards_used,
+                    reason=str(exc),
+                    first_answer=first_answer,
+                    first_commitments=first_commits,
+                    assessing=True,
+                )
             final_answer, final_think = strip_thinking(pivot.content)
             final_commits = commitments(final_answer)
             repaired_flag = True  # the turn was pivoted, not "repaired"
@@ -490,6 +549,67 @@ class HermeneuticBot:
         return record
 
     # ── Helpers: geometry context, grade band, standard code ──
+
+    def _renderer_available(self) -> bool:
+        if os.environ.get("HERMES_FORCE_OFFLINE") == "1":
+            return False
+        return ping()
+
+    def _offline_record(
+        self,
+        *,
+        raw_question: str,
+        normalized_question: str,
+        norm: Normalization,
+        detected: List[str],
+        entitlements: List[EntitlementCheck],
+        move: MoveDecision,
+        state_before: DialogueState,
+        mode: str,
+        cards_used: list,
+        reason: str,
+        assessing: bool | None = None,
+        first_answer: str = "",
+        first_commitments: List[Commitment] | None = None,
+    ) -> TurnRecord:
+        final_commitments: List[Commitment] = []
+        first_commitments = first_commitments or []
+        terms = ", ".join(detected) if detected else "none"
+        final_answer = (
+            "Offline Prolog mode: no local LLM renderer is available, so I can only "
+            f"report the symbolic read. Detected terms: {terms}. "
+            "Use the N103 pairer with metadata-only events, or configure Ollama/REALLMS "
+            "for prose revoicing."
+        )
+        is_assessing = move.assessing if assessing is None else assessing
+        state_after = state_step(state_before, move.move_tag, len(final_commitments))
+        record = TurnRecord(
+            question=normalized_question,
+            raw_question=raw_question,
+            normalization=norm,
+            detected_terms=detected,
+            entitlements=entitlements,
+            move=move,
+            first_answer=first_answer,
+            first_thinking="",
+            first_commitments=first_commitments,
+            final_answer=final_answer,
+            final_thinking=reason,
+            final_commitments=final_commitments,
+            repaired=bool(first_commitments),
+            assessing=is_assessing,
+            state_before=state_before,
+            state_after=state_after,
+            model="offline-prolog",
+            duration_ms=0,
+            eval_tokens=0,
+            mode=mode,
+            cards_used=cards_used,
+        )
+        self.session.history.append(record)
+        self.session.ledger.extend(first_commitments)
+        self.session.state = state_after
+        return record
 
     def _build_geometry_context(
         self,

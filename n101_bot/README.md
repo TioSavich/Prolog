@@ -35,6 +35,11 @@ Hermes visual language, calls the existing Prolog-in-the-loop bot, and keeps
 DeepSeek optional rather than default. The model field accepts any local Ollama
 tag, so a later Gemma 4/Gemma 4B install can be selected there.
 
+If Ollama or the selected local model is unavailable, Hermes falls back to
+offline Prolog mode. In that mode the chat pane reports the symbolic read
+instead of hanging on "thinking..."; pair graph and metadata-only N103 workflow
+tools still work.
+
 ## Run the overnight test loop
 
 ```
@@ -55,6 +60,16 @@ Inputs can be JSON, CSV, or Zoom-style transcript text. The output is an
 instructor-reviewable pairing packet with geometry misconception/paradox
 signals, evidence snippets, and a dyadic prompt for each recommended pair.
 See `reallms/USAGE.md` for the RealLMS/Open WebUI workflow.
+
+To summarize existing N103 `runs_output` folders without exposing raw student
+work, point the safe loader at the parent directory:
+
+```
+python3 -m bridge.n103_run_loader /path/to/runs_output
+```
+
+It reads only `pairings_safe.json`, omits pseudonym maps, and rejects raw-text
+fields such as `raw_text`, `student_id`, `author_raw_name`, or `evidence`.
 
 ## Authoring a new term
 
