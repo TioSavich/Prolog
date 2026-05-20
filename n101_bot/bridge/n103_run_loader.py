@@ -38,7 +38,6 @@ def load_safe_runs(root: Path | str) -> dict[str, Any]:
         coverage = payload.get("coverage", {})
         _assert_safe_metadata(coverage, path=str(path))
         needs_check = payload.get("needs_instructor_check", [])
-        _assert_safe_metadata(needs_check, path=str(path))
         run_dir = path.parent
         runs.append(
             {

@@ -78,6 +78,29 @@ def test_load_safe_runs_rejects_identifier_maps_inside_safe_outputs(tmp_path):
         load_safe_runs(tmp_path)
 
 
+def test_load_safe_runs_counts_tainted_instructor_check_rows_without_exporting_them(tmp_path):
+    run_dir = tmp_path / "2026-05-18_134003_01_maddy_square_or_diamond"
+    run_dir.mkdir()
+    (run_dir / "pairings_safe.json").write_text(
+        json.dumps(
+            {
+                "research_safe_pairings": [],
+                "needs_instructor_check": [
+                    {"student_id": "real-id-1", "reason": "missing visible response"}
+                ],
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    packet = load_safe_runs(tmp_path)
+
+    run = packet["runs"][0]
+    assert run["needs_instructor_check_count"] == 1
+    assert "student_id" not in json.dumps(run)
+    assert "real-id-1" not in json.dumps(run)
+
+
 def test_load_safe_runs_returns_empty_packet_when_no_safe_outputs(tmp_path):
     assert load_safe_runs(tmp_path) == {
         "source": str(tmp_path),
