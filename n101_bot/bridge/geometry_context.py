@@ -2,7 +2,7 @@
 
 This module replaces the older regex-based geometry context with a mode-aware
 pipeline that calls into the eight query predicates exposed by
-`umedcta-formalization/geometry/query.pl` (loaded via `geometry_bridge.pl`)
+`umedcta-formalization/geometry/query.pl` (loaded by `src/geometry_runner.pl`)
 and renders the results as LLM-friendly cards.
 
 Public surface, in order of preference:

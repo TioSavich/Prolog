@@ -3,9 +3,9 @@
 % Loaded by Python via subprocess:
 %   swipl -q -g geom_main src/geometry_runner.pl -- <predicate> <json_args>
 %
-% Where <predicate> is one of the eight query predicates from
-% /Users/tio/Documents/GitHub/umedcta-formalization/geometry/query.pl
-% and <json_args> is a JSON-encoded list of the predicate arguments.
+% Where <predicate> is one of the eight query predicates from the geometry
+% query layer under $UMEDCTA_ROOT/geometry/query.pl and <json_args> is a
+% JSON-encoded list of the predicate arguments.
 %
 % On success, prints a single JSON document to stdout and halts 0.
 % On failure (no matching results), prints "null" to stdout and halts 0.
@@ -23,13 +23,33 @@ geom_main :-
     halt(0).
 
 geom_main_ :-
-    consult('/Users/tio/Documents/GitHub/Prolog/geometry_bridge.pl'),
-    load_geometry_kb,
+    load_geometry_runtime,
     current_prolog_flag(argv, Argv),
     maplist(arg_to_string, Argv, [PredStr, ArgsJson]),
     atom_string(PredAtom, PredStr),
     atom_to_term_args(ArgsJson, ArgList),
     dispatch(PredAtom, ArgList).
+
+load_geometry_runtime :-
+    (   getenv('UMEDCTA_ROOT', Root0)
+    ->  atom_string(Root, Root0)
+    ;   throw(error(missing_environment('UMEDCTA_ROOT'), load_geometry_runtime/0))
+    ),
+    directory_file_path(Root, 'geometry/schema.pl', Schema),
+    consult(Schema),
+    load_geometry_files(Root, 'geometry/concepts/*.pl'),
+    load_geometry_files(Root, 'geometry/metaphors/*.pl'),
+    load_geometry_files(Root, 'geometry/van_hiele/*.pl'),
+    load_geometry_files(Root, 'geometry/bootstrap/*.pl'),
+    load_geometry_files(Root, 'geometry/standards/*.pl'),
+    load_geometry_files(Root, 'geometry/pck/*.pl'),
+    directory_file_path(Root, 'geometry/query.pl', Query),
+    consult(Query).
+
+load_geometry_files(Root, Pattern) :-
+    directory_file_path(Root, Pattern, AbsolutePattern),
+    expand_file_name(AbsolutePattern, Files),
+    maplist(consult, Files).
 
 arg_to_string(X, S) :-
     ( string(X) -> S = X

@@ -20,7 +20,7 @@ worker_main :-
 load_runtime :-
     (   getenv('UMEDCTA_ROOT', Root0)
     ->  atom_string(Root, Root0)
-    ;   Root = '/Users/tio/Documents/GitHub/umedcta-formalization'
+    ;   throw(error(missing_environment('UMEDCTA_ROOT'), load_runtime/0))
     ),
     directory_file_path(Root, 'hermes/event_scoring.pl', EventScoring),
     use_module(EventScoring),
@@ -36,6 +36,7 @@ load_geometry_runtime(Root) :-
     load_geometry_files(Root, 'geometry/van_hiele/*.pl'),
     load_geometry_files(Root, 'geometry/bootstrap/*.pl'),
     load_geometry_files(Root, 'geometry/standards/*.pl'),
+    load_geometry_files(Root, 'geometry/pck/*.pl'),
     directory_file_path(Root, 'geometry/query.pl', Query),
     consult(Query).
 

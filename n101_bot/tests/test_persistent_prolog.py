@@ -44,6 +44,27 @@ def test_resolve_swipl_falls_back_to_system_name(monkeypatch, tmp_path):
     assert resolve_swipl(None, root=tmp_path) == "swipl"
 
 
+def test_worker_defaults_to_runtime_umedcta_root(monkeypatch, tmp_path):
+    expected = tmp_path / "Hermes" / "umedcta-formalization"
+    app_root = tmp_path / "Hermes" / "n101_bot"
+    expected.mkdir(parents=True)
+    monkeypatch.delenv("UMEDCTA_ROOT", raising=False)
+    monkeypatch.setattr("bridge.persistent_prolog.ROOT", app_root)
+
+    worker = PersistentPrologWorker()
+
+    assert worker.umedcta_root == expected
+
+
+def test_worker_honors_launcher_umedcta_root(monkeypatch, tmp_path):
+    expected = tmp_path / "portable-formalization"
+    monkeypatch.setenv("UMEDCTA_ROOT", str(expected))
+
+    worker = PersistentPrologWorker()
+
+    assert worker.umedcta_root == expected
+
+
 @pytest.fixture
 def worker():
     proc = PersistentPrologWorker(umedcta_root=UMEDCTA_ROOT)

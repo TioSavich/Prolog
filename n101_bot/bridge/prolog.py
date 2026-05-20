@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List
 
-from .runtime_env import resolve_swipl
+from .runtime_env import build_runtime_env, resolve_swipl
 
 ROOT = Path(__file__).resolve().parent.parent
 VOCAB_PL = ROOT / "src" / "vocabulary.pl"
@@ -35,7 +35,13 @@ def _run(command: str, *args: str) -> str:
         command,
         *args,
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        env=build_runtime_env(ROOT),
+    )
     if result.returncode != 0:
         raise PrologError(
             f"swipl {command} exit {result.returncode}\n"
@@ -226,10 +232,9 @@ class EntitlementCheck:
 
 # ── Geometry KB query layer ──
 #
-# Wraps the eight query predicates in
-#   /Users/tio/Documents/GitHub/umedcta-formalization/geometry/query.pl
-# via a swipl subprocess that consults the geometry_bridge loader and
-# emits a single JSON document per call. See `n101_bot/src/geometry_runner.pl`.
+# Wraps the eight query predicates in the geometry query layer under
+# $UMEDCTA_ROOT/geometry/query.pl via a swipl subprocess that emits a single
+# JSON document per call. See `n101_bot/src/geometry_runner.pl`.
 
 GEOMETRY_PREDICATES = {
     "matching_concepts",            # (tokens, grade_band)
@@ -270,7 +275,13 @@ def geometry_query(predicate: str, args: list):
         predicate,
         payload,
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        cwd=ROOT,
+        env=build_runtime_env(ROOT),
+    )
     if result.returncode != 0:
         raise PrologError(
             f"swipl geometry_query {predicate} exit {result.returncode}\n"

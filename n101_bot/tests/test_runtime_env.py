@@ -1,6 +1,28 @@
 from __future__ import annotations
 
-from bridge.runtime_env import build_runtime_env, runtime_preflight
+from bridge.runtime_env import build_runtime_env, resolve_umedcta_root, runtime_preflight
+
+
+def test_resolve_umedcta_root_prefers_environment_override(tmp_path):
+    explicit = tmp_path / "custom-formalization"
+
+    assert resolve_umedcta_root(tmp_path / "n101_bot", env={"UMEDCTA_ROOT": str(explicit)}) == explicit
+
+
+def test_resolve_umedcta_root_prefers_flash_sibling_layout(tmp_path):
+    app_root = tmp_path / "Hermes" / "n101_bot"
+    expected = tmp_path / "Hermes" / "umedcta-formalization"
+    expected.mkdir(parents=True)
+
+    assert resolve_umedcta_root(app_root, env={}) == expected
+
+
+def test_resolve_umedcta_root_prefers_source_sibling_layout(tmp_path):
+    app_root = tmp_path / "Prolog" / "n101_bot"
+    expected = tmp_path / "umedcta-formalization"
+    expected.mkdir(parents=True)
+
+    assert resolve_umedcta_root(app_root, env={}) == expected
 
 
 def test_runtime_env_keeps_temp_and_cache_inside_app(tmp_path):
@@ -11,6 +33,7 @@ def test_runtime_env_keeps_temp_and_cache_inside_app(tmp_path):
     assert env["TMPDIR"] == str(tmp_path / "runtime" / "tmp")
     assert env["XDG_CACHE_HOME"] == str(tmp_path / "runtime" / "cache")
     assert env["PYTHONPYCACHEPREFIX"] == str(tmp_path / "runtime" / "pycache")
+    assert env["UMEDCTA_ROOT"] == str(resolve_umedcta_root(tmp_path, env={}))
     assert (tmp_path / "runtime" / "tmp").is_dir()
     assert (tmp_path / "runtime" / "cache").is_dir()
     assert (tmp_path / "runtime" / "pycache").is_dir()
@@ -24,12 +47,14 @@ def test_runtime_env_preserves_existing_model_and_reallms_config(tmp_path):
             "HERMES_MODEL": "custom-model",
             "REALLMS_BASE_URL": "https://example.test/v1",
             "REALLMS_API_KEY": "secret",
+            "UMEDCTA_ROOT": "/Volumes/Hermes/Hermes/umedcta-formalization",
         },
     )
 
     assert env["HERMES_MODEL"] == "custom-model"
     assert env["REALLMS_BASE_URL"] == "https://example.test/v1"
     assert env["REALLMS_API_KEY"] == "secret"
+    assert env["UMEDCTA_ROOT"] == "/Volumes/Hermes/Hermes/umedcta-formalization"
 
 
 def test_runtime_env_sets_bundled_swipl_when_present(tmp_path):
@@ -59,6 +84,7 @@ def test_runtime_preflight_reports_missing_bundled_swipl_and_local_dirs(tmp_path
     )
     assert report["bundled_swipl"]["exists"] is False
     assert report["local_runtime_dirs"] is True
+    assert report["umedcta_root_source"] == "fallback"
     assert report["tmp_dir"] == str(tmp_path / "runtime" / "tmp")
     assert report["cache_dir"] == str(tmp_path / "runtime" / "cache")
     assert report["pycache_dir"] == str(tmp_path / "runtime" / "pycache")
@@ -75,6 +101,7 @@ def test_runtime_preflight_reports_bundled_swipl_ready(tmp_path):
     assert report["swipl_source"] == "bundled"
     assert report["swipl_path"] == str(bundled)
     assert report["bundled_swipl"]["exists"] is True
+    assert report["umedcta_root"]["path"] == str(resolve_umedcta_root(tmp_path, env={}))
 
 
 def test_runtime_preflight_treats_env_pointing_to_bundled_swipl_as_bundled(tmp_path):

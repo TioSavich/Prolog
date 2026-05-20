@@ -16,11 +16,11 @@ from pathlib import Path
 from typing import Any
 
 from .runtime_env import resolve_swipl as resolve_runtime_swipl
+from .runtime_env import resolve_umedcta_root
 
 
 ROOT = Path(__file__).resolve().parent.parent
 WORKER_PL = ROOT / "src" / "hermes_worker.pl"
-DEFAULT_UMEDCTA_ROOT = Path("/Users/tio/Documents/GitHub/umedcta-formalization")
 
 
 class PersistentPrologError(RuntimeError):
@@ -35,11 +35,11 @@ class PersistentPrologWorker:
     def __init__(
         self,
         *,
-        umedcta_root: Path | str = DEFAULT_UMEDCTA_ROOT,
+        umedcta_root: Path | str | None = None,
         swipl: str | None = None,
         timeout: float = 5.0,
     ) -> None:
-        self.umedcta_root = Path(umedcta_root)
+        self.umedcta_root = Path(umedcta_root) if umedcta_root is not None else resolve_umedcta_root(ROOT)
         self.swipl = resolve_swipl(swipl)
         self.timeout = timeout
         self._seq = 0

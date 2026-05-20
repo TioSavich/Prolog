@@ -12,6 +12,43 @@ def bundled_swipl_path(root: Path | str = DEFAULT_ROOT) -> Path:
     return Path(root) / "runtime" / "swi-prolog" / "bin" / "swipl"
 
 
+def resolve_umedcta_root(
+    root: Path | str = DEFAULT_ROOT,
+    *,
+    env: Mapping[str, str] | None = None,
+) -> Path:
+    app_root = Path(root)
+    source_env = os.environ if env is None else env
+    env_root = source_env.get("UMEDCTA_ROOT")
+    if env_root:
+        return Path(env_root)
+
+    candidates = [
+        app_root.parent / "umedcta-formalization",
+        app_root.parent.parent / "umedcta-formalization",
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return app_root.parent.parent / "umedcta-formalization"
+
+
+def umedcta_root_source(
+    root: Path | str = DEFAULT_ROOT,
+    *,
+    env: Mapping[str, str] | None = None,
+) -> str:
+    app_root = Path(root)
+    source_env = os.environ if env is None else env
+    if source_env.get("UMEDCTA_ROOT"):
+        return "env"
+    if (app_root.parent / "umedcta-formalization").exists():
+        return "package_sibling"
+    if (app_root.parent.parent / "umedcta-formalization").exists():
+        return "source_sibling"
+    return "fallback"
+
+
 def resolve_swipl(
     swipl: str | None = None,
     *,
@@ -45,6 +82,7 @@ def build_runtime_env(root: Path | str, *, base_env: Mapping[str, str] | None = 
     env["TMPDIR"] = str(tmp)
     env["XDG_CACHE_HOME"] = str(cache)
     env["PYTHONPYCACHEPREFIX"] = str(pycache)
+    env.setdefault("UMEDCTA_ROOT", str(resolve_umedcta_root(app_root, env=env)))
     env.setdefault("HERMES_MODEL", env.get("REALLMS_MODEL", "gemma-4-31B-it"))
 
     bundled_swipl = bundled_swipl_path(app_root)
@@ -96,4 +134,9 @@ def runtime_preflight(root: Path | str, *, base_env: Mapping[str, str] | None = 
         "tmp_dir": env["HERMES_TMPDIR"],
         "cache_dir": env["XDG_CACHE_HOME"],
         "pycache_dir": env["PYTHONPYCACHEPREFIX"],
+        "umedcta_root": {
+            "path": env["UMEDCTA_ROOT"],
+            "exists": Path(env["UMEDCTA_ROOT"]).exists(),
+        },
+        "umedcta_root_source": umedcta_root_source(app_root, env=incoming_env),
     }
