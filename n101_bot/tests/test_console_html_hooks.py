@@ -135,6 +135,20 @@ def test_console_copy_defaults_to_reallms_not_gemma2b():
     assert "REALLMS" in html
 
 
+def test_console_presents_one_hermes_not_course_specific_bots():
+    html = _html()
+    visible_text = html.split("<script>", 1)[0]
+
+    assert "Hermes local teaching console" in visible_text
+    assert "Ask Hermes" in visible_text
+    assert "Analyze discussion" in visible_text
+    assert "Paste a question, writing sample, or discussion transcript." in visible_text
+    assert "workflow" in visible_text
+    assert "N103 pairer" not in visible_text
+    assert "N103 pairing lab" not in visible_text
+    assert "N101/N103 research console" not in visible_text
+
+
 def test_console_renderer_status_distinguishes_key_presence_from_validated_readiness():
     html = _html()
     assert '`${renderer} key set`' in html

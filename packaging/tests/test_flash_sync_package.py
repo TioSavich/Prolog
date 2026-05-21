@@ -29,7 +29,9 @@ def test_flash_sync_manifest_keeps_inputs_and_runtime_payloads_out():
     assert "n101_bot/bridge/path_contract.py" in manifest["required_files"]
     assert "n101_bot/bridge/fake_demo_run.py" in manifest["required_files"]
     assert "n101_bot/bridge/run_manifest.py" in manifest["required_files"]
+    assert "Hermes_Icon.svg" in manifest["required_files"]
     assert "n101_bot/scripts/console.sh" in manifest["required_files"]
+    assert "n101_bot/scripts/launch_hermes.sh" in manifest["required_files"]
     assert "n101_bot/scripts/ralph_verify.sh" in manifest["required_files"]
     assert "n101_bot/scripts/fake_demo_run.sh" in manifest["required_files"]
     assert "n101_bot/scripts/run_manifest.sh" in manifest["required_files"]
@@ -81,9 +83,12 @@ def test_sync_flash_package_copies_files_preserves_mode_and_creates_only_safe_di
     dest = tmp_path / "dest"
     source.mkdir()
     executable = source / "n101_bot" / "scripts" / "console.sh"
+    launcher = source / "n101_bot" / "scripts" / "launch_hermes.sh"
     _write(source / "n101_bot" / "bridge" / "path_contract.py", "contract")
     _write(executable, "#!/usr/bin/env bash\n")
+    _write(launcher, "#!/usr/bin/env bash\n")
     executable.chmod(executable.stat().st_mode | stat.S_IXUSR)
+    launcher.chmod(launcher.stat().st_mode | stat.S_IXUSR)
 
     manifest = {
         "include_roots": ["n101_bot"],
@@ -92,6 +97,7 @@ def test_sync_flash_package_copies_files_preserves_mode_and_creates_only_safe_di
         "required_files": [
             "n101_bot/bridge/path_contract.py",
             "n101_bot/scripts/console.sh",
+            "n101_bot/scripts/launch_hermes.sh",
         ],
         "ensure_dirs": ["data/derived", "data/outputs", "runtime/tmp"],
         "never_create_dirs": ["data/inputs"],
@@ -102,9 +108,11 @@ def test_sync_flash_package_copies_files_preserves_mode_and_creates_only_safe_di
     assert result["copied"] == [
         "n101_bot/bridge/path_contract.py",
         "n101_bot/scripts/console.sh",
+        "n101_bot/scripts/launch_hermes.sh",
     ]
     assert (dest / "n101_bot" / "bridge" / "path_contract.py").read_text() == "contract"
     assert (dest / "n101_bot" / "scripts" / "console.sh").stat().st_mode & stat.S_IXUSR
+    assert (dest / "n101_bot" / "scripts" / "launch_hermes.sh").stat().st_mode & stat.S_IXUSR
     assert (dest / "data" / "derived").is_dir()
     assert (dest / "data" / "outputs").is_dir()
     assert (dest / "runtime" / "tmp").is_dir()

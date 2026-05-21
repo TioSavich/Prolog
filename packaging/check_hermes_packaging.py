@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "n101_bot" / "PACKAGING_MANIFEST.md"
 
 REQUIRED_TRACKABLE = [
+    "Hermes_Icon.svg",
     "n101_bot/PACKAGING_MANIFEST.md",
     "n101_bot/README.md",
     "n101_bot/requirements.txt",
@@ -30,6 +31,7 @@ REQUIRED_TRACKABLE = [
     "n101_bot/runtime/README.md",
     "n101_bot/reallms/USAGE.md",
     "n101_bot/scripts/console.sh",
+    "n101_bot/scripts/launch_hermes.sh",
     "n101_bot/scripts/reallms_smoke.sh",
     "n101_bot/scripts/fake_demo_run.sh",
     "n101_bot/scripts/run_manifest.sh",
@@ -44,7 +46,9 @@ REQUIRED_TRACKABLE = [
     "n101_bot/tests/test_fake_demo_run.py",
     "n101_bot/tests/test_run_manifest.py",
     "packaging/flash_sync_manifest.json",
+    "packaging/create_hermes_app.py",
     "packaging/sync_flash_package.py",
+    "packaging/tests/test_create_hermes_app.py",
     "packaging/tests/test_flash_sync_package.py",
 ]
 

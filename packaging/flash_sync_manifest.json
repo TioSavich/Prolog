@@ -2,6 +2,7 @@
   "version": 1,
   "include_roots": [
     ".gitignore",
+    "Hermes_Icon.svg",
     "n101_bot",
     "packaging"
   ],
@@ -27,6 +28,7 @@
   ],
   "required_files": [
     ".gitignore",
+    "Hermes_Icon.svg",
     "n101_bot/PACKAGING_MANIFEST.md",
     "n101_bot/bridge/path_contract.py",
     "n101_bot/bridge/event_importer.py",
@@ -37,6 +39,7 @@
     "n101_bot/bridge/fake_demo_run.py",
     "n101_bot/bridge/run_manifest.py",
     "n101_bot/scripts/console.sh",
+    "n101_bot/scripts/launch_hermes.sh",
     "n101_bot/scripts/ralph_verify.sh",
     "n101_bot/scripts/reallms_smoke.sh",
     "n101_bot/scripts/fake_demo_run.sh",
@@ -55,9 +58,11 @@
     "n101_bot/tests/test_console_revoice_endpoint.py",
     "n101_bot/runtime/README.md",
     "packaging/check_hermes_packaging.py",
+    "packaging/create_hermes_app.py",
     "packaging/flash_sync_manifest.json",
     "packaging/sync_flash_package.py",
     "packaging/tests/test_check_hermes_packaging.py",
+    "packaging/tests/test_create_hermes_app.py",
     "packaging/tests/test_flash_sync_package.py"
   ],
   "ensure_dirs": [

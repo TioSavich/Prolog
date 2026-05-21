@@ -300,7 +300,7 @@ class HermesHandler(BaseHTTPRequestHandler):
                 {
                     "error": (
                         "This looks like speaker-labeled student discussion text. "
-                        "Use the N103 Prolog analyzer so Hermes can canonicalize it "
+                        "Use the local Hermes discussion analyzer so Hermes can canonicalize it "
                         "before any REALLMS revoicing."
                     ),
                     "error_type": "chat_transcript_safety",

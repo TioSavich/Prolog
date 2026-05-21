@@ -8,6 +8,7 @@ do not track local runtimes, model weights, generated logs, caches, or student/c
 
 - `n101_bot/PACKAGING_MANIFEST.md`
 - `n101_bot/.gitignore`
+- `Hermes_Icon.svg`
 - `n101_bot/README.md`
 - `n101_bot/PLAN.md`
 - `n101_bot/STATUS.md`
@@ -26,17 +27,18 @@ do not track local runtimes, model weights, generated logs, caches, or student/c
   - representative required file: `n101_bot/reallms/USAGE.md`
 - `n101_bot/scripts/*.sh`
 - `n101_bot/scripts/*.py`
-  - representative required files: `n101_bot/scripts/console.sh`, `n101_bot/scripts/reallms_smoke.sh`, `n101_bot/scripts/fake_demo_run.sh`, `n101_bot/scripts/run_manifest.sh`
+  - representative required files: `n101_bot/scripts/console.sh`, `n101_bot/scripts/launch_hermes.sh`, `n101_bot/scripts/reallms_smoke.sh`, `n101_bot/scripts/fake_demo_run.sh`, `n101_bot/scripts/run_manifest.sh`
 - `n101_bot/tests/*.py`
 - `n101_bot/tests/*.pl`
   - representative required files: `n101_bot/tests/test_runtime_env.py`, `n101_bot/tests/test_path_contract.py`, `n101_bot/tests/test_event_importer.py`, `n101_bot/tests/test_runtime_scripts.py`, `n101_bot/tests/test_reallms_smoke.py`, `n101_bot/tests/test_reallms_smoke_script.py`, `n101_bot/tests/test_fake_demo_run.py`, `n101_bot/tests/test_run_manifest.py`
 - `n101_bot/samples/*.json`
   - representative required files: `n101_bot/samples/fake_demo_events.json`, `n101_bot/samples/fake_run_manifest.json`
 - `packaging/check_hermes_packaging.py`
+- `packaging/create_hermes_app.py`
 - `packaging/flash_sync_manifest.json`
 - `packaging/sync_flash_package.py`
 - `packaging/tests/*.py`
-  - representative required files: `packaging/tests/test_check_hermes_packaging.py`, `packaging/tests/test_flash_sync_package.py`
+  - representative required files: `packaging/tests/test_check_hermes_packaging.py`, `packaging/tests/test_create_hermes_app.py`, `packaging/tests/test_flash_sync_package.py`
 
 ## Keep Out Of Git
 

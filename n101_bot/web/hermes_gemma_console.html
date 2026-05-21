@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hermes Local Console</title>
+<title>Hermes local teaching console</title>
 <style>
 :root {
   --ink: #0d0c08;
@@ -646,7 +646,7 @@ pre {
         </svg>
       </div>
       <div>
-        <h1>Hermes <span class="sub">REALLMS + Prolog console</span></h1>
+        <h1>Hermes <span class="sub">local teaching console</span></h1>
       </div>
     </div>
     <div class="top-controls">
@@ -658,8 +658,8 @@ pre {
   <main class="main">
     <aside class="sidebar">
       <p class="label">Surface</p>
-      <button class="mode-btn active" data-mode="chat"><span>01</span><strong>Hermes chat</strong><small>REALLMS renders; Prolog reads.</small></button>
-      <button class="mode-btn" data-mode="pair"><span>02</span><strong>N103 pairer</strong><small>Metadata events become discussion pairs.</small></button>
+      <button class="mode-btn active" data-mode="chat"><span>01</span><strong>Ask Hermes</strong><small>Ask a question, check reasoning, or draft a next move.</small></button>
+      <button class="mode-btn" data-mode="pair"><span>02</span><strong>Analyze discussion</strong><small>Paste writing or talk; Hermes builds safe candidate pairs.</small></button>
 
       <div class="model-box">
         <p class="label">Renderer</p>
@@ -676,14 +676,14 @@ pre {
         <button id="reset">reset thread</button>
       </div>
 
-      <p class="note">Set REALLMS_API_KEY before launch. Hermes uses Prolog for symbolic checks and pair scoring.</p>
+      <p class="note">Double-click Hermes, paste classroom text, then choose what you want back. Prolog keeps the checks local; REALLMS only adds prose when a key is present.</p>
     </aside>
 
     <section class="workspace" id="chat-workspace">
       <header class="head">
         <div>
-          <h2>REALLMS as <em>voice</em>, Prolog as skeleton</h2>
-          <div class="meta">N101/N103 research console · REALLMS key required for prose</div>
+          <h2>Paste a question, writing sample, or discussion transcript.</h2>
+          <div class="meta">one Hermes console · local Prolog checks · optional REALLMS prose</div>
         </div>
         <div class="register" id="register">
           <button class="active" data-register="fresh">fresh</button>
@@ -700,7 +700,7 @@ pre {
       <div class="feed" id="feed">
         <div class="msg hermes">
           <div class="avatar">H</div>
-          <div class="bubble">I am running locally. Ask a methods question, or switch to the N103 pairer with metadata-only event packets.</div>
+          <div class="bubble">I am running locally. Paste a teaching question, a short piece of student writing, or a speaker-labeled discussion transcript.</div>
         </div>
       </div>
       <form class="composer" id="chat-form">
@@ -719,18 +719,18 @@ pre {
     <section class="workspace pair-form" id="pair-workspace">
       <header class="head">
         <div>
-          <h2>N103 <em>pairing</em> lab</h2>
-          <div class="meta">metadata-only event packets · pseudonyms and event handles only</div>
+          <h2>Analyze <em>discussion</em></h2>
+          <div class="meta">safe event handles · no raw student identifiers in graph payloads</div>
         </div>
         <div class="quick">
-          <button id="load-workflows" type="button">workflows</button>
+          <button id="load-workflows" type="button">workflow</button>
           <button id="load-sample" type="button">sample</button>
-          <button id="load-canonical-sample" type="button">canonical</button>
+          <button id="load-canonical-sample" type="button">safe sample</button>
           <button id="analyze-transcript" type="button">analyze</button>
         </div>
       </header>
       <form class="composer" id="pair-form">
-        <textarea id="pair-input" placeholder='Paste a transcript, or paste [{"event_id":"ev_0003","actor":{"role":"student","pseudonym":"S01"},"source":{"source_type":"n103_discussion"},"symbolic":{},"pml":{}}]'></textarea>
+        <textarea id="pair-input" placeholder='Paste speaker-labeled discussion text, student writing, or a safe event packet. Example: Teacher: What do you notice? Student A: I think a square is not a rectangle.'></textarea>
         <div class="quick">
           <button type="submit">pair</button>
           <button type="button" id="clear-pair">clear</button>
@@ -769,7 +769,7 @@ pre {
         <div id="commitments"><div class="commit">none</div></div>
       </div>
       <div class="trace-section">
-        <p class="label">N103 packet</p>
+        <p class="label">safe packet</p>
         <pre id="pair-json">waiting</pre>
       </div>
     </aside>
@@ -1258,7 +1258,7 @@ async function loadN103Workflows() {
   const res = await fetch(apiUrl("/api/n103_workflows"));
   const packet = await res.json();
   if (!res.ok) throw new Error(packet.error || "workflow metadata failed");
-  pairOutput.textContent = `${packet.course} workflows loaded: ${packet.privacy}. Use these cards to choose a pairing focus before sending safe annotated events.`;
+  pairOutput.textContent = `Hermes workflow loaded: ${packet.privacy}. Use these cards to choose a pairing focus before sending safe annotated events.`;
   pairJson.textContent = JSON.stringify(packet, null, 2);
 }
 
@@ -1323,7 +1323,7 @@ async function requestN103Pipeline(transcript) {
     body: JSON.stringify({transcript})
   });
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || "N103 analysis failed");
+  if (!res.ok) throw new Error(data.error || "Hermes analysis failed");
   return data;
 }
 
@@ -1341,12 +1341,12 @@ async function routeTranscriptThroughPairer(text) {
     pairJson.textContent = JSON.stringify(packet, null, 2);
     addMessage(
       "hermes",
-      `I routed that transcript to the N103 pairer instead of sending it to REALLMS. Safe Prolog analysis complete: ${packet.event_count || 0} event(s), ${pairCount} pair(s).`
+      `I routed that transcript to the local discussion analyzer instead of sending it to REALLMS. Safe Prolog analysis complete: ${packet.event_count || 0} event(s), ${pairCount} pair(s).`
     );
   } catch (err) {
     pairOutput.textContent = String(err);
     pairJson.textContent = "analysis failed";
-    addMessage("hermes", `I routed that transcript to the N103 pairer, but analysis failed: ${String(err)}`);
+    addMessage("hermes", `I routed that transcript to the local discussion analyzer, but analysis failed: ${String(err)}`);
   }
 }
 

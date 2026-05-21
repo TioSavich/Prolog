@@ -29,11 +29,15 @@ Set `REALLMS_API_KEY` before launching. The default model is
 scripts/console.sh
 ```
 
-Then open `http://127.0.0.1:8765`. The console uses the Critical Math /
-Hermes visual language, calls the existing Prolog-in-the-loop bot, and uses
-REALLMS for prose rendering. Without `REALLMS_API_KEY`, the chat pane returns
-a configuration message instead of hanging on "thinking..."; pair graph and
-metadata-only N103 workflow tools still work.
+Then open `http://127.0.0.1:8765`. For a packaged flash drive, double-click
+`Hermes.app` or `run-hermes.command`; both use the same launcher. Put local API
+configuration in the flash-drive root `.env` or package-root `.env`, not beside
+inputs or generated outputs.
+
+The console uses the Critical Math / Hermes visual language, calls the existing
+Prolog-in-the-loop bot, and uses REALLMS for prose rendering. Without
+`REALLMS_API_KEY`, the chat pane returns a configuration message instead of
+hanging on "thinking..."; pair graph and safe workflow tools still work.
 
 ## Run the overnight test loop
 
