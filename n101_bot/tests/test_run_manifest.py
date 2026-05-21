@@ -107,6 +107,110 @@ def test_run_manifest_reads_inputs_and_writes_derived_and_outputs(tmp_path):
     assert json.loads(summary_path.read_text(encoding="utf-8"))["run_id"] == "local_fake"
 
 
+def test_run_manifest_can_revoice_one_synthetic_pair_with_fake_revoicer(tmp_path):
+    run_manifest = _module()
+    app_root = _package_root(tmp_path)
+    package_root = app_root.parent
+    input_root = package_root / "data" / "inputs"
+    manifest_path = input_root / "manifests" / "fake.json"
+    events_path = input_root / "events" / "fake_events.json"
+    _write_json(events_path, _sample_events())
+    _write_json(manifest_path, {"run_id": "local_revoice", "events_file": "events/fake_events.json"})
+    captured = {}
+
+    class FakeWorker:
+        def request(self, op, **payload):
+            if op == "batch_event_score":
+                return [{"event_id": event["event_id"]} for event in payload["events"]]
+            if op == "pair_score":
+                return [
+                    {
+                        "pair_id": "pair_ev_demo_0001_ev_demo_0002",
+                        "event_a": "ev_demo_0001",
+                        "event_b": "ev_demo_0002",
+                        "pseudonym_a": "S01",
+                        "pseudonym_b": "S02",
+                        "roles": ["teacher", "learner"],
+                        "score": 8,
+                        "reasons": ["repair_affordance"],
+                        "question_moves": [
+                            {
+                                "question_id": "q_demo_0001",
+                                "move_type": "FMST",
+                                "validity_register": "objective_truth",
+                                "target_commitment": "shape_name_varies_by_orientation",
+                                "prompt_score": 10,
+                                "score_reasons": ["repair_affordance"],
+                            }
+                        ],
+                    }
+                ]
+            if op == "pair_graph":
+                return {
+                    "nodes": [],
+                    "edges": [
+                        {
+                            "id": "pair_ev_demo_0001_ev_demo_0002",
+                            "source": "ev_demo_0001",
+                            "target": "ev_demo_0002",
+                            "weight": 8,
+                            "question_count": 1,
+                            "reasons": ["repair_affordance"],
+                        }
+                    ],
+                }
+            raise AssertionError(op)
+
+        def close(self):
+            pass
+
+    class FakeRevoiceResult:
+        def as_dict(self):
+            return {
+                "provider": "reallms",
+                "model": "fake-model",
+                "content": "Try asking which attributes stay fixed across orientation.",
+                "blocked": False,
+                "filter_result": {
+                    "text": "Try asking which attributes stay fixed across orientation.",
+                    "original": "Try asking which attributes stay fixed across orientation.",
+                    "blocked": False,
+                    "hits": [],
+                },
+            }
+
+    class FakeRevoicer:
+        def __init__(self, *, model=None):
+            captured["model"] = model
+
+        def revoice(self, *, question_move, pair_context):
+            captured["question_move"] = question_move
+            captured["pair_context"] = pair_context
+            return FakeRevoiceResult()
+
+    summary = run_manifest.run_manifest(
+        manifest_path,
+        app_root=app_root,
+        env={},
+        worker_factory=FakeWorker,
+        revoice=True,
+        revoicer_factory=FakeRevoicer,
+        model="fake-model",
+    )
+
+    result = json.loads(Path(summary["result_path"]).read_text(encoding="utf-8"))
+    assert summary["revoice_provider"] == "reallms"
+    assert summary["revoice_blocked"] is False
+    assert result["revoice"]["content"].startswith("Try asking")
+    assert result["revoice"]["filter_result"] == {"blocked": False, "hits": []}
+    assert captured["model"] == "fake-model"
+    assert captured["question_move"]["question_id"] == "q_demo_0001"
+    assert captured["pair_context"]["pair_id"] == "pair_ev_demo_0001_ev_demo_0002"
+    serialized = json.dumps(result)
+    for forbidden in ["raw_text", "\"text\"", "actor_id", "student_id", "source_id", "path", "evidence"]:
+        assert forbidden not in serialized
+
+
 def test_run_manifest_rejects_input_path_inside_code_root(tmp_path):
     run_manifest = _module()
     app_root = _package_root(tmp_path)

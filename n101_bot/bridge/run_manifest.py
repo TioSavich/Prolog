@@ -15,8 +15,10 @@ from pathlib import Path
 from typing import Any, Callable, Mapping
 
 from .event_importer import assert_pair_graph_safe
+from .fake_demo_run import run_pair_revoice
 from .path_contract import resolve_path_contract
 from .persistent_prolog import PersistentPrologWorker
+from .reallms_revoicer import RealLMSRevoicer
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -36,6 +38,9 @@ def run_manifest(
     app_root: Path | str = ROOT,
     env: Mapping[str, str] | None = None,
     worker_factory: Callable[[], Any] = PersistentPrologWorker,
+    revoice: bool = False,
+    revoicer_factory: Callable[..., Any] = RealLMSRevoicer,
+    model: str | None = None,
 ) -> dict[str, Any]:
     app_root_path = Path(app_root)
     contract = resolve_path_contract(app_root_path, env=env)
@@ -64,8 +69,6 @@ def run_manifest(
         "privacy": "canonical_metadata_only_no_student_work",
         "run_id": run_id,
         "description": manifest.get("description", ""),
-        "manifest_path": str(safe_manifest_path),
-        "events_path": str(events_path),
         "event_count": len(events),
         "events": events,
         "score_count": len(scores),
@@ -75,6 +78,13 @@ def run_manifest(
         "graph": graph,
         "graph_edge_count": len(graph.get("edges", [])) if isinstance(graph, dict) else 0,
     }
+    if revoice:
+        result["revoice"] = run_pair_revoice(
+            pairs=pairs,
+            graph=graph,
+            revoicer_factory=revoicer_factory,
+            model=model,
+        )
     assert_pair_graph_safe(result)
 
     _write_json(derived_events_path, events)
@@ -135,7 +145,7 @@ def _summary(
     result_path: Path,
     summary_path: Path,
 ) -> dict[str, Any]:
-    return {
+    summary = {
         "privacy": result["privacy"],
         "run_id": result["run_id"],
         "event_count": result["event_count"],
@@ -146,6 +156,12 @@ def _summary(
         "result_path": str(result_path),
         "summary_path": str(summary_path),
     }
+    revoice = result.get("revoice")
+    if isinstance(revoice, dict):
+        summary["revoice_provider"] = revoice.get("provider")
+        summary["revoice_model"] = revoice.get("model")
+        summary["revoice_blocked"] = bool(revoice.get("blocked", False))
+    return summary
 
 
 def _write_json(path: Path, payload: object) -> None:
@@ -167,11 +183,13 @@ def _is_relative_to(path: Path, parent: Path) -> bool:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Run Hermes from a data/inputs manifest.")
     parser.add_argument("--manifest", required=True, help="manifest path under data/inputs")
+    parser.add_argument("--revoice", action="store_true", help="opt in to one REALLMS revoicing call")
+    parser.add_argument("--model", default=None, help="optional REALLMS model override")
     parser.add_argument("--pretty", action="store_true", help="pretty-print summary JSON")
     args = parser.parse_args(argv)
 
     try:
-        summary = run_manifest(args.manifest)
+        summary = run_manifest(args.manifest, revoice=args.revoice, model=args.model)
     except Exception as exc:  # pragma: no cover - CLI error reporting
         print(f"manifest run failed: {exc}", file=sys.stderr)
         return 2

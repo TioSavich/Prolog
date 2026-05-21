@@ -65,7 +65,7 @@ def run_fake_demo(
     assert_pair_graph_safe(result)
 
     if revoice:
-        result["revoice"] = _run_revoice(
+        result["revoice"] = run_pair_revoice(
             pairs=pairs,
             graph=graph,
             revoicer_factory=revoicer_factory,
@@ -74,6 +74,21 @@ def run_fake_demo(
         assert_pair_graph_safe(result)
 
     return result
+
+
+def run_pair_revoice(
+    *,
+    pairs: list[dict[str, Any]],
+    graph: dict[str, Any],
+    revoicer_factory: Callable[..., Any] = RealLMSRevoicer,
+    model: str | None = None,
+) -> dict[str, Any]:
+    return _run_revoice(
+        pairs=pairs,
+        graph=graph,
+        revoicer_factory=revoicer_factory,
+        model=model,
+    )
 
 
 def _run_revoice(
