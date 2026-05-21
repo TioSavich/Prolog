@@ -5,13 +5,16 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PACKAGE_ROOT="$(cd "$ROOT/.." && pwd)"
+FLASH_ROOT="$(cd "$PACKAGE_ROOT/.." && pwd)"
 cd "$ROOT"
 
-if [[ -f "$ROOT/.env" ]]; then
-  set -a
-  source "$ROOT/.env"
-  set +a
-fi
+for env_file in "$PACKAGE_ROOT/.env" "$FLASH_ROOT/.env" "$ROOT/.env"; do
+  if [[ -f "$env_file" ]]; then
+    set -a
+    source "$env_file"
+    set +a
+  fi
+done
 
 if [[ -n "${HERMES_PYTHON:-}" ]]; then
   PYTHON_BIN="$HERMES_PYTHON"
