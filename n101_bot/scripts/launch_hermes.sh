@@ -87,4 +87,8 @@ if [[ "$OPEN_BROWSER" == "1" && "${HERMES_NO_OPEN:-0}" != "1" ]]; then
   (sleep 2; open "$URL" >/dev/null 2>&1 || true) &
 fi
 
-exec "$PYTHON_BIN" -m bridge.hermes_console_server --host "$HOST" --port "$PORT" "${SERVER_ARGS[@]}"
+if [[ ${#SERVER_ARGS[@]} -gt 0 ]]; then
+  exec "$PYTHON_BIN" -m bridge.hermes_console_server --host "$HOST" --port "$PORT" "${SERVER_ARGS[@]}"
+else
+  exec "$PYTHON_BIN" -m bridge.hermes_console_server --host "$HOST" --port "$PORT"
+fi

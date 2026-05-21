@@ -37,6 +37,14 @@ def test_launch_script_resolves_python_for_flash_package():
     assert 'exec "$PYTHON_BIN" -m bridge.hermes_console_server' in script
 
 
+def test_launch_script_handles_empty_passthrough_args_for_macos_bash():
+    script = _read(LAUNCH)
+
+    assert 'if [[ ${#SERVER_ARGS[@]} -gt 0 ]]; then' in script
+    assert '"${SERVER_ARGS[@]}"' in script
+    assert 'else\n  exec "$PYTHON_BIN" -m bridge.hermes_console_server --host "$HOST" --port "$PORT"\nfi' in script
+
+
 def test_ralph_verify_script_resolves_python_for_flash_package():
     script = _read(RALPH)
 

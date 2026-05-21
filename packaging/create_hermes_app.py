@@ -33,21 +33,109 @@ def create_app_bundle(package_root: Path | str, icon_path: Path | str | None = N
     if icon.is_file():
         shutil.copy2(icon, resources / "Hermes_Icon.svg")
         _try_build_icns(icon, resources / "Hermes.icns")
+    _try_ad_hoc_sign(app_root)
     return app_root
 
 
 def _write_executable(path: Path) -> None:
+    shell_launcher = path.with_suffix(".sh")
+    _write_shell_launcher(shell_launcher)
+    if _compile_native_launcher(path):
+        return
+    shutil.copy2(shell_launcher, path)
+    path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+
+def _write_shell_launcher(path: Path) -> None:
     path.write_text(
         """#!/usr/bin/env bash
 set -euo pipefail
 
 APP_BUNDLE="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PACKAGE_ROOT="$(cd "$APP_BUNDLE/.." && pwd)"
+LOG_DIR="$PACKAGE_ROOT/runtime/logs"
+mkdir -p "$LOG_DIR"
+exec >> "$LOG_DIR/hermes-app.log" 2>&1
+echo "[$(date '+%Y-%m-%d %H:%M:%S')] launching Hermes from $PACKAGE_ROOT"
 exec "$PACKAGE_ROOT/n101_bot/scripts/launch_hermes.sh" "$@"
 """,
         encoding="utf-8",
     )
     path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+
+def _compile_native_launcher(path: Path) -> bool:
+    compiler = shutil.which("cc") or shutil.which("clang")
+    if not compiler:
+        return False
+    with tempfile.TemporaryDirectory(prefix="hermes-launcher-") as tmp_dir:
+        source = Path(tmp_dir) / "hermes_launcher.c"
+        source.write_text(_native_launcher_source(), encoding="utf-8")
+        result = subprocess.run(
+            [compiler, str(source), "-o", str(path)],
+            check=False,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+    if result.returncode != 0 or not path.exists():
+        return False
+    path.chmod(path.stat().st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    return True
+
+
+def _native_launcher_source() -> str:
+    return r"""
+#include <errno.h>
+#include <limits.h>
+#include <mach-o/dyld.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+int main(int argc, char *argv[]) {
+    char exe_path[PATH_MAX];
+    char resolved[PATH_MAX];
+    uint32_t size = sizeof(exe_path);
+    if (_NSGetExecutablePath(exe_path, &size) != 0) {
+        fprintf(stderr, "Hermes launcher path is too long.\n");
+        return 1;
+    }
+    if (realpath(exe_path, resolved) == NULL) {
+        strncpy(resolved, exe_path, sizeof(resolved) - 1);
+        resolved[sizeof(resolved) - 1] = '\0';
+    }
+
+    char *last_slash = strrchr(resolved, '/');
+    if (last_slash == NULL) {
+        fprintf(stderr, "Hermes launcher could not resolve its directory.\n");
+        return 1;
+    }
+    *last_slash = '\0';
+
+    char script_path[PATH_MAX];
+    if (snprintf(script_path, sizeof(script_path), "%s/Hermes.sh", resolved) >= (int)sizeof(script_path)) {
+        fprintf(stderr, "Hermes shell launcher path is too long.\n");
+        return 1;
+    }
+
+    char **args = calloc((size_t)argc + 2, sizeof(char *));
+    if (args == NULL) {
+        perror("calloc");
+        return 1;
+    }
+    args[0] = "bash";
+    args[1] = script_path;
+    for (int i = 1; i < argc; i++) {
+        args[i + 1] = argv[i];
+    }
+    args[argc + 1] = NULL;
+
+    execv("/bin/bash", args);
+    perror("execv /bin/bash");
+    return errno == 0 ? 1 : errno;
+}
+"""
 
 
 def _write_plist(path: Path) -> None:
@@ -126,6 +214,17 @@ def _base_png(icon: Path, tmp: Path) -> Path | None:
 def _sips_resize(source: Path, target: Path, size: int) -> None:
     subprocess.run(
         ["sips", "-z", str(size), str(size), str(source), "--out", str(target)],
+        check=False,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+
+def _try_ad_hoc_sign(app_root: Path) -> None:
+    if not shutil.which("codesign"):
+        return
+    subprocess.run(
+        ["codesign", "--force", "--deep", "--sign", "-", str(app_root)],
         check=False,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
