@@ -79,6 +79,22 @@ def test_worker_health(worker):
     assert result["worker"] == "hermes_swi"
     assert "event_scoring" in result["loaded"]
     assert "geometry" in result["loaded"]
+    assert "misconceptions" in result["loaded"]
+
+
+def test_worker_exposes_diagnose_error(worker):
+    response = worker.raw_request(
+        {
+            "id": "diag_1",
+            "op": "diagnose_error",
+            "domain": "fraction",
+            "input": "frac(1,2)+frac(1,3)",
+            "got": "frac(2,5)",
+        }
+    )
+    assert response["id"] == "diag_1"
+    assert response["ok"] is True
+    assert isinstance(response["result"], list)
 
 
 def test_unknown_operation_returns_structured_error(worker):

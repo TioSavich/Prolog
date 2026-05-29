@@ -41,7 +41,9 @@ load_geometry_runtime :-
     load_geometry_files(Root, 'geometry/metaphors/*.pl'),
     load_geometry_files(Root, 'geometry/van_hiele/*.pl'),
     load_geometry_files(Root, 'geometry/bootstrap/*.pl'),
-    load_geometry_files(Root, 'geometry/standards/*.pl'),
+    load_geometry_files(Root, 'standards/ccss/*.pl'),
+    load_geometry_files(Root, 'standards/indiana/geometry.pl'),
+    load_geometry_files(Root, 'standards/im/*.pl'),
     load_geometry_files(Root, 'geometry/pck/*.pl'),
     directory_file_path(Root, 'geometry/query.pl', Query),
     consult(Query).

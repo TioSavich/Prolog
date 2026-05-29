@@ -20,7 +20,14 @@ from .runtime_env import resolve_umedcta_root
 
 
 ROOT = Path(__file__).resolve().parent.parent
-WORKER_PL = ROOT / "src" / "hermes_worker.pl"
+# WORKER_PL points at the authoritative copy in umedcta-formalization, not the
+# local src/hermes_worker.pl fork.  Keeping one source of truth means geometry
+# runtime loading (standards/ccss/*.pl, standards/indiana/geometry.pl, etc.)
+# tracks the canonical repo without manual mirroring.  If offline or isolated
+# operation is ever needed, swap this line to:
+#   WORKER_PL = ROOT / "src" / "hermes_worker.pl"
+# and keep src/hermes_worker.pl in sync with umedcta-formalization manually.
+WORKER_PL = resolve_umedcta_root(ROOT) / "hermes_worker.pl"
 
 
 class PersistentPrologError(RuntimeError):

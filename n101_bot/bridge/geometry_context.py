@@ -33,11 +33,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from .prolog import PrologError, geometry_query
+from .runtime_env import resolve_umedcta_root
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-GITHUB_ROOT = REPO_ROOT.parent
-UMEDCTA_ROOT = GITHUB_ROOT / "umedcta-formalization"
+UMEDCTA_ROOT = resolve_umedcta_root(REPO_ROOT)
 
 SOURCE_FILES = [
     REPO_ROOT / "Prolog" / "formalization" / "axioms_geometry.pl",
@@ -49,8 +49,8 @@ SOURCE_FILES = [
     UMEDCTA_ROOT / "geometry" / "concepts" / "shape_recognition.pl",
     UMEDCTA_ROOT / "geometry" / "concepts" / "coordinate_geometry.pl",
     UMEDCTA_ROOT / "geometry" / "concepts" / "volume_surface_area.pl",
-    UMEDCTA_ROOT / "geometry" / "standards" / "ccss_geometry.pl",
-    UMEDCTA_ROOT / "geometry" / "standards" / "indiana_geometry.pl",
+    UMEDCTA_ROOT / "standards" / "ccss" / "geometry.pl",
+    UMEDCTA_ROOT / "standards" / "indiana" / "geometry.pl",
     UMEDCTA_ROOT / "misconceptions" / "misconceptions_geometry.pl",
     UMEDCTA_ROOT / "misconceptions" / "misconceptions_geometric_batch_1.pl",
     UMEDCTA_ROOT / "misconceptions" / "misconceptions_geometric_batch_2.pl",

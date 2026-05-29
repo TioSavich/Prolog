@@ -8,7 +8,7 @@ Spec: docs/superpowers/specs/2026-05-04-hermes-chatbot-substrate-design.md §2
 """
 from __future__ import annotations
 
-from bridge.geometry_context import geometry_context
+from bridge.geometry_context import SOURCE_FILES, geometry_context
 
 
 # ── mode-driven card selection ─────────────────────────────────────────
@@ -57,6 +57,13 @@ def test_geometry_context_lesson_plan_with_standard():
     # lesson_plan unpacks the standards bundle; we expect at least one of the
     # major card types from the bundle to render.
     assert any(tag in upper for tag in ("MISCONCEPTION", "BOOTSTRAP", "CONCEPT", "VH-MARKER"))
+
+
+def test_geometry_context_source_file_standards_paths_exist():
+    standards_files = [path for path in SOURCE_FILES if "standards" in str(path)]
+
+    assert standards_files
+    assert all(path.exists() for path in standards_files)
 
 
 def test_geometry_context_auto_falls_back_for_geometry_input():
